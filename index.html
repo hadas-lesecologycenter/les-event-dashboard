@@ -307,18 +307,28 @@
             color: #6a5a4a;
         }
 
-        .sync-info {
-            background: #e8f0d8;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-            color: #556b2f;
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            margin-bottom: 6px;
         }
 
-        .sync-info strong {
-            display: block;
-            margin-bottom: 5px;
+        .status-planning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .status-hold {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .status-confirmed {
+            background: #dcfce7;
+            color: #166534;
         }
 
         .view-toggle {
@@ -705,6 +715,15 @@
                     </select>
                 </div>
                 <div class="control-group">
+                    <label for="filterStatus">Filter by Status</label>
+                    <select id="filterStatus">
+                        <option value="">All Statuses</option>
+                        <option value="Planning">Planning</option>
+                        <option value="Hold">Hold</option>
+                        <option value="Confirmed">Confirmed</option>
+                    </select>
+                </div>
+                <div class="control-group">
                     <label for="searchEvents">Search Events</label>
                     <input type="text" id="searchEvents" placeholder="Search by name or location...">
                 </div>
@@ -724,7 +743,15 @@
                     <h2 id="calendarTitle" style="display: inline-block; margin: 0 20px;"></h2>
                     <button id="nextMonth">Next →</button>
                 </div>
-                <button id="addEventBtn">+ Add Event</button>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="calendarStatusFilter" style="padding: 8px 12px; border: 1px solid #d4cec0; border-radius: 6px; font-family: 'DM Sans'; cursor: pointer;">
+                        <option value="">All Statuses</option>
+                        <option value="Planning">Planning</option>
+                        <option value="Hold">Hold</option>
+                        <option value="Confirmed">Confirmed</option>
+                    </select>
+                    <button id="addEventBtn">+ Add Event</button>
+                </div>
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
         </div>
@@ -775,6 +802,14 @@
                 <div class="form-group">
                     <label for="eventType">Event Type</label>
                     <input type="text" id="eventType" placeholder="e.g., Workshop, Tabling, STC Event">
+                </div>
+                <div class="form-group">
+                    <label for="eventStatus">Status</label>
+                    <select id="eventStatus" required>
+                        <option value="Planning">Planning</option>
+                        <option value="Confirmed">Confirmed</option>
+                        <option value="Hold">Hold</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="eventNotes">Notes</label>
@@ -843,10 +878,14 @@
             }
 
             // Current month days
+            const calendarStatusFilter = document.getElementById('calendarStatusFilter') ? document.getElementById('calendarStatusFilter').value : '';
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, month, day);
                 const isToday = dateObj.toDateString() === today.toDateString();
-                const dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
+                let dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
+                if (calendarStatusFilter) {
+                    dayEvents = dayEvents.filter(e => e.status === calendarStatusFilter);
+                }
                 const eventsList = dayEvents.map(e => `<div class="calendar-day-event">${e.name}</div>`).join('');
 
                 const todayClass = isToday ? 'today' : '';
@@ -955,6 +994,7 @@
                     category: document.getElementById('eventCategory').value,
                     type: document.getElementById('eventType').value,
                     collaboration: '',
+                    status: document.getElementById('eventStatus').value || 'Planning',
                     brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No',
                     compost: 'No', opsCheckin: 'No', reminder: 'No',
                     report: 'No', treeMap: 'No', thankYou: 'No'
@@ -965,6 +1005,11 @@
                 closeEventModal();
                 renderCalendar();
                 applyFilters();
+            });
+
+            // Calendar status filter
+            document.getElementById('calendarStatusFilter').addEventListener('change', () => {
+                renderCalendar();
             });
         }
 
@@ -994,7 +1039,7 @@
 
         function applyFilters() {
             const owner = document.getElementById('filterOwner').value;
-            const status = document.getElementById('filterStatus').value;
+            const eventStatus = document.getElementById('filterStatus').value;
             const category = document.getElementById('filterCategory').value;
             const search = document.getElementById('searchEvents').value.toLowerCase();
 
@@ -1003,9 +1048,7 @@
             filteredEvents = events.filter(event => {
                 if (owner && event.owner !== owner) return false;
                 if (category && event.category !== category) return false;
-
-                if (status === 'upcoming' && event.date < now) return false;
-                if (status === 'past' && event.date >= now) return false;
+                if (eventStatus && event.status !== eventStatus) return false;
 
                 if (search && !event.name.toLowerCase().includes(search) &&
                     !event.location.toLowerCase().includes(search)) return false;
@@ -1074,6 +1117,9 @@
                         <div class="event-header">
                             <div class="event-title">
                                 <h3>${event.name}</h3>
+                                <div style="margin-bottom: 8px;">
+                                    <span class="status-badge status-${event.status.toLowerCase()}">${event.status}</span>
+                                </div>
                                 <div class="event-meta">
                                     <span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span>
                                     <span class="event-type-badge">${event.type}</span>
