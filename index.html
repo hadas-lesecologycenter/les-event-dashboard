@@ -1295,18 +1295,17 @@
                 return { path, label, count, color: colors[label] || '#999', labelX, labelY };
             });
 
+            const legendHTML = items.map(([label, count]) => `${label}: ${count}`).join(' | ');
             const svg = `
                 <svg width="200" height="200" style="margin: 0 auto; display: block;">
                     ${slices.map((s, idx) => `
                         <g class="pie-slice" style="cursor: pointer;">
-                            <path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2" data-label="${s.label}" data-count="${s.count}"/>
+                            <path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2"/>
                         </g>
                     `).join('')}
                     ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
                 </svg>
-                <div style="font-size: 0.80em; margin-top: 8px; padding: 4px 0;">
-                    ${items.map(([label, count]) => `<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;"><span style="color: ${colors[label] || '#999'}; font-weight: bold; font-size: 1.2em;">●</span> <span>${label}: ${count}</span></div>`).join('')}
-                </div>
+                <div style="text-align: center; font-size: 0.75em; color: #666; margin-top: 4px;">${legendHTML}</div>
             `;
             return svg;
         }
