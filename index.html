@@ -1293,17 +1293,9 @@
 
             const svg = `
                 <svg width="200" height="200" style="margin: 0 auto; display: block;">
-                    ${slices.map(s => `<path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2"/>`).join('')}
+                    ${slices.map(s => `<path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2" style="cursor: pointer;" title="${s.label}: ${s.count}"/>`).join('')}
                     ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
                 </svg>
-                <div class="pie-legend" style="display: none; flex-direction: column; gap: 6px; font-size: 0.85em; margin-top: 10px;">
-                    ${items.map(([label, count]) => `
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div style="width: 12px; height: 12px; background: ${colors[label] || '#999'}; border-radius: 2px;"></div>
-                            <span>${label}: ${count}</span>
-                        </div>
-                    `).join('')}
-                </div>
             `;
             return svg;
         }
@@ -1402,21 +1394,15 @@
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
-                        <div class="pie-chart-container" onmouseover="this.querySelector('.pie-legend').style.display='flex'" onmouseout="this.querySelector('.pie-legend').style.display='none'">
-                            ${createPieChart(byOwner, ownerColors)}
-                        </div>
+                        ${createPieChart(byOwner, ownerColors)}
                     </div>
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Category</div>
-                        <div class="pie-chart-container" onmouseover="this.querySelector('.pie-legend').style.display='flex'" onmouseout="this.querySelector('.pie-legend').style.display='none'">
-                            ${createPieChart(byCategory, categoryColors)}
-                        </div>
+                        ${createPieChart(byCategory, categoryColors)}
                     </div>
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Status</div>
-                        <div class="pie-chart-container" onmouseover="this.querySelector('.pie-legend').style.display='flex'" onmouseout="this.querySelector('.pie-legend').style.display='none'">
-                            ${createPieChart(byStatus, statusColors)}
-                        </div>
+                        ${createPieChart(byStatus, statusColors)}
                     </div>
                 </div>
 
