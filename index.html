@@ -837,14 +837,12 @@
         </div>
 
         <div id="tasksView" class="tasks-view-container" style="display: none;">
-            <div style="margin-bottom: 20px;">
-                <label style="font-weight: 600; margin-right: 10px;">Filter by Owner:</label>
-                <div class="checkbox-group" id="tasksFilterOwner" style="display: inline-flex; gap: 15px; padding: 0; border: none; background: none;">
-                    <label style="margin: 0;"><input type="checkbox" value="all" checked> All</label>
-                    <label style="margin: 0;"><input type="checkbox" value="Maddy"> Maddy</label>
-                    <label style="margin: 0;"><input type="checkbox" value="Hadas"> Hadas</label>
-                    <label style="margin: 0;"><input type="checkbox" value="Gretel"> Gretel</label>
-                </div>
+            <div id="tasksFilterOwner" style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center;">
+                <label style="font-weight: 600; font-size: 0.95em; white-space: nowrap;">Owner:</label>
+                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="all" checked> All</label>
+                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Maddy"> Maddy</label>
+                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Hadas"> Hadas</label>
+                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Gretel"> Gretel</label>
             </div>
             <div id="openTasksContainer"></div>
         </div>
