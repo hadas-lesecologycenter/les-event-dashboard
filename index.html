@@ -1292,11 +1292,11 @@
             });
 
             const svg = `
-                <svg width="200" height="280" style="margin: 0 auto; display: block;">
+                <svg width="200" height="200" style="margin: 0 auto; display: block;">
                     ${slices.map(s => `<path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2"/>`).join('')}
                     ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
                 </svg>
-                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85em; margin-top: 10px;">
+                <div class="pie-legend" style="display: none; flex-direction: column; gap: 6px; font-size: 0.85em; margin-top: 10px;">
                     ${items.map(([label, count]) => `
                         <div style="display: flex; align-items: center; gap: 8px;">
                             <div style="width: 12px; height: 12px; background: ${colors[label] || '#999'}; border-radius: 2px;"></div>
@@ -1329,7 +1329,8 @@
                 monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
                 yearSet.add(e.date.getFullYear().toString());
             });
-            const monthOptions = ['All', ...Array.from(monthSet).sort()];
+            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
             const yearOptions = ['All', ...Array.from(yearSet).sort()];
 
             // Get selected month and year from localStorage
@@ -1347,7 +1348,6 @@
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
             const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
-            const byType = {};
             const byMonth = {};
             let confirmedCount = 0;
             let completedCount = 0;
@@ -1356,7 +1356,6 @@
                 byOwner[e.owner]++;
                 byCategory[e.primaryCategory]++;
                 byStatus[e.status || 'Planning']++;
-                if (e.type) byType[e.type] = (byType[e.type] || 0) + 1;
 
                 const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                 byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
@@ -1364,13 +1363,10 @@
                 if (e.status === 'Confirmed') confirmedCount++;
                 if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
             });
-
-            const avgProgress = filteredEventsByMonth.length > 0 ? Math.round(filteredEventsByMonth.reduce((sum, e) => sum + getEventProgress(e), 0) / filteredEventsByMonth.length) : 0;
             const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
             const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
-            const typeColors = { Workshop: '#8b5cf6', Volunteer: '#ec4899', Community: '#06b6d4', Education: '#14b8a6', Service: '#f97316' };
 
             statsBar.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
@@ -1388,7 +1384,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                     <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${filteredEventsByMonth.length}</div>
                         <div class="stat-label">Total Events</div>
@@ -1401,28 +1397,26 @@
                         <div class="stat-number">${completedCount}</div>
                         <div class="stat-label">Fully Completed</div>
                     </div>
-                    <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-                        <div class="stat-number">${avgProgress}%</div>
-                        <div class="stat-label">Avg Progress</div>
-                    </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
-                        ${createPieChart(byOwner, ownerColors)}
+                        <div class="pie-chart-container" onmouseover="this.querySelector('.pie-legend').style.display='flex'" onmouseout="this.querySelector('.pie-legend').style.display='none'">
+                            ${createPieChart(byOwner, ownerColors)}
+                        </div>
                     </div>
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Category</div>
-                        ${createPieChart(byCategory, categoryColors)}
+                        <div class="pie-chart-container" onmouseover="this.querySelector('.pie-legend').style.display='flex'" onmouseout="this.querySelector('.pie-legend').style.display='none'">
+                            ${createPieChart(byCategory, categoryColors)}
+                        </div>
                     </div>
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Status</div>
-                        ${createPieChart(byStatus, statusColors)}
-                    </div>
-                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
-                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Event Type</div>
-                        ${createPieChart(byType, typeColors)}
+                        <div class="pie-chart-container" onmouseover="this.querySelector('.pie-legend').style.display='flex'" onmouseout="this.querySelector('.pie-legend').style.display='none'">
+                            ${createPieChart(byStatus, statusColors)}
+                        </div>
                     </div>
                 </div>
 
