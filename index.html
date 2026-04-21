@@ -1272,7 +1272,6 @@
             const total = items.reduce((sum, [_, count]) => sum + count, 0);
             const radius = 60;
             let currentAngle = -Math.PI / 2;
-            const uniqueId = 'pie-' + Math.random().toString(36).substr(2, 9);
 
             const slices = items.map(([label, count]) => {
                 const sliceAngle = (count / total) * 2 * Math.PI;
@@ -1297,17 +1296,15 @@
             });
 
             const svg = `
-                <div style="position: relative; display: inline-block; width: 100%;">
-                    <svg width="200" height="200" style="margin: 0 auto; display: block;">
-                        ${slices.map((s, idx) => `
-                            <g data-label="${s.label}" data-count="${s.count}" data-id="${uniqueId}" style="cursor: pointer;" class="pie-segment" onmouseover="document.getElementById('tooltip-${uniqueId}').textContent='${s.label}: ${s.count}'; document.getElementById('tooltip-${uniqueId}').style.display='block';" onmouseout="document.getElementById('tooltip-${uniqueId}').style.display='none';">
-                                <path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2"/>
-                            </g>
-                        `).join('')}
-                        ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
-                    </svg>
-                    <div id="tooltip-${uniqueId}" style="display: none; position: absolute; bottom: -30px; left: 50%; transform: translateX(-50%); background: #1d5432; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.80em; white-space: nowrap; z-index: 10; pointer-events: none;"></div>
-                </div>
+                <svg width="200" height="240" style="margin: 0 auto; display: block;">
+                    ${slices.map((s, idx) => `
+                        <g class="pie-slice" style="cursor: pointer;">
+                            <path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2" data-label="${s.label}" data-count="${s.count}"/>
+                        </g>
+                    `).join('')}
+                    ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
+                    ${slices.map((s, idx) => `<text class="pie-label" x="10" y="${220 + (idx * 16)}" font-size="10" fill="#333" data-label="${s.label}" data-count="${s.count}"><tspan fill="${s.color}" font-weight="bold">●</tspan> ${s.label}: ${s.count}</text>`).join('')}
+                </svg>
             `;
             return svg;
         }
