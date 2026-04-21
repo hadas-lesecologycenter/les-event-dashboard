@@ -1308,11 +1308,13 @@
             return svg;
         }
 
-        function getEventsByMonth(monthKey) {
-            if (monthKey === 'All Months') return events;
+        function getEventsByMonthYear(month, year) {
             return events.filter(e => {
-                const emonthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                return emonthKey === monthKey;
+                const eventMonth = e.date.toLocaleDateString('en-US', { month: 'short' });
+                const eventYear = e.date.getFullYear().toString();
+                const monthMatch = month === 'All' || eventMonth === month;
+                const yearMatch = year === 'All' || eventYear === year;
+                return monthMatch && yearMatch;
             });
         }
 
@@ -1320,21 +1322,26 @@
             const statsBar = document.getElementById('statsView');
             const now = new Date();
 
-            // Get all months from events
-            const allMonths = {};
+            // Get all months and years from events
+            const monthSet = new Set();
+            const yearSet = new Set();
             events.forEach(e => {
-                const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-                allMonths[monthKey] = true;
+                monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
+                yearSet.add(e.date.getFullYear().toString());
             });
-            const monthOptions = ['All Months', ...Object.keys(allMonths).sort((a, b) => new Date(a) - new Date(b))];
+            const monthOptions = ['All', ...Array.from(monthSet).sort()];
+            const yearOptions = ['All', ...Array.from(yearSet).sort()];
 
-            // Get selected month from localStorage
-            let selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All Months';
-            if (!monthOptions.includes(selectedMonth)) selectedMonth = 'All Months';
+            // Get selected month and year from localStorage
+            let selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All';
+            let selectedYear = localStorage.getItem('selectedStatsYear') || 'All';
+            if (!monthOptions.includes(selectedMonth)) selectedMonth = 'All';
+            if (!yearOptions.includes(selectedYear)) selectedYear = 'All';
             localStorage.setItem('selectedStatsMonth', selectedMonth);
+            localStorage.setItem('selectedStatsYear', selectedYear);
 
-            // Filter events by month
-            const filteredEventsByMonth = getEventsByMonth(selectedMonth);
+            // Filter events by month and year
+            const filteredEventsByMonth = getEventsByMonthYear(selectedMonth, selectedYear);
 
             // Basic counts
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
@@ -1363,11 +1370,19 @@
             const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
 
             statsBar.innerHTML = `
-                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
-                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Filter by Month/Year:</label>
-                    <select id="statsMonthFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                        ${monthOptions.map(month => `<option value="${month}" ${month === selectedMonth ? 'selected' : ''}>${month}</option>`).join('')}
-                    </select>
+                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
+                    <div>
+                        <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Month:</label>
+                        <select id="statsMonthFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
+                            ${monthOptions.map(month => `<option value="${month}" ${month === selectedMonth ? 'selected' : ''}>${month}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Year:</label>
+                        <select id="statsYearFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
+                            ${yearOptions.map(year => `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${year}</option>`).join('')}
+                        </select>
+                    </div>
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
@@ -1411,8 +1426,10 @@
                             ${monthEntries.map(([month, count]) => {
                                 const maxMonthCount = Math.max(...Object.values(byMonth));
                                 const barHeight = (count / maxMonthCount) * 100;
-                                const isSelected = selectedMonth === 'All Months' || selectedMonth === month;
-                                const opacity = isSelected ? 1 : 0.4;
+                                const [monthPart, yearPart] = month.split(' ');
+                                const monthMatch = selectedMonth === 'All' || monthPart === selectedMonth;
+                                const yearMatch = selectedYear === 'All' || yearPart === selectedYear;
+                                const opacity = (monthMatch && yearMatch) ? 1 : 0.4;
                                 return `
                                     <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 50px; opacity: ${opacity};">
                                         <div style="font-size: 0.8em; color: #666; font-weight: 500; height: 16px;">${count}</div>
@@ -1426,9 +1443,13 @@
                 </div>
             `;
 
-            // Add event listener to month filter
+            // Add event listeners to filters
             document.getElementById('statsMonthFilter').addEventListener('change', (e) => {
                 localStorage.setItem('selectedStatsMonth', e.target.value);
+                updateStats();
+            });
+            document.getElementById('statsYearFilter').addEventListener('change', (e) => {
+                localStorage.setItem('selectedStatsYear', e.target.value);
                 updateStats();
             });
         }
