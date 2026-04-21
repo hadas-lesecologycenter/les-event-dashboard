@@ -84,6 +84,21 @@
             box-shadow: 0 0 0 3px rgba(139, 157, 69, 0.1);
         }
 
+        .control-group select[multiple] {
+            min-height: 100px;
+            padding: 8px;
+        }
+
+        .control-group select[multiple] option {
+            padding: 6px;
+            margin: 2px 0;
+        }
+
+        .control-group select[multiple] option:checked {
+            background: #1d5432;
+            color: white;
+        }
+
         .events-view {
             display: grid;
             gap: 20px;
@@ -656,18 +671,13 @@
             <p>LES Ecology Center - Street Tree Care & Community Engagement</p>
         </div>
 
-        <div class="sync-info">
-            <strong>📊 Data Source:</strong> This dashboard reads from your Event Tracker Google Sheet.
-            To connect, you'll need to set up Google Sheets integration (see README.md for setup).
-            For now, you can use the dashboard with manual data entry or test data.
-        </div>
-
         <div class="view-toggle">
             <button class="view-btn active" data-view="list">📋 List View</button>
             <button class="view-btn" data-view="calendar">📅 Calendar View</button>
+            <button id="statsBtn" style="margin-left: auto; padding: 10px 20px; border: 2px solid #d4cec0; background: white; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;">📊 Stats</button>
         </div>
 
-        <div class="stats-bar">
+        <div class="stats-bar" id="statsBar" style="display: none;">
             <div class="stat-card">
                 <div class="stat-number" id="totalEvents">0</div>
                 <div class="stat-label">Total Events</div>
@@ -706,26 +716,34 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="filterCategory">Filter by Category</label>
-                    <select id="filterCategory">
-                        <option value="">All Categories</option>
+                    <label for="filterCategory">Filter by Category (Select Multiple)</label>
+                    <select id="filterCategory" multiple>
                         <option value="Outreach">Outreach</option>
                         <option value="Education">Education</option>
                         <option value="Stewardship">Stewardship</option>
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="filterStatus">Filter by Status</label>
-                    <select id="filterStatus">
-                        <option value="">All Statuses</option>
+                    <label for="filterStatus">Filter by Status (Select Multiple)</label>
+                    <select id="filterStatus" multiple>
                         <option value="Planning">Planning</option>
                         <option value="Hold">Hold</option>
                         <option value="Confirmed">Confirmed</option>
                     </select>
                 </div>
                 <div class="control-group">
+                    <label for="sortOrder">Sort Events</label>
+                    <select id="sortOrder">
+                        <option value="earliest">Earliest to Latest</option>
+                        <option value="latest">Latest to Earliest</option>
+                    </select>
+                </div>
+                <div class="control-group">
                     <label for="searchEvents">Search Events</label>
                     <input type="text" id="searchEvents" placeholder="Search by name or location...">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button id="addEventBtnList" style="padding: 10px 20px; background: #1d5432; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">+ Add Event</button>
                 </div>
             </div>
 
@@ -774,8 +792,12 @@
                     <input type="date" id="eventDate" required>
                 </div>
                 <div class="form-group">
-                    <label for="eventTime">Time</label>
+                    <label for="eventTime">Start Time</label>
                     <input type="time" id="eventTime">
+                </div>
+                <div class="form-group">
+                    <label for="eventEndTime">End Time</label>
+                    <input type="time" id="eventEndTime">
                 </div>
                 <div class="form-group">
                     <label for="eventOwner">Owner</label>
@@ -966,8 +988,20 @@
                 renderCalendar();
             });
 
+            // Stats button toggle
+            document.getElementById('statsBtn').addEventListener('click', () => {
+                const statsBar = document.getElementById('statsBar');
+                statsBar.style.display = statsBar.style.display === 'none' ? 'grid' : 'none';
+                document.getElementById('statsBtn').style.background = statsBar.style.display === 'grid' ? '#1d5432' : 'white';
+                document.getElementById('statsBtn').style.color = statsBar.style.display === 'grid' ? 'white' : '#2c2416';
+            });
+
             // Event modal
             document.getElementById('addEventBtn').addEventListener('click', () => {
+                openEventModal(new Date());
+            });
+
+            document.getElementById('addEventBtnList').addEventListener('click', () => {
                 openEventModal(new Date());
             });
 
@@ -990,6 +1024,7 @@
                     owner: document.getElementById('eventOwner').value,
                     date: new Date(document.getElementById('eventDate').value),
                     time: document.getElementById('eventTime').value || '12:00 PM',
+                    endTime: document.getElementById('eventEndTime').value || '',
                     location: document.getElementById('eventLocation').value,
                     category: document.getElementById('eventCategory').value,
                     type: document.getElementById('eventType').value,
@@ -1081,22 +1116,29 @@
             document.getElementById('filterTiming').addEventListener('change', applyFilters);
             document.getElementById('filterStatus').addEventListener('change', applyFilters);
             document.getElementById('filterCategory').addEventListener('change', applyFilters);
+            document.getElementById('sortOrder').addEventListener('change', applyFilters);
             document.getElementById('searchEvents').addEventListener('input', applyFilters);
         }
 
         function applyFilters() {
             const owner = document.getElementById('filterOwner').value;
             const timing = document.getElementById('filterTiming').value;
-            const eventStatus = document.getElementById('filterStatus').value;
-            const category = document.getElementById('filterCategory').value;
+            const sortOrder = document.getElementById('sortOrder').value;
             const search = document.getElementById('searchEvents').value.toLowerCase();
+
+            // Get multiple selected values from category and status
+            const categorySelect = document.getElementById('filterCategory');
+            const selectedCategories = Array.from(categorySelect.selectedOptions).map(o => o.value);
+
+            const statusSelect = document.getElementById('filterStatus');
+            const selectedStatuses = Array.from(statusSelect.selectedOptions).map(o => o.value);
 
             const now = new Date();
 
             filteredEvents = events.filter(event => {
                 if (owner && event.owner !== owner) return false;
-                if (category && !event.category.includes(category)) return false;
-                if (eventStatus && event.status !== eventStatus) return false;
+                if (selectedCategories.length > 0 && !selectedCategories.some(cat => event.category.includes(cat))) return false;
+                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status)) return false;
                 if (timing === 'upcoming' && event.date < now) return false;
                 if (timing === 'past' && event.date >= now) return false;
 
@@ -1108,7 +1150,7 @@
             });
 
             // Sort by date
-            filteredEvents.sort((a, b) => a.date - b.date);
+            filteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
 
             updateStats();
             renderEvents();
@@ -1174,7 +1216,7 @@
                                 <div class="event-meta">
                                     <span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span>
                                     <span class="event-type-badge">${event.type}</span>
-                                    <span class="meta-item">📅 ${formatDate(event.date)} at ${event.time}</span>
+                                    <span class="meta-item">📅 ${formatDate(event.date)} ${event.time}${event.endTime ? ' - ' + event.endTime : ''}</span>
                                     ${event.location ? `<span class="location-info">📍 ${event.location}</span>` : ''}
                                 </div>
                             </div>
