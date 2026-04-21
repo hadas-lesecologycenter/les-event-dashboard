@@ -742,7 +742,7 @@
         <div id="listView" class="list-view-container">
             <div class="controls">
                 <div class="control-group">
-                    <label for="filterOwner">Filter by Owner (Select Multiple)</label>
+                    <label for="filterOwner">Filter by Owner</label>
                     <select id="filterOwner" multiple>
                         <option value="Maddy">Maddy</option>
                         <option value="Hadas">Hadas</option>
@@ -758,7 +758,7 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="filterCategory">Filter by Category (Select Multiple)</label>
+                    <label for="filterCategory">Filter by Category</label>
                     <select id="filterCategory" multiple>
                         <option value="Outreach">Outreach</option>
                         <option value="Education">Education</option>
@@ -766,7 +766,7 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="filterStatus">Filter by Status (Select Multiple)</label>
+                    <label for="filterStatus">Filter by Status</label>
                     <select id="filterStatus" multiple>
                         <option value="Planning">Planning</option>
                         <option value="Hold">Hold</option>
@@ -1162,12 +1162,12 @@
 
                 if (selectedCategories.length > 0) {
                     const hasMatchingCategory = selectedCategories.some(cat =>
-                        event.category.toLowerCase().includes(cat.toLowerCase())
+                        event.primaryCategory === cat || event.secondaryCategory === cat
                     );
                     if (!hasMatchingCategory) return false;
                 }
 
-                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status)) return false;
+                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
 
                 if (timing === 'upcoming' && event.date < now) return false;
                 if (timing === 'past' && event.date >= now) return false;
