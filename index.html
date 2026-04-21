@@ -837,6 +837,15 @@
         </div>
 
         <div id="tasksView" class="tasks-view-container" style="display: none;">
+            <div style="margin-bottom: 20px;">
+                <label style="font-weight: 600; margin-right: 10px;">Filter by Owner:</label>
+                <div class="checkbox-group" id="tasksFilterOwner" style="display: inline-flex; gap: 15px; padding: 0; border: none; background: none;">
+                    <label style="margin: 0;"><input type="checkbox" value="all" checked> All</label>
+                    <label style="margin: 0;"><input type="checkbox" value="Maddy"> Maddy</label>
+                    <label style="margin: 0;"><input type="checkbox" value="Hadas"> Hadas</label>
+                    <label style="margin: 0;"><input type="checkbox" value="Gretel"> Gretel</label>
+                </div>
+            </div>
             <div id="openTasksContainer"></div>
         </div>
 
@@ -1103,6 +1112,10 @@
                 renderCalendar();
                 applyFilters();
             });
+
+            document.querySelectorAll('#tasksFilterOwner input[type="checkbox"]').forEach(cb => {
+                cb.addEventListener('change', () => renderOpenTasks());
+            });
         }
 
         function getSampleData() {
@@ -1347,6 +1360,8 @@
                             openTasks.push({
                                 eventId: event.id,
                                 eventName: event.name,
+                                owner: event.owner,
+                                taskKey: task.key,
                                 taskLabel: task.label,
                                 deadline: deadline,
                                 daysUntil: Math.ceil((deadline - now) / (1000 * 60 * 60 * 24))
@@ -1358,12 +1373,16 @@
 
             openTasks.sort((a, b) => a.deadline - b.deadline);
 
-            if (openTasks.length === 0) {
+            const selectedOwners = Array.from(document.querySelectorAll('#tasksFilterOwner input[type="checkbox"]:checked')).map(cb => cb.value);
+            const showAll = selectedOwners.includes('all');
+            const filteredTasks = openTasks.filter(task => showAll || selectedOwners.includes(task.owner));
+
+            if (filteredTasks.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>No open tasks! All confirmed events are on track.</p></div>';
                 return;
             }
 
-            container.innerHTML = openTasks.map(task => {
+            container.innerHTML = filteredTasks.map(task => {
                 let className = '';
                 if (task.daysUntil < 0) className = 'deadline-overdue';
                 else if (task.daysUntil <= 7) className = 'deadline-soon';
@@ -1373,12 +1392,30 @@
 
                 return `
                     <div class="open-task-card ${className}">
-                        <div class="task-event-name">${task.eventName}</div>
-                        <div class="task-description">${task.taskLabel}</div>
-                        <div class="task-deadline">📅 ${deadlineStr} (${daysStr})</div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="checkbox" class="task-completion-checkbox" data-event-id="${task.eventId}" data-task-key="${task.taskKey}" style="width: 20px; height: 20px; cursor: pointer; accent-color: #1d5432;">
+                            <div style="flex: 1;">
+                                <div class="task-event-name">${task.eventName}</div>
+                                <div class="task-description">${task.taskLabel}</div>
+                                <div class="task-deadline">📅 ${deadlineStr} (${daysStr})</div>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
+
+            document.querySelectorAll('.task-completion-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const eventId = parseInt(e.target.dataset.eventId);
+                    const taskKey = e.target.dataset.taskKey;
+                    const event = events.find(ev => ev.id === eventId);
+                    if (event) {
+                        event[taskKey] = e.target.checked ? 'Yes' : 'No';
+                        saveEvents();
+                        renderOpenTasks();
+                    }
+                });
+            });
         }
 
         function formatDate(date) {
