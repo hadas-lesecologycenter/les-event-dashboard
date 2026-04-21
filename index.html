@@ -1055,10 +1055,15 @@
         function loadEvents() {
             const stored = localStorage.getItem('lesEvents');
             if (stored) {
-                events = JSON.parse(stored).map(e => ({
-                    ...e,
-                    date: new Date(e.date)
-                }));
+                const parsed = JSON.parse(stored);
+                if (parsed.length > 0) {
+                    events = parsed.map(e => ({
+                        ...e,
+                        date: new Date(e.date)
+                    }));
+                } else {
+                    events = getSampleData();
+                }
             } else {
                 events = getSampleData();
             }
