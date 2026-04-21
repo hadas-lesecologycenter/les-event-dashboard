@@ -409,13 +409,18 @@
             cursor: not-allowed;
         }
 
+        #openTasksContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
         .open-task-card {
             background: white;
             border-left: 4px solid #ff6b6b;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            margin-bottom: 12px;
         }
 
         .open-task-card.deadline-soon {
