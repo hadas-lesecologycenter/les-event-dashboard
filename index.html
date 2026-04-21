@@ -813,85 +813,52 @@
         function renderCalendar() {
             const year = currentMonth.getFullYear();
             const month = currentMonth.getMonth();
-
-            // Update title
             const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
                 'July', 'August', 'September', 'October', 'November', 'December'];
+
             document.getElementById('calendarTitle').textContent = `${monthNames[month]} ${year}`;
 
-            // Get first day of month and number of days
             const firstDay = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
             const daysInPrevMonth = new Date(year, month, 0).getDate();
+            const today = new Date();
 
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
+            let html = '';
 
             // Day headers
             const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
             dayHeaders.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'calendar-day-header';
-                header.textContent = day;
-                grid.appendChild(header);
+                html += `<div class="calendar-day-header">${day}</div>`;
             });
 
             // Previous month days
             for (let i = firstDay - 1; i >= 0; i--) {
-                const day = document.createElement('div');
-                day.className = 'calendar-day other-month';
-                day.textContent = daysInPrevMonth - i;
-                grid.appendChild(day);
+                html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
             }
 
             // Current month days
-            const today = new Date();
             for (let day = 1; day <= daysInMonth; day++) {
-                const dayEl = document.createElement('div');
                 const dateObj = new Date(year, month, day);
-                dayEl.className = 'calendar-day';
-
-                // Check if today
-                if (dateObj.toDateString() === today.toDateString()) {
-                    dayEl.classList.add('today');
-                }
-
-                // Add day number
-                const dayNum = document.createElement('div');
-                dayNum.className = 'calendar-day-number';
-                dayNum.textContent = day;
-                dayEl.appendChild(dayNum);
-
-                // Add events for this day
+                const isToday = dateObj.toDateString() === today.toDateString();
                 const dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
-                const eventContainer = document.createElement('div');
-                eventContainer.className = 'calendar-day-events';
-                dayEvents.forEach(e => {
-                    const dot = document.createElement('span');
-                    dot.className = 'calendar-day-event-dot';
-                    eventContainer.appendChild(dot);
-                });
-                if (dayEvents.length > 0) {
-                    const count = document.createElement('span');
-                    count.textContent = `${dayEvents.length}`;
-                    eventContainer.appendChild(count);
-                }
-                dayEl.appendChild(eventContainer);
+                const eventDots = dayEvents.length > 0 ? `<span class="calendar-day-event-dot"></span>`.repeat(dayEvents.length) : '';
+                const eventCount = dayEvents.length > 0 ? `<span>${dayEvents.length}</span>` : '';
 
-                // Click to create event
-                dayEl.addEventListener('click', () => openEventModal(dateObj));
-                grid.appendChild(dayEl);
+                const todayClass = isToday ? 'today' : '';
+                html += `<div class="calendar-day ${todayClass}" onclick="openEventModal(new Date(${year}, ${month}, ${day}))">
+                    <div class="calendar-day-number">${day}</div>
+                    <div class="calendar-day-events">${eventDots}${eventCount}</div>
+                </div>`;
             }
 
             // Next month days
             const totalCells = firstDay + daysInMonth;
             const remainingDays = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
             for (let day = 1; day <= remainingDays; day++) {
-                const dayEl = document.createElement('div');
-                dayEl.className = 'calendar-day other-month';
-                dayEl.textContent = day;
-                grid.appendChild(dayEl);
+                html += `<div class="calendar-day other-month">${day}</div>`;
             }
+
+            document.getElementById('calendarGrid').innerHTML = html;
         }
 
         function openEventModal(date) {
