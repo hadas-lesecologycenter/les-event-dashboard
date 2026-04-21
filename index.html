@@ -411,14 +411,15 @@
         .calendar-day {
             border: 1px solid #e8ddd0;
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            min-height: 120px;
+            min-height: 130px;
             background: white;
             break-inside: avoid;
+            overflow: hidden;
         }
 
         .calendar-day:hover {
@@ -445,19 +446,24 @@
         }
 
         .calendar-day-events {
-            font-size: 0.7em;
-            color: #1d5432;
+            font-size: 0.75em;
+            color: #fff;
             overflow: hidden;
-            text-overflow: ellipsis;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            flex: 1;
         }
 
-        .calendar-day-event-dot {
-            display: inline-block;
-            width: 4px;
-            height: 4px;
+        .calendar-day-event {
             background: #1d5432;
-            border-radius: 50%;
-            margin-right: 3px;
+            padding: 3px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            font-weight: 500;
+            line-height: 1.2;
         }
 
         .modal {
@@ -841,13 +847,12 @@
                 const dateObj = new Date(year, month, day);
                 const isToday = dateObj.toDateString() === today.toDateString();
                 const dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
-                const eventDots = dayEvents.length > 0 ? `<span class="calendar-day-event-dot"></span>`.repeat(dayEvents.length) : '';
-                const eventCount = dayEvents.length > 0 ? `<span>${dayEvents.length}</span>` : '';
+                const eventsList = dayEvents.map(e => `<div class="calendar-day-event">${e.name}</div>`).join('');
 
                 const todayClass = isToday ? 'today' : '';
                 html += `<div class="calendar-day ${todayClass}" onclick="openEventModal(new Date(${year}, ${month}, ${day}))">
                     <div class="calendar-day-number">${day}</div>
-                    <div class="calendar-day-events">${eventDots}${eventCount}</div>
+                    <div class="calendar-day-events">${eventsList}</div>
                 </div>`;
             }
 
