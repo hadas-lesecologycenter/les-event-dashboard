@@ -354,6 +354,8 @@
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: none;
+            width: 100%;
+            overflow: visible;
         }
 
         .calendar-container.active {
@@ -364,12 +366,15 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
         }
 
         .calendar-header h2 {
             color: #1d5432;
             font-size: 1.5em;
+            margin: 0;
         }
 
         .calendar-header button {
@@ -389,27 +394,31 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 5px;
+            grid-template-columns: repeat(7, minmax(80px, 1fr));
+            gap: 10px;
+            width: 100%;
         }
 
         .calendar-day-header {
             text-align: center;
             font-weight: 600;
             color: #1d5432;
-            padding: 10px;
+            padding: 15px 8px;
+            background: #f9f7f2;
+            border-radius: 6px;
         }
 
         .calendar-day {
-            aspect-ratio: 1;
             border: 1px solid #e8ddd0;
             border-radius: 8px;
-            padding: 8px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            min-height: 80px;
+            min-height: 120px;
+            background: white;
+            break-inside: avoid;
         }
 
         .calendar-day:hover {
@@ -603,12 +612,19 @@
             }
 
             .calendar-grid {
-                gap: 2px;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 5px;
             }
 
             .calendar-day {
-                min-height: 60px;
-                font-size: 0.8em;
+                min-height: 80px;
+                font-size: 0.85em;
+                padding: 8px;
+            }
+
+            .calendar-day-header {
+                padding: 10px 4px;
+                font-size: 0.9em;
             }
 
             .modal-content {
