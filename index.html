@@ -1003,7 +1003,7 @@
                 let dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
                 const eventsList = dayEvents.map(e => {
                     const color = CATEGORY_COLORS[e.primaryCategory] || '#1d5432';
-                    return `<div class="calendar-day-event" style="background: ${color};">${e.name}</div>`;
+                    return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); viewEventDetail(${e.id})">${e.name}</div>`;
                 }).join('');
 
                 const todayClass = isToday ? 'today' : '';
@@ -1019,15 +1019,83 @@
             document.getElementById('calendarGrid').innerHTML = html;
         }
 
+        function viewEventDetail(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            const progress = getEventProgress(event);
+            document.querySelector('.modal-header h3').textContent = event.name;
+            document.getElementById('eventForm').style.display = 'none';
+
+            const detailsHtml = `
+                <div style="margin-top: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span>
+                        ${event.secondaryCategory ? `<span class="category-badge category-${event.secondaryCategory.toLowerCase()}">${event.secondaryCategory}</span>` : ''}
+                        <span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <p style="margin: 5px 0;"><strong>Owner:</strong> ${event.owner}</p>
+                        <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(event.date)} at ${event.time}${event.endTime ? ' - ' + event.endTime : ''}</p>
+                        ${event.location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${event.location}</p>` : ''}
+                        <p style="margin: 5px 0;"><strong>Type:</strong> ${event.type || 'N/A'}</p>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <p><strong>Progress: ${progress}%</strong></p>
+                        <div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                        <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">📋 Setup</div>
+                            ${['brief', 'eventbrite', 'calendar', 'comms'].map(key => {
+                                const task = TASK_DEADLINES.setup.find(t => t.key === key);
+                                const value = event[key];
+                                const isChecked = value === 'Yes' || value === true;
+                                return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
+                            }).join('')}
+                        </div>
+                        <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">🚀 Execution</div>
+                            ${['compost', 'opsCheckin', 'reminder'].map(key => {
+                                const task = TASK_DEADLINES.execution.find(t => t.key === key);
+                                const value = event[key];
+                                const isChecked = value === 'Yes' || value === true;
+                                return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
+                            }).join('')}
+                        </div>
+                        <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
+                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">✅ Completion</div>
+                            ${['report', 'treeMap', 'thankYou'].map(key => {
+                                const task = TASK_DEADLINES.completion.find(t => t.key === key);
+                                const value = event[key];
+                                const isChecked = value === 'Yes' || value === true;
+                                return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('eventForm').insertAdjacentHTML('afterend', `<div id="eventDetails">${detailsHtml}</div>`);
+            document.getElementById('eventModal').classList.add('active');
+        }
+
         function openEventModal(date) {
             selectedDate = date;
             document.getElementById('eventDate').value = formatDateForInput(date);
+            document.getElementById('eventForm').reset();
+            document.querySelector('.modal-header h3').textContent = 'Create New Event';
+            document.getElementById('eventForm').style.display = 'block';
             document.getElementById('eventModal').classList.add('active');
         }
 
         function closeEventModal() {
             document.getElementById('eventModal').classList.remove('active');
             document.getElementById('eventForm').reset();
+            document.getElementById('eventForm').style.display = 'block';
+            const details = document.getElementById('eventDetails');
+            if (details) details.remove();
+            document.querySelector('.modal-header h3').textContent = 'Create New Event';
         }
 
         function formatDateForInput(date) {
