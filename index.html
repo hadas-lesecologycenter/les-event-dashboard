@@ -964,12 +964,13 @@
         }
 
         function loadEvents() {
-            // Try to load from localStorage first
             const stored = localStorage.getItem('lesEvents');
             if (stored) {
-                events = JSON.parse(stored);
+                events = JSON.parse(stored).map(e => ({
+                    ...e,
+                    date: new Date(e.date)
+                }));
             } else {
-                // Load sample data for demo
                 events = getSampleData();
                 saveEvents();
             }
