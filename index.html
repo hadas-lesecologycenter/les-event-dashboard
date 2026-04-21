@@ -351,7 +351,7 @@
         .calendar-container {
             background: white;
             border-radius: 12px;
-            padding: 20px;
+            padding: 15px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: none;
             width: 100%;
@@ -394,8 +394,8 @@
 
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(7, minmax(80px, 1fr));
-            gap: 10px;
+            grid-template-columns: repeat(7, minmax(75px, 1fr));
+            gap: 6px;
             width: 100%;
         }
 
@@ -410,13 +410,13 @@
 
         .calendar-day {
             border: 1px solid #e8ddd0;
-            border-radius: 8px;
-            padding: 10px;
+            border-radius: 6px;
+            padding: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             flex-direction: column;
-            min-height: 130px;
+            min-height: 85px;
             background: white;
             break-inside: avoid;
             overflow: hidden;
@@ -441,29 +441,29 @@
         .calendar-day-number {
             font-weight: 600;
             color: #2c2416;
-            margin-bottom: 4px;
-            font-size: 0.9em;
+            margin-bottom: 2px;
+            font-size: 0.85em;
         }
 
         .calendar-day-events {
-            font-size: 0.75em;
+            font-size: 0.65em;
             color: #fff;
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
             flex: 1;
         }
 
         .calendar-day-event {
             background: #1d5432;
-            padding: 3px 6px;
-            border-radius: 3px;
+            padding: 2px 4px;
+            border-radius: 2px;
             white-space: nowrap;
             text-overflow: ellipsis;
             overflow: hidden;
             font-weight: 500;
-            line-height: 1.2;
+            line-height: 1.1;
         }
 
         .modal {
