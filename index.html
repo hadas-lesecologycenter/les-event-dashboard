@@ -1245,9 +1245,72 @@
                                 <div class="progress-text">${progress}% complete</div>
                             </div>
                         </div>
+
+                        <div class="workflow-phases">
+                            <div class="phase">
+                                <div class="phase-title">📋 Setup</div>
+                                <div class="tasks">
+                                    ${renderTasks(event, 'setup')}
+                                </div>
+                            </div>
+                            <div class="phase">
+                                <div class="phase-title">🚀 Execution</div>
+                                <div class="tasks">
+                                    ${renderTasks(event, 'execution')}
+                                </div>
+                            </div>
+                            <div class="phase">
+                                <div class="phase-title">✅ Completion</div>
+                                <div class="tasks">
+                                    ${renderTasks(event, 'completion')}
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 `;
             }).join('');
+
+            document.querySelectorAll('.task input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', handleTaskToggle);
+            });
+        }
+
+        function renderTasks(event, phase) {
+            return Object.values(TASK_DEADLINES).find((_, idx) => {
+                const phases = ['setup', 'execution', 'completion'];
+                return phases[idx] === phase;
+            })?.map(task => {
+                const value = event[task.key];
+                const isNA = value === 'N/A';
+                const isChecked = value === 'Yes' || value === true;
+
+                return `
+                    <div class="task ${isNA ? 'na' : ''}">
+                        <input
+                            type="checkbox"
+                            id="task-${event.id}-${task.key}"
+                            data-event-id="${event.id}"
+                            data-task-key="${task.key}"
+                            ${isChecked ? 'checked' : ''}
+                            ${isNA ? 'disabled' : ''}
+                        >
+                        <label for="task-${event.id}-${task.key}">${task.label}</label>
+                    </div>
+                `;
+            }).join('') || '';
+        }
+
+        function handleTaskToggle(e) {
+            const eventId = parseInt(e.target.dataset.eventId);
+            const taskKey = e.target.dataset.taskKey;
+            const isChecked = e.target.checked;
+
+            const event = events.find(e => e.id === eventId);
+            if (event) {
+                event[taskKey] = isChecked ? 'Yes' : 'No';
+                saveEvents();
+                applyFilters();
+            }
         }
 
         function renderOpenTasks() {
