@@ -1296,15 +1296,17 @@
             });
 
             const svg = `
-                <svg width="200" height="240" style="margin: 0 auto; display: block;">
+                <svg width="200" height="200" style="margin: 0 auto; display: block;">
                     ${slices.map((s, idx) => `
                         <g class="pie-slice" style="cursor: pointer;">
                             <path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2" data-label="${s.label}" data-count="${s.count}"/>
                         </g>
                     `).join('')}
                     ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
-                    ${slices.map((s, idx) => `<text class="pie-label" x="10" y="${220 + (idx * 16)}" font-size="10" fill="#333" data-label="${s.label}" data-count="${s.count}"><tspan fill="${s.color}" font-weight="bold">●</tspan> ${s.label}: ${s.count}</text>`).join('')}
                 </svg>
+                <div style="font-size: 0.80em; margin-top: 8px; padding: 4px 0;">
+                    ${items.map(([label, count]) => `<div style="display: flex; align-items: center; gap: 6px; margin-bottom: 3px;"><span style="color: ${colors[label] || '#999'}; font-weight: bold; font-size: 1.2em;">●</span> <span>${label}: ${count}</span></div>`).join('')}
+                </div>
             `;
             return svg;
         }
