@@ -1347,6 +1347,7 @@
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
             const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
+            const byType = {};
             const byMonth = {};
             let confirmedCount = 0;
             let completedCount = 0;
@@ -1355,6 +1356,7 @@
                 byOwner[e.owner]++;
                 byCategory[e.primaryCategory]++;
                 byStatus[e.status || 'Planning']++;
+                if (e.type) byType[e.type] = (byType[e.type] || 0) + 1;
 
                 const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                 byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
@@ -1368,6 +1370,7 @@
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
             const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
+            const typeColors = { Workshop: '#8b5cf6', Volunteer: '#ec4899', Community: '#06b6d4', Education: '#14b8a6', Service: '#f97316' };
 
             statsBar.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
@@ -1386,41 +1389,45 @@
                 </div>
 
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
-                    <div class="stat-card">
+                    <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${filteredEventsByMonth.length}</div>
                         <div class="stat-label">Total Events</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${confirmedCount}</div>
                         <div class="stat-label">Confirmed</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${completedCount}</div>
                         <div class="stat-label">Fully Completed</div>
                     </div>
-                    <div class="stat-card">
+                    <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${avgProgress}%</div>
                         <div class="stat-label">Avg Progress</div>
                     </div>
                 </div>
 
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
-                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
                         ${createPieChart(byOwner, ownerColors)}
                     </div>
-                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Category</div>
                         ${createPieChart(byCategory, categoryColors)}
                     </div>
-                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Status</div>
                         ${createPieChart(byStatus, statusColors)}
                     </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease; cursor: default;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Event Type</div>
+                        ${createPieChart(byType, typeColors)}
+                    </div>
                 </div>
 
-                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">Events Timeline</div>
+                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;" onmouseover="this.style.boxShadow='0 4px 20px rgba(0,0,0,0.15)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
+                    <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">Monthly Distribution</div>
                     <div style="overflow-x: auto; padding-bottom: 10px;">
                         <div style="display: flex; align-items: flex-end; gap: 12px; min-width: max-content;">
                             ${monthEntries.map(([month, count]) => {
@@ -1431,9 +1438,9 @@
                                 const yearMatch = selectedYear === 'All' || yearPart === selectedYear;
                                 const opacity = (monthMatch && yearMatch) ? 1 : 0.4;
                                 return `
-                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 50px; opacity: ${opacity};">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 50px; opacity: ${opacity}; transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.opacity='1'; this.style.transform='scale(1.08)'" onmouseout="this.style.opacity='${opacity}'; this.style.transform='scale(1)'" title="${month}: ${count} events">
                                         <div style="font-size: 0.8em; color: #666; font-weight: 500; height: 16px;">${count}</div>
-                                        <div style="width: 40px; background: #1d5432; border-radius: 4px; height: ${Math.max(barHeight, 30)}px;"></div>
+                                        <div style="width: 40px; background: #1d5432; border-radius: 4px; height: ${Math.max(barHeight, 30)}px; transition: all 0.2s ease;" onmouseover="this.style.background='#2d7a52'" onmouseout="this.style.background='#1d5432'"></div>
                                         <div style="font-size: 0.8em; text-align: center; color: #666; font-weight: 500;">${month}</div>
                                     </div>
                                 `;
