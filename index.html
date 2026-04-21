@@ -1118,6 +1118,14 @@
             document.getElementById('filterCategory').addEventListener('change', applyFilters);
             document.getElementById('sortOrder').addEventListener('change', applyFilters);
             document.getElementById('searchEvents').addEventListener('input', applyFilters);
+
+            // Ensure multi-select dropdowns respond to any interaction
+            document.getElementById('filterStatus').addEventListener('click', () => {
+                setTimeout(applyFilters, 50);
+            });
+            document.getElementById('filterCategory').addEventListener('click', () => {
+                setTimeout(applyFilters, 50);
+            });
         }
 
         function applyFilters() {
@@ -1137,8 +1145,18 @@
 
             filteredEvents = events.filter(event => {
                 if (owner && event.owner !== owner) return false;
-                if (selectedCategories.length > 0 && !selectedCategories.some(cat => event.category.includes(cat))) return false;
+
+                // For categories: check if any selected category matches any category in the event
+                if (selectedCategories.length > 0) {
+                    const hasMatchingCategory = selectedCategories.some(cat =>
+                        event.category.toLowerCase().includes(cat.toLowerCase())
+                    );
+                    if (!hasMatchingCategory) return false;
+                }
+
+                // For status: exact match
                 if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status)) return false;
+
                 if (timing === 'upcoming' && event.date < now) return false;
                 if (timing === 'past' && event.date >= now) return false;
 
