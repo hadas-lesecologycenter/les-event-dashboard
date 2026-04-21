@@ -90,14 +90,10 @@
         }
 
         .stats-bar {
-            display: none;
+            display: flex;
             flex-direction: column;
             gap: 20px;
             margin-bottom: 30px;
-        }
-
-        .stats-bar.active {
-            display: flex;
         }
 
         .stat-card {
@@ -763,11 +759,9 @@
             <button class="view-btn active" data-view="list">📋 List View</button>
             <button class="view-btn" data-view="calendar">📅 Calendar View</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
-            <button id="statsBtn" style="margin-left: auto; padding: 10px 20px; border: 2px solid #d4cec0; background: white; border-radius: 8px; cursor: pointer; font-weight: 500;">📊 Stats</button>
+            <button class="view-btn" data-view="stats">📊 Stats</button>
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add Event</button>
         </div>
-
-        <div class="stats-bar" id="statsBar"></div>
 
         <div id="listView" class="list-view-container">
             <div class="controls">
@@ -833,6 +827,8 @@
             </div>
             <div id="openTasksContainer"></div>
         </div>
+
+        <div id="statsView" class="stats-bar" style="display: none;"></div>
 
         <div id="calendarView" class="calendar-container">
             <div class="calendar-header">
@@ -1094,9 +1090,11 @@
             document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
             document.getElementById('calendarView').classList.toggle('active', view === 'calendar');
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
+            document.getElementById('statsView').style.display = view === 'stats' ? 'flex' : 'none';
 
             if (view === 'calendar') renderCalendar();
             if (view === 'tasks') renderOpenTasks();
+            if (view === 'stats') updateStats();
         }
 
         function init() {
@@ -1109,11 +1107,6 @@
         function setupCalendarListeners() {
             document.querySelectorAll('.view-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => switchView(e.target.dataset.view));
-            });
-
-            document.getElementById('statsBtn').addEventListener('click', () => {
-                const statsBar = document.getElementById('statsBar');
-                statsBar.classList.toggle('active');
             });
 
             document.getElementById('prevMonth').addEventListener('click', () => {
@@ -1324,7 +1317,7 @@
         }
 
         function updateStats() {
-            const statsBar = document.getElementById('statsBar');
+            const statsBar = document.getElementById('statsView');
             const now = new Date();
 
             // Get all months from events
