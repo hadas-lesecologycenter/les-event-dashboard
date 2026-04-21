@@ -698,8 +698,8 @@
                     </select>
                 </div>
                 <div class="control-group">
-                    <label for="filterStatus">Filter by Status</label>
-                    <select id="filterStatus">
+                    <label for="filterTiming">Filter by Timing</label>
+                    <select id="filterTiming">
                         <option value="">All Events</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
@@ -1056,13 +1056,16 @@
             const stored = localStorage.getItem('lesEvents');
             if (stored) {
                 const parsed = JSON.parse(stored);
-                if (parsed.length > 0) {
+                // If empty or missing status field (stale data), reload from sample
+                if (parsed.length === 0 || !parsed[0].status) {
+                    events = getSampleData();
+                } else {
                     events = parsed.map(e => ({
                         ...e,
-                        date: new Date(e.date)
+                        date: new Date(e.date),
+                        status: e.status || 'Planning',
+                        location: e.location || ''
                     }));
-                } else {
-                    events = getSampleData();
                 }
             } else {
                 events = getSampleData();
@@ -1075,6 +1078,7 @@
 
         function setupEventListeners() {
             document.getElementById('filterOwner').addEventListener('change', applyFilters);
+            document.getElementById('filterTiming').addEventListener('change', applyFilters);
             document.getElementById('filterStatus').addEventListener('change', applyFilters);
             document.getElementById('filterCategory').addEventListener('change', applyFilters);
             document.getElementById('searchEvents').addEventListener('input', applyFilters);
@@ -1082,6 +1086,7 @@
 
         function applyFilters() {
             const owner = document.getElementById('filterOwner').value;
+            const timing = document.getElementById('filterTiming').value;
             const eventStatus = document.getElementById('filterStatus').value;
             const category = document.getElementById('filterCategory').value;
             const search = document.getElementById('searchEvents').value.toLowerCase();
@@ -1090,11 +1095,14 @@
 
             filteredEvents = events.filter(event => {
                 if (owner && event.owner !== owner) return false;
-                if (category && event.category !== category) return false;
+                if (category && !event.category.includes(category)) return false;
                 if (eventStatus && event.status !== eventStatus) return false;
+                if (timing === 'upcoming' && event.date < now) return false;
+                if (timing === 'past' && event.date >= now) return false;
 
+                const location = event.location || '';
                 if (search && !event.name.toLowerCase().includes(search) &&
-                    !event.location.toLowerCase().includes(search)) return false;
+                    !location.toLowerCase().includes(search)) return false;
 
                 return true;
             });
@@ -1161,7 +1169,7 @@
                             <div class="event-title">
                                 <h3>${event.name}</h3>
                                 <div style="margin-bottom: 8px;">
-                                    <span class="status-badge status-${event.status.toLowerCase()}">${event.status}</span>
+                                    <span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span>
                                 </div>
                                 <div class="event-meta">
                                     <span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span>
