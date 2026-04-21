@@ -1267,9 +1267,81 @@
             renderEvents();
         }
 
+        function createPieChart(data, colors, containerWidth = 200) {
+            const items = Object.entries(data).filter(([_, count]) => count > 0);
+            if (items.length === 0) return '<div style="text-align: center; color: #999;">No data</div>';
+
+            const total = items.reduce((sum, [_, count]) => sum + count, 0);
+            const radius = 60;
+            let currentAngle = -Math.PI / 2;
+
+            let pathD = '';
+            const slices = items.map(([label, count]) => {
+                const sliceAngle = (count / total) * 2 * Math.PI;
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + sliceAngle;
+
+                const x1 = 100 + radius * Math.cos(startAngle);
+                const y1 = 100 + radius * Math.sin(startAngle);
+                const x2 = 100 + radius * Math.cos(endAngle);
+                const y2 = 100 + radius * Math.sin(endAngle);
+
+                const largeArc = sliceAngle > Math.PI ? 1 : 0;
+                const path = `M 100 100 L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z`;
+
+                const midAngle = startAngle + sliceAngle / 2;
+                const labelX = 100 + (radius * 0.65) * Math.cos(midAngle);
+                const labelY = 100 + (radius * 0.65) * Math.sin(midAngle);
+
+                currentAngle = endAngle;
+
+                return { path, label, count, color: colors[label] || '#999', labelX, labelY };
+            });
+
+            const svg = `
+                <svg width="200" height="280" style="margin: 0 auto; display: block;">
+                    ${slices.map(s => `<path d="${s.path}" fill="${s.color}" stroke="white" stroke-width="2"/>`).join('')}
+                    ${slices.map(s => `<text x="${s.labelX}" y="${s.labelY}" text-anchor="middle" font-size="11" font-weight="600" fill="white" pointer-events="none">${s.count}</text>`).join('')}
+                </svg>
+                <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.85em; margin-top: 10px;">
+                    ${items.map(([label, count]) => `
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 12px; height: 12px; background: ${colors[label] || '#999'}; border-radius: 2px;"></div>
+                            <span>${label}: ${count}</span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            return svg;
+        }
+
+        function getEventsByMonth(monthKey) {
+            if (monthKey === 'All Months') return events;
+            return events.filter(e => {
+                const emonthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                return emonthKey === monthKey;
+            });
+        }
+
         function updateStats() {
             const statsBar = document.getElementById('statsBar');
             const now = new Date();
+
+            // Get all months from events
+            const allMonths = {};
+            events.forEach(e => {
+                const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                allMonths[monthKey] = true;
+            });
+            const monthOptions = ['All Months', ...Object.keys(allMonths).sort((a, b) => new Date(a) - new Date(b))];
+
+            // Get selected month from localStorage
+            let selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All Months';
+            if (!monthOptions.includes(selectedMonth)) selectedMonth = 'All Months';
+            localStorage.setItem('selectedStatsMonth', selectedMonth);
+
+            // Filter events by month
+            const filteredEventsByMonth = getEventsByMonth(selectedMonth);
 
             // Basic counts
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
@@ -1279,7 +1351,7 @@
             let confirmedCount = 0;
             let completedCount = 0;
 
-            events.forEach(e => {
+            filteredEventsByMonth.forEach(e => {
                 byOwner[e.owner]++;
                 byCategory[e.primaryCategory]++;
                 byStatus[e.status || 'Planning']++;
@@ -1291,17 +1363,23 @@
                 if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
             });
 
-            const avgProgress = events.length > 0 ? Math.round(events.reduce((sum, e) => sum + getEventProgress(e), 0) / events.length) : 0;
+            const avgProgress = filteredEventsByMonth.length > 0 ? Math.round(filteredEventsByMonth.reduce((sum, e) => sum + getEventProgress(e), 0) / filteredEventsByMonth.length) : 0;
             const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
-            const maxCount = Math.max(...Object.values(byOwner), ...Object.values(byCategory), ...Object.values(byStatus));
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
             const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
 
             statsBar.innerHTML = `
+                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Filter by Month/Year:</label>
+                    <select id="statsMonthFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
+                        ${monthOptions.map(month => `<option value="${month}" ${month === selectedMonth ? 'selected' : ''}>${month}</option>`).join('')}
+                    </select>
+                </div>
+
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
                     <div class="stat-card">
-                        <div class="stat-number">${events.length}</div>
+                        <div class="stat-number">${filteredEventsByMonth.length}</div>
                         <div class="stat-label">Total Events</div>
                     </div>
                     <div class="stat-card">
@@ -1321,45 +1399,15 @@
                 <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
-                        ${Object.entries(byOwner).map(([owner, count]) => `
-                            <div style="margin-bottom: 10px;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 4px;">
-                                    <strong>${owner}</strong>
-                                    <span>${count}</span>
-                                </div>
-                                <div style="width: 100%; height: 8px; background: #e8ddd0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; background: ${ownerColors[owner]}; width: ${(count/maxCount)*100}%;"></div>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${createPieChart(byOwner, ownerColors)}
                     </div>
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Category</div>
-                        ${Object.entries(byCategory).map(([cat, count]) => `
-                            <div style="margin-bottom: 10px;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 4px;">
-                                    <strong>${cat}</strong>
-                                    <span>${count}</span>
-                                </div>
-                                <div style="width: 100%; height: 8px; background: #e8ddd0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; background: ${categoryColors[cat]}; width: ${(count/maxCount)*100}%;"></div>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${createPieChart(byCategory, categoryColors)}
                     </div>
                     <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Status</div>
-                        ${Object.entries(byStatus).map(([status, count]) => `
-                            <div style="margin-bottom: 10px;">
-                                <div style="display: flex; justify-content: space-between; font-size: 0.85em; margin-bottom: 4px;">
-                                    <strong>${status}</strong>
-                                    <span>${count}</span>
-                                </div>
-                                <div style="width: 100%; height: 8px; background: #e8ddd0; border-radius: 4px; overflow: hidden;">
-                                    <div style="height: 100%; background: ${statusColors[status]}; width: ${(count/maxCount)*100}%;"></div>
-                                </div>
-                            </div>
-                        `).join('')}
+                        ${createPieChart(byStatus, statusColors)}
                     </div>
                 </div>
 
@@ -1370,8 +1418,10 @@
                             ${monthEntries.map(([month, count]) => {
                                 const maxMonthCount = Math.max(...Object.values(byMonth));
                                 const barHeight = (count / maxMonthCount) * 100;
+                                const isSelected = selectedMonth === 'All Months' || selectedMonth === month;
+                                const opacity = isSelected ? 1 : 0.4;
                                 return `
-                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 50px;">
+                                    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 50px; opacity: ${opacity};">
                                         <div style="font-size: 0.8em; color: #666; font-weight: 500; height: 16px;">${count}</div>
                                         <div style="width: 40px; background: #1d5432; border-radius: 4px; height: ${Math.max(barHeight, 30)}px;"></div>
                                         <div style="font-size: 0.8em; text-align: center; color: #666; font-weight: 500;">${month}</div>
@@ -1382,6 +1432,12 @@
                     </div>
                 </div>
             `;
+
+            // Add event listener to month filter
+            document.getElementById('statsMonthFilter').addEventListener('change', (e) => {
+                localStorage.setItem('selectedStatsMonth', e.target.value);
+                updateStats();
+            });
         }
 
         function getEventProgress(event) {
