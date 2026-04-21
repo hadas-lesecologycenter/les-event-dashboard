@@ -1114,14 +1114,25 @@
                 if (parsed.length === 0 || !parsed[0].status) {
                     events = getSampleData();
                 } else {
-                    events = parsed.map(e => ({
-                        ...e,
-                        date: new Date(e.date),
-                        status: e.status || 'Planning',
-                        location: e.location || '',
-                        primaryCategory: e.primaryCategory || e.category || 'Outreach',
-                        secondaryCategory: e.secondaryCategory || ''
-                    }));
+                    events = parsed.map(e => {
+                        let primary = e.primaryCategory || '';
+                        let secondary = e.secondaryCategory || '';
+
+                        if (!primary && e.category) {
+                            const parts = e.category.split(',').map(c => c.trim());
+                            primary = parts[0] || 'Outreach';
+                            secondary = parts[1] || '';
+                        }
+
+                        return {
+                            ...e,
+                            date: new Date(e.date),
+                            status: e.status || 'Planning',
+                            location: e.location || '',
+                            primaryCategory: primary || 'Outreach',
+                            secondaryCategory: secondary
+                        };
+                    });
                 }
             } else {
                 events = getSampleData();
