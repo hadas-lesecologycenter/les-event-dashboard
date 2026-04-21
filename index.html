@@ -768,24 +768,7 @@
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add Event</button>
         </div>
 
-        <div class="stats-bar" id="statsBar">
-            <div class="stat-card">
-                <div class="stat-number" id="totalEvents">0</div>
-                <div class="stat-label">Total Events</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="upcomingEvents">0</div>
-                <div class="stat-label">Upcoming</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="completedEvents">0</div>
-                <div class="stat-label">Completed</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number" id="avgProgress">0%</div>
-                <div class="stat-label">Avg Progress</div>
-            </div>
-        </div>
+        <div class="stats-bar" id="statsBar"></div>
 
         <div id="listView" class="list-view-container">
             <div class="controls">
@@ -1286,15 +1269,74 @@
         }
 
         function updateStats() {
+            const statsBar = document.getElementById('statsBar');
             const now = new Date();
-            const upcoming = events.filter(e => e.date >= now).length;
-            const completed = events.filter(e => (e.report === 'Yes' || e.report === true) && (e.treeMap === 'Yes' || e.treeMap === true)).length;
-            const avgProgress = events.length > 0 ? Math.round(events.reduce((sum, e) => sum + getEventProgress(e), 0) / events.length) : 0;
 
-            document.getElementById('totalEvents').textContent = events.length;
-            document.getElementById('upcomingEvents').textContent = upcoming;
-            document.getElementById('completedEvents').textContent = completed;
-            document.getElementById('avgProgress').textContent = avgProgress + '%';
+            // Basic counts
+            const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
+            const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
+            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
+            const byMonth = {};
+            let confirmedCount = 0;
+            let completedCount = 0;
+
+            events.forEach(e => {
+                byOwner[e.owner]++;
+                byCategory[e.primaryCategory]++;
+                byStatus[e.status || 'Planning']++;
+
+                const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
+
+                if (e.status === 'Confirmed') confirmedCount++;
+                if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
+            });
+
+            const avgProgress = events.length > 0 ? Math.round(events.reduce((sum, e) => sum + getEventProgress(e), 0) / events.length) : 0;
+            const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+
+            statsBar.innerHTML = `
+                <div style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div class="stat-card">
+                        <div class="stat-number">${events.length}</div>
+                        <div class="stat-label">Total Events</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${confirmedCount}</div>
+                        <div class="stat-label">Confirmed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${completedCount}</div>
+                        <div class="stat-label">Fully Completed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${avgProgress}%</div>
+                        <div class="stat-label">Avg Progress</div>
+                    </div>
+                </div>
+
+                <div style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 10px;">
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 10px;">By Owner</div>
+                        ${Object.entries(byOwner).map(([owner, count]) => `<div style="font-size: 0.9em; margin: 5px 0;"><strong>${owner}:</strong> ${count} events</div>`).join('')}
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 10px;">By Category</div>
+                        ${Object.entries(byCategory).map(([cat, count]) => `<div style="font-size: 0.9em; margin: 5px 0;"><strong>${cat}:</strong> ${count} events</div>`).join('')}
+                    </div>
+                    <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 10px;">By Status</div>
+                        ${Object.entries(byStatus).map(([status, count]) => `<div style="font-size: 0.9em; margin: 5px 0;"><strong>${status}:</strong> ${count} events</div>`).join('')}
+                    </div>
+                </div>
+
+                <div style="grid-column: 1/-1; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <div style="font-weight: 600; color: #1d5432; margin-bottom: 10px;">Events by Month</div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px;">
+                        ${monthEntries.map(([month, count]) => `<div style="text-align: center; padding: 8px; background: #f9f7f2; border-radius: 6px;"><div style="font-weight: 600; color: #1d5432;">${count}</div><div style="font-size: 0.85em; color: #666;">${month}</div></div>`).join('')}
+                    </div>
+                </div>
+            `;
         }
 
         function getEventProgress(event) {
