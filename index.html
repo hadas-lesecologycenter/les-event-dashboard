@@ -883,6 +883,200 @@
                 padding: 20px;
             }
         }
+
+        .brief-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 3000;
+            overflow-y: auto;
+        }
+
+        .brief-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brief-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .brief-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: white;
+        }
+
+        .brief-header h2 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #1d5432;
+        }
+
+        .brief-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .brief-close:hover {
+            color: #333;
+        }
+
+        .brief-body {
+            padding: 24px;
+        }
+
+        .brief-section {
+            margin-bottom: 32px;
+        }
+
+        .brief-section h3 {
+            font-size: 1.2em;
+            color: #1d5432;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #10b981;
+            padding-bottom: 8px;
+        }
+
+        .brief-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .brief-grid.full {
+            grid-template-columns: 1fr;
+        }
+
+        .brief-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .brief-field label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 6px;
+            font-size: 0.9em;
+        }
+
+        .brief-field input,
+        .brief-field textarea,
+        .brief-field select {
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95em;
+        }
+
+        .brief-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .brief-field input:focus,
+        .brief-field textarea:focus,
+        .brief-field select:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+
+        .brief-checkbox-group {
+            margin-top: 12px;
+        }
+
+        .brief-checkbox-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .brief-checkbox-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #10b981;
+        }
+
+        .brief-checkbox-item label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+            margin-bottom: 0;
+        }
+
+        .brief-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
+            position: sticky;
+            bottom: 0;
+            background: white;
+        }
+
+        .brief-btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .brief-btn.draft {
+            background: #f3f4f6;
+            color: #333;
+        }
+
+        .brief-btn.draft:hover {
+            background: #e5e7eb;
+        }
+
+        .brief-btn.complete {
+            background: #10b981;
+            color: white;
+        }
+
+        .brief-btn.complete:hover {
+            background: #059669;
+        }
+
+        .draft-link {
+            display: inline-block;
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 0.85em;
+            margin-top: 4px;
+        }
+
+        .draft-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -1063,11 +1257,300 @@
         </div>
     </div>
 
+    <div id="briefModal" class="brief-modal">
+        <div class="brief-content">
+            <div class="brief-header">
+                <h2>Event Brief</h2>
+                <button class="brief-close" id="closeBriefModal">&times;</button>
+            </div>
+            <form id="briefForm">
+                <div class="brief-body">
+                    <!-- Event Overview -->
+                    <div class="brief-section">
+                        <h3>🌳 Event Overview</h3>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>Event Name (Internal)</label>
+                                <input type="text" name="eventNameInternal" placeholder="e.g., STC with Girl Scouts">
+                            </div>
+                            <div class="brief-field">
+                                <label>Event Lead</label>
+                                <input type="text" name="eventLead">
+                            </div>
+                        </div>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>On-Site Support</label>
+                                <input type="text" name="onSiteSupport">
+                            </div>
+                            <div class="brief-field">
+                                <label>Principal Program Category</label>
+                                <select name="principalCategory">
+                                    <option value="">Select</option>
+                                    <option value="Stewardship">Stewardship</option>
+                                    <option value="Education">Education</option>
+                                    <option value="Outreach">Outreach</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>Format</label>
+                                <select name="format">
+                                    <option value="">Select</option>
+                                    <option value="In-person">In-person</option>
+                                    <option value="Virtual">Virtual</option>
+                                    <option value="Hybrid">Hybrid</option>
+                                </select>
+                            </div>
+                            <div class="brief-field">
+                                <label>Date</label>
+                                <input type="date" name="briefDate">
+                            </div>
+                        </div>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>Time</label>
+                                <input type="text" name="time" placeholder="e.g., 2-4p">
+                            </div>
+                            <div class="brief-field">
+                                <label>Location/Venue</label>
+                                <input type="text" name="location">
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Partner/s (We are facilitating a public program)</label>
+                                <input type="text" name="partners" placeholder="e.g., CM Epstein's office">
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Client/s (We are facilitating a private program)</label>
+                                <input type="text" name="clients" placeholder="e.g., Girl Scouts">
+                            </div>
+                        </div>
+                        <div class="brief-field">
+                            <label>Primary Audience</label>
+                            <div class="brief-checkbox-group">
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="audience" value="General public">
+                                    <label>General public</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="audience" value="Volunteers">
+                                    <label>Volunteers</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="audience" value="Families">
+                                    <label>Families</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="audience" value="Students">
+                                    <label>Students</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="audience" value="CB participants">
+                                    <label>CB participants</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="audience" value="Citizen pruners">
+                                    <label>Citizen pruners</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impact -->
+                    <div class="brief-section">
+                        <h3>📊 Impact</h3>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Goals</label>
+                                <textarea name="goals" placeholder="e.g., Demonstrate proper STC and engage local community members."></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>Expected Attendance</label>
+                                <input type="text" name="expectedAttendance" placeholder="e.g., 10 students and 4 staff people">
+                            </div>
+                            <div class="brief-field">
+                                <label>Success Metrics</label>
+                                <textarea name="successMetrics" placeholder="e.g., Engage 10+ volunteers in STC, Steward 10+ trees"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Comms -->
+                    <div class="brief-section">
+                        <h3>💬 Comms</h3>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Event Name (External)</label>
+                                <input type="text" name="eventNameExternal" placeholder="e.g., Spring into Tree Care!">
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Description (50-150 words)</label>
+                                <textarea name="description" placeholder="Join us for..."></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Visual / Image</label>
+                                <input type="text" name="visual" placeholder="Link to image from Google Photos library">
+                            </div>
+                        </div>
+                        <div class="brief-field">
+                            <label>Marketing Channels</label>
+                            <div class="brief-checkbox-group">
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Org email">
+                                    <label>Org's email (monthly, first week of the month)</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Volunteer email">
+                                    <label>Volunteer email (monthly, mid-month)</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Instagram Post">
+                                    <label>Instagram Post</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Instagram Reel">
+                                    <label>Instagram Reel</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Instagram Story">
+                                    <label>Instagram Story</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="TikTok">
+                                    <label>TikTok</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Facebook">
+                                    <label>Facebook</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Partner cross-promotion">
+                                    <label>Partner cross-promotion</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Event listicles">
+                                    <label>Event listicles (e.g., the Skint)</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="checkbox" name="marketingChannels" value="Flyering">
+                                    <label>Flyering (e.g., at Partybus)</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Eventbrite Link</label>
+                                <input type="url" name="eventbriteLink" placeholder="https://www.eventbrite.com/...">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Logistics -->
+                    <div class="brief-section">
+                        <h3>📦 Logistics</h3>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Vendors (Names and contacts)</label>
+                                <textarea name="vendors" placeholder=""></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Facilities</label>
+                                <textarea name="facilities" placeholder="e.g., Public bathroom at Seward Park, Storage for belongings"></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Supplies (What we are providing to participants, include quantities)</label>
+                                <textarea name="supplies" placeholder="e.g., Water (x1 cooler), Sunscreen (x2 tubes)"></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Equipment</label>
+                                <textarea name="equipment" placeholder="e.g., From STC team: Trowels (x20), From LESEC: tablecloths (x2)"></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>Compost - Qty</label>
+                                <input type="text" name="compostQty" placeholder="e.g., 5 bags">
+                            </div>
+                            <div class="brief-field">
+                                <label>Compost - Process</label>
+                                <input type="text" name="compostProcess" placeholder="How and when are we getting it?">
+                            </div>
+                        </div>
+                        <div class="brief-grid">
+                            <div class="brief-field">
+                                <label>Mulch - Qty</label>
+                                <input type="text" name="mulchQty" placeholder="e.g., 10 bags">
+                            </div>
+                            <div class="brief-field">
+                                <label>Mulch - Process</label>
+                                <input type="text" name="mulchProcess" placeholder="How and when are we getting it?">
+                            </div>
+                        </div>
+                        <div class="brief-field">
+                            <label>Expenses</label>
+                            <div class="brief-checkbox-group">
+                                <div class="brief-checkbox-item">
+                                    <input type="radio" name="hasExpenses" value="yes">
+                                    <label>Yes</label>
+                                </div>
+                                <div class="brief-checkbox-item">
+                                    <input type="radio" name="hasExpenses" value="no">
+                                    <label>No</label>
+                                </div>
+                            </div>
+                            <textarea name="expenses" placeholder="If yes, describe (e.g., $200 for food from Ayat, Budget category: STC meals)" style="margin-top: 10px;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Run of Show & Access Notes -->
+                    <div class="brief-section">
+                        <h3>📋 Run of Show & Access Notes</h3>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Run of Show (Timeline of activities)</label>
+                                <textarea name="runOfShow" placeholder="e.g., 2:00p - Welcome & icebreaker, 2:15p - Introduce STC..."></textarea>
+                            </div>
+                        </div>
+                        <div class="brief-grid full">
+                            <div class="brief-field">
+                                <label>Access Notes (Accessibility, transportation, parking)</label>
+                                <textarea name="accessNotes" placeholder="e.g., Accessible by subway, Free parking, Wheelchair accessible"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="brief-buttons">
+                    <button type="button" class="brief-btn draft" id="saveDraftBtn">Save as Draft</button>
+                    <button type="button" class="brief-btn complete" id="completeBriefBtn">Complete Brief</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let events = [];
         let filteredEvents = [];
         let currentMonth = new Date();
         let selectedDate = null;
+        let currentBriefEvent = null;
 
         const CATEGORY_COLORS = {
             'Outreach': '#f59e0b',
@@ -1340,6 +1823,14 @@
             document.getElementById('eventModal').addEventListener('click', (e) => {
                 if (e.target === document.getElementById('eventModal')) closeEventModal();
             });
+
+            // Brief modal event listeners
+            document.getElementById('closeBriefModal').addEventListener('click', closeBriefModal);
+            document.getElementById('briefModal').addEventListener('click', (e) => {
+                if (e.target === document.getElementById('briefModal')) closeBriefModal();
+            });
+            document.getElementById('saveDraftBtn').addEventListener('click', saveBriefDraft);
+            document.getElementById('completeBriefBtn').addEventListener('click', completeBrief);
 
             document.getElementById('eventForm').addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -1772,6 +2263,13 @@
                 const value = event[task.key];
                 const isNA = value === 'N/A';
                 const isChecked = value === 'Yes' || value === true;
+                const hasDraft = task.key === 'eventbrite' && event.eventbriefDraft && !event.eventbriefCompleted;
+                const isCompleted = task.key === 'eventbrite' && event.eventbriefCompleted;
+
+                let draftLinkHTML = '';
+                if (hasDraft) {
+                    draftLinkHTML = `<a href="#" class="draft-link" data-event-id="${event.id}" onclick="event.preventDefault(); openBriefModal(events.find(e => e.id === ${event.id}));">📝 View Draft</a>`;
+                }
 
                 return `
                     <div class="task ${isNA ? 'na' : ''}">
@@ -1784,6 +2282,7 @@
                             ${isNA ? 'disabled' : ''}
                         >
                         <label for="task-${event.id}-${task.key}">${task.label}</label>
+                        ${draftLinkHTML}
                     </div>
                 `;
             }).join('') || '';
@@ -1831,12 +2330,19 @@
 
             const event = events.find(e => e.id === eventId);
             if (event) {
+                // Special handling for eventbrite task - open brief modal instead
+                if (taskKey === 'eventbrite' && isChecked) {
+                    e.target.checked = false; // Revert checkbox since we're handling it specially
+                    openBriefModal(event);
+                    return;
+                }
+
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
 
                 if (isChecked) {
-                    // Open Google Calendar for calendar-related tasks
-                    if (taskKey === 'calendar' || taskKey === 'eventbrite') {
+                    // Open Google Calendar for calendar task
+                    if (taskKey === 'calendar') {
                         openGoogleCalendar(event);
                     }
 
@@ -1856,6 +2362,135 @@
                     applyFilters();
                 }
             }
+        }
+
+        function openBriefModal(event) {
+            const briefForm = document.getElementById('briefForm');
+            currentBriefEvent = event;
+
+            // Pre-populate with event data
+            briefForm.eventNameInternal.value = event.name;
+            briefForm.eventLead.value = event.owner || '';
+            briefForm.briefDate.value = event.date.toISOString().split('T')[0];
+            briefForm.time.value = event.time || '';
+            briefForm.location.value = event.location || '';
+            briefForm.principalCategory.value = event.primaryCategory || '';
+
+            // Load draft if it exists
+            if (event.eventbriefDraft) {
+                const draft = event.eventbriefDraft;
+                Object.keys(draft).forEach(key => {
+                    const input = briefForm.elements[key];
+                    if (input) {
+                        if (input.type === 'checkbox' || input.type === 'radio') {
+                            if (Array.isArray(draft[key])) {
+                                draft[key].forEach(val => {
+                                    const elem = briefForm.querySelector(`[name="${key}"][value="${val}"]`);
+                                    if (elem) elem.checked = true;
+                                });
+                            } else {
+                                const elem = briefForm.querySelector(`[name="${key}"][value="${draft[key]}"]`);
+                                if (elem) elem.checked = true;
+                            }
+                        } else {
+                            input.value = draft[key] || '';
+                        }
+                    }
+                });
+            }
+
+            document.getElementById('briefModal').classList.add('active');
+        }
+
+        function closeBriefModal() {
+            document.getElementById('briefModal').classList.remove('active');
+            document.getElementById('briefForm').reset();
+            currentBriefEvent = null;
+        }
+
+        function saveBriefDraft() {
+            if (!currentBriefEvent) return;
+
+            const briefForm = document.getElementById('briefForm');
+            const draft = {};
+
+            // Collect form data
+            for (let elem of briefForm.elements) {
+                if (elem.name) {
+                    if (elem.type === 'checkbox' || elem.type === 'radio') {
+                        if (elem.type === 'checkbox' && elem.checked) {
+                            if (!draft[elem.name]) draft[elem.name] = [];
+                            draft[elem.name].push(elem.value);
+                        } else if (elem.type === 'radio' && elem.checked) {
+                            draft[elem.name] = elem.value;
+                        }
+                    } else if (elem.value) {
+                        draft[elem.name] = elem.value;
+                    }
+                }
+            }
+
+            // Store draft in event
+            currentBriefEvent.eventbriefDraft = draft;
+            currentBriefEvent.eventbriefDraftDate = new Date().toISOString();
+            saveEvents();
+
+            // Show confirmation
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            toast.textContent = '💾 Event brief saved as draft';
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 2000);
+
+            closeBriefModal();
+            applyFilters();
+        }
+
+        function completeBrief() {
+            if (!currentBriefEvent) return;
+
+            const briefForm = document.getElementById('briefForm');
+            const draft = {};
+
+            // Collect form data
+            for (let elem of briefForm.elements) {
+                if (elem.name) {
+                    if (elem.type === 'checkbox' || elem.type === 'radio') {
+                        if (elem.type === 'checkbox' && elem.checked) {
+                            if (!draft[elem.name]) draft[elem.name] = [];
+                            draft[elem.name].push(elem.value);
+                        } else if (elem.type === 'radio' && elem.checked) {
+                            draft[elem.name] = elem.value;
+                        }
+                    } else if (elem.value) {
+                        draft[elem.name] = elem.value;
+                    }
+                }
+            }
+
+            // Save completed brief
+            currentBriefEvent.eventbriefDraft = draft;
+            currentBriefEvent.eventbriefDraftDate = new Date().toISOString();
+            currentBriefEvent.eventbriefCompleted = true;
+            currentBriefEvent.eventbriefCompletedDate = new Date().toISOString();
+            currentBriefEvent.eventbrite = 'Yes'; // Mark task as complete
+            saveEvents();
+
+            // Show confirmation
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            toast.textContent = '✓ Event brief completed';
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 2000);
+
+            closeBriefModal();
+            applyFilters();
         }
 
         function renderOpenTasks() {
