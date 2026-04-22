@@ -986,11 +986,11 @@
             </div>
             <form id="eventForm">
                 <div class="form-group">
-                    <label for="eventName">Event Name</label>
+                    <label for="eventName">Event Name <span style="color:#ef4444">*</span></label>
                     <input type="text" id="eventName" required placeholder="e.g., Spring Tree Care">
                 </div>
                 <div class="form-group">
-                    <label for="eventDate">Date</label>
+                    <label for="eventDate">Date <span style="color:#ef4444">*</span></label>
                     <input type="date" id="eventDate" required>
                 </div>
                 <div class="form-group">
@@ -1002,7 +1002,7 @@
                     <input type="time" id="eventEndTime">
                 </div>
                 <div class="form-group">
-                    <label for="eventOwner">Owner</label>
+                    <label for="eventOwner">Owner <span style="color:#ef4444">*</span></label>
                     <select id="eventOwner" required>
                         <option value="">Select Owner</option>
                         <option value="Maddy">Maddy</option>
@@ -1015,7 +1015,7 @@
                     <input type="text" id="eventLocation" placeholder="e.g., Tompkins Square Park">
                 </div>
                 <div class="form-group">
-                    <label for="eventPrimaryCategory">Primary Category</label>
+                    <label for="eventPrimaryCategory">Category <span style="color:#ef4444">*</span></label>
                     <select id="eventPrimaryCategory" required>
                         <option value="">Select Category</option>
                         <option value="Outreach">Outreach</option>
@@ -1024,16 +1024,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="eventSecondaryCategory">Secondary Category (Optional)</label>
-                    <select id="eventSecondaryCategory">
-                        <option value="">None</option>
-                        <option value="Outreach">Outreach</option>
-                        <option value="Education">Education</option>
-                        <option value="Stewardship">Stewardship</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="eventType">Event Type</label>
+                    <label for="eventType">Event Type <span style="color:#ef4444">*</span></label>
                     <select id="eventType" required>
                         <option value="">Select Event Type</option>
                         <option value="FIELD TRIP">🏫 FIELD TRIP</option>
@@ -1044,7 +1035,7 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="eventStatus">Status</label>
+                    <label for="eventStatus">Status <span style="color:#ef4444">*</span></label>
                     <select id="eventStatus" required>
                         <option value="Planning">Planning</option>
                         <option value="Confirmed">Confirmed</option>
@@ -1344,9 +1335,6 @@
                 e.preventDefault();
 
                 const primaryCategory = document.getElementById('eventPrimaryCategory').value;
-                const secondaryCategory = document.getElementById('eventSecondaryCategory').value;
-                const category = secondaryCategory ? `${primaryCategory}, ${secondaryCategory}` : primaryCategory;
-
                 const newEvent = {
                     id: Math.max(...events.map(e => e.id), 0) + 1,
                     name: document.getElementById('eventName').value,
@@ -1356,8 +1344,8 @@
                     endTime: document.getElementById('eventEndTime').value || '',
                     location: document.getElementById('eventLocation').value,
                     primaryCategory: primaryCategory,
-                    secondaryCategory: secondaryCategory,
-                    category: category,
+                    secondaryCategory: '',
+                    category: primaryCategory,
                     type: document.getElementById('eventType').value,
                     status: document.getElementById('eventStatus').value || 'Planning',
                     brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No',
