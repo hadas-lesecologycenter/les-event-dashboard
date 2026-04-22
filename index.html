@@ -1079,7 +1079,7 @@
             'FIELD TRIP': {
                 setup: [
                     { key: 'brief', label: 'Create event brief', daysOffset: 0 },
-                    { key: 'eventbrite', label: 'Add to LES events calendar', daysOffset: 0 },
+                    { key: 'calendar', label: 'Add to LES events calendar', daysOffset: 0 },
                     { key: 'comms', label: 'Confirm date/time/location with coordinator', daysOffset: 0 }
                 ],
                 execution: [
@@ -1098,7 +1098,7 @@
             'PRIVATE VOLUNTEER EVENT': {
                 setup: [
                     { key: 'brief', label: 'Create event brief', daysOffset: 0 },
-                    { key: 'eventbrite', label: 'Add to LES events calendar', daysOffset: 0 },
+                    { key: 'calendar', label: 'Add to LES events calendar', daysOffset: 0 },
                     { key: 'comms', label: 'Confirm date/time/location with coordinator', daysOffset: 0 },
                     { key: 'volunteer', label: 'Add to volunteer stewardship spreadsheet', daysOffset: 0 }
                 ],
@@ -1117,6 +1117,7 @@
             },
             'PUBLIC VOLUNTEER EVENT': {
                 setup: [
+                    { key: 'calendar', label: 'Add to LES events calendar', daysOffset: 0 },
                     { key: 'eventbrite', label: 'Create event brief & Eventbrite page', daysOffset: -30 },
                     { key: 'comms', label: 'Submit comms request (social/newsletter/website)', daysOffset: -30 }
                 ],
@@ -1135,6 +1136,7 @@
             },
             'PUBLIC PROGRAM': {
                 setup: [
+                    { key: 'calendar', label: 'Add to LES events calendar', daysOffset: 0 },
                     { key: 'eventbrite', label: 'Create event brief & Eventbrite page', daysOffset: -30 },
                     { key: 'comms', label: 'Submit comms request (social/newsletter/website)', daysOffset: -30 }
                 ],
@@ -1150,7 +1152,7 @@
             },
             'TABLING': {
                 setup: [
-                    { key: 'eventbrite', label: 'Add to LES events calendar', daysOffset: 0 }
+                    { key: 'calendar', label: 'Add to LES events calendar', daysOffset: 0 }
                 ],
                 execution: [
                     { key: 'equipment', label: 'Reserve equipment', daysOffset: -1 }
