@@ -2316,6 +2316,10 @@
                     if (taskKey === 'eventbrite') {
                         openEventbriteForm(event);
                     }
+                    // Open Compost Sheet for compost task
+                    if (taskKey === 'compost') {
+                        openCompostSheet(event);
+                    }
 
                     // Show completion feedback
                     const taskLabel = e.target.nextElementSibling.textContent;
@@ -2503,6 +2507,37 @@
 
                 console.error('Eventbrite creation error:', error);
             });
+        }
+
+        function openCompostSheet(event) {
+            // Open Google Sheet
+            const sheetUrl = 'https://docs.google.com/spreadsheets/d/1JI9boDjjxKQ8JarExC9wk6CZdwtO3K0wk7vl3ee4s8U/edit?usp=sharing';
+            window.open(sheetUrl, 'CompostSheet', 'width=1200,height=800');
+
+            // Format date and time for display
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = monthNames[event.date.getMonth()];
+            const day = event.date.getDate();
+            const year = event.date.getFullYear();
+            const eventDateStr = `${month} ${day}, ${year}`;
+
+            // Show notification with pre-fill values
+            const infoText = `
+Date/Time: ${eventDateStr} at ${event.time || 'TBD'}
+Event Type: STC
+Location: ${event.location || 'TBD'}
+Program: ${event.name}
+Primary LESEC Contact: ${event.owner}
+            `;
+
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #8b5cf6; color: white; padding: 16px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 320px; white-space: pre-line; font-size: 0.9em;';
+            toast.textContent = `🌱 Compost Sheet opened\n\nFill in:\n${infoText}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 7000);
         }
 
         function saveBriefDraft() {
