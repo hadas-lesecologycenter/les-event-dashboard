@@ -2431,32 +2431,76 @@
         }
 
         function openEventbriteForm(event) {
-            // Open Eventbrite create event page
-            window.open('https://www.eventbrite.com/create/event/', `Eventbrite - ${event.name}`, 'width=1200,height=900');
+            // Show loading toast
+            const loadingToast = document.createElement('div');
+            loadingToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            loadingToast.textContent = '⏳ Creating Eventbrite event...';
+            loadingToast.id = 'eventbriteLoadingToast';
+            document.body.appendChild(loadingToast);
 
-            // Show notification with event details to fill in
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-            const month = monthNames[event.date.getMonth()];
-            const day = event.date.getDate();
-            const year = event.date.getFullYear();
-            const eventDateStr = `${month} ${day}, ${year}`;
+            // Prepare event data for API
+            const eventData = {
+                name: event.name,
+                description: event.eventbriefDraft?.description || `${event.name} - ${event.primaryCategory}`,
+                date: event.date.toISOString().split('T')[0],
+                startTime: event.time || '09:00',
+                endTime: event.endTime || '10:00',
+                location: event.location || '',
+                category: event.primaryCategory
+            };
 
-            const details = `
-Event Name: ${event.name}
-Date: ${eventDateStr}
-Time: ${event.time || 'TBD'}
-Location: ${event.location || 'TBD'}
-Category: ${event.primaryCategory}
-            `;
+            // Call backend API to create Eventbrite event
+            const apiUrl = process.env.NODE_ENV === 'production'
+                ? 'https://your-backend-url.com/api/create-eventbrite-event'
+                : 'http://localhost:3000/api/create-eventbrite-event';
 
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #f59e0b; color: white; padding: 16px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 300px; white-space: pre-line; font-size: 0.9em;';
-            toast.textContent = `🎫 Eventbrite page opened\n\nFill in:\n${details}`;
-            document.body.appendChild(toast);
+            fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(eventData)
+            })
+            .then(res => res.json())
+            .then(data => {
+                const loadingToastEl = document.getElementById('eventbriteLoadingToast');
+                if (loadingToastEl) loadingToastEl.remove();
 
-            setTimeout(() => {
-                if (toast.parentNode) toast.remove();
-            }, 6000);
+                if (data.success) {
+                    // Store the Eventbrite URL/ID in the event
+                    event.eventbriteUrl = data.eventUrl;
+                    event.eventbriteId = data.eventId;
+                    saveEvents();
+
+                    // Show success toast with link
+                    const successToast = document.createElement('div');
+                    successToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 16px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer; max-width: 350px;';
+                    successToast.innerHTML = `✅ Event created!<br><a href="${data.eventUrl}" target="_blank" style="color: white; text-decoration: underline; font-size: 0.9em;">Open on Eventbrite</a>`;
+                    successToast.onclick = () => window.open(data.eventUrl, '_blank');
+                    document.body.appendChild(successToast);
+
+                    setTimeout(() => {
+                        if (successToast.parentNode) successToast.remove();
+                    }, 8000);
+
+                    applyFilters();
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+            })
+            .catch(error => {
+                const loadingToastEl = document.getElementById('eventbriteLoadingToast');
+                if (loadingToastEl) loadingToastEl.remove();
+
+                const errorToast = document.createElement('div');
+                errorToast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 16px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 350px; white-space: pre-wrap;';
+                errorToast.textContent = `❌ Failed to create event\n\n${error.message}`;
+                document.body.appendChild(errorToast);
+
+                setTimeout(() => {
+                    if (errorToast.parentNode) errorToast.remove();
+                }, 5000);
+
+                console.error('Eventbrite creation error:', error);
+            });
         }
 
         function saveBriefDraft() {
