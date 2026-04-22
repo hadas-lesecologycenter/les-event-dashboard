@@ -2450,9 +2450,11 @@
             };
 
             // Call backend API to create Eventbrite event
-            const apiUrl = process.env.NODE_ENV === 'production'
-                ? 'https://your-backend-url.com/api/create-eventbrite-event'
-                : 'http://localhost:3000/api/create-eventbrite-event';
+            // Vercel auto-deploys to your domain at /api/create-eventbrite-event
+            const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiUrl = isDev
+                ? 'http://localhost:3000/api/create-eventbrite-event'
+                : `${window.location.origin}/api/create-eventbrite-event`;
 
             fetch(apiUrl, {
                 method: 'POST',

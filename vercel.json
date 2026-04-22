@@ -1,0 +1,7 @@
+{
+  "buildCommand": "npm install",
+  "env": {
+    "EVENTBRITE_API_KEY": "@eventbrite_api_key",
+    "EVENTBRITE_ORG_ID": "@eventbrite_org_id"
+  }
+}
