@@ -769,49 +769,49 @@
         </div>
 
         <div id="listView" class="list-view-container">
-            <div class="controls">
-                <div class="control-group">
-                    <label>Filter by Owner</label>
-                    <div class="checkbox-group" id="filterOwner">
-                        <label><input type="checkbox" value="Maddy"> Maddy</label>
-                        <label><input type="checkbox" value="Hadas"> Hadas</label>
-                        <label><input type="checkbox" value="Gretel"> Gretel</label>
+            <div class="controls" style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
+                <div>
+                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Owner:</label>
+                    <div class="checkbox-group" id="filterOwner" style="border: none; padding: 0; background: none; display: flex; gap: 12px; flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Maddy"> Maddy</label>
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Hadas"> Hadas</label>
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Gretel"> Gretel</label>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label for="filterTiming">Filter by Timing</label>
-                    <select id="filterTiming">
+                <div>
+                    <label for="filterTiming" style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Timing:</label>
+                    <select id="filterTiming" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
                         <option value="">All Events</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
                     </select>
                 </div>
-                <div class="control-group">
-                    <label>Filter by Category</label>
-                    <div class="checkbox-group" id="filterCategory">
-                        <label><input type="checkbox" value="Outreach"> Outreach</label>
-                        <label><input type="checkbox" value="Education"> Education</label>
-                        <label><input type="checkbox" value="Stewardship"> Stewardship</label>
+                <div>
+                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Category:</label>
+                    <div class="checkbox-group" id="filterCategory" style="border: none; padding: 0; background: none; display: flex; gap: 12px; flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Outreach"> Outreach</label>
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Education"> Education</label>
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Stewardship"> Stewardship</label>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label>Filter by Status</label>
-                    <div class="checkbox-group" id="filterStatus">
-                        <label><input type="checkbox" value="Planning"> Planning</label>
-                        <label><input type="checkbox" value="Hold"> Hold</label>
-                        <label><input type="checkbox" value="Confirmed"> Confirmed</label>
+                <div>
+                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Status:</label>
+                    <div class="checkbox-group" id="filterStatus" style="border: none; padding: 0; background: none; display: flex; gap: 12px; flex-direction: row;">
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Planning"> Planning</label>
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Hold"> Hold</label>
+                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Confirmed"> Confirmed</label>
                     </div>
                 </div>
-                <div class="control-group">
-                    <label for="sortOrder">Sort Events</label>
-                    <select id="sortOrder">
+                <div>
+                    <label for="sortOrder" style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Sort:</label>
+                    <select id="sortOrder" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
                         <option value="earliest">Earliest to Latest</option>
                         <option value="latest">Latest to Earliest</option>
                     </select>
                 </div>
-                <div class="control-group">
-                    <label for="searchEvents">Search Events</label>
-                    <input type="text" id="searchEvents" placeholder="Search by name or location...">
+                <div style="flex: 1; min-width: 200px;">
+                    <label for="searchEvents" style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Search:</label>
+                    <input type="text" id="searchEvents" placeholder="Event name or location..." style="width: 100%; padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9em;">
                 </div>
             </div>
 
