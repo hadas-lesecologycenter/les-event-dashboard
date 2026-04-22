@@ -1786,10 +1786,16 @@
 
                 const primaryCategory = document.getElementById('eventPrimaryCategory').value;
                 const editingId = document.getElementById('eventForm').dataset.editingId;
+
+                // Parse date string to avoid timezone offset issue
+                const dateStr = document.getElementById('eventDate').value;
+                const [year, month, day] = dateStr.split('-');
+                const eventDate = new Date(year, month - 1, day);
+
                 const updatedEvent = {
                     name: document.getElementById('eventName').value,
                     owner: document.getElementById('eventOwner').value,
-                    date: new Date(document.getElementById('eventDate').value),
+                    date: eventDate,
                     time: document.getElementById('eventTime').value || '12:00 PM',
                     endTime: document.getElementById('eventEndTime').value || '',
                     location: document.getElementById('eventLocation').value,
