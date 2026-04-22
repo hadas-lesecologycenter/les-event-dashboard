@@ -1716,6 +1716,7 @@
             document.getElementById('eventModal').classList.remove('active');
             document.getElementById('eventForm').reset();
             document.getElementById('eventForm').style.display = 'block';
+            delete document.getElementById('eventForm').dataset.editingId;
             const details = document.getElementById('eventDetails');
             if (details) details.remove();
             document.querySelector('.modal-header h3').textContent = 'Create New Event';
@@ -1784,8 +1785,8 @@
                 e.preventDefault();
 
                 const primaryCategory = document.getElementById('eventPrimaryCategory').value;
-                const newEvent = {
-                    id: Math.max(...events.map(e => e.id), 0) + 1,
+                const editingId = document.getElementById('eventForm').dataset.editingId;
+                const updatedEvent = {
                     name: document.getElementById('eventName').value,
                     owner: document.getElementById('eventOwner').value,
                     date: new Date(document.getElementById('eventDate').value),
@@ -1796,14 +1797,29 @@
                     secondaryCategory: document.getElementById('eventSecondaryCategory').value,
                     category: document.getElementById('eventSecondaryCategory').value ? `${primaryCategory}, ${document.getElementById('eventSecondaryCategory').value}` : primaryCategory,
                     type: document.getElementById('eventType').value,
-                    status: document.getElementById('eventStatus').value || 'Planning',
-                    brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No',
-                    compost: 'No', opsCheckin: 'No', reminder: 'No',
-                    report: 'No', treeMap: 'No', thankYou: 'No',
-                    coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No'
+                    status: document.getElementById('eventStatus').value || 'Planning'
                 };
 
-                events.push(newEvent);
+                if (editingId) {
+                    // Edit existing event - preserve task status
+                    const eventIndex = events.findIndex(e => e.id == editingId);
+                    if (eventIndex !== -1) {
+                        events[eventIndex] = { ...events[eventIndex], ...updatedEvent };
+                        delete document.getElementById('eventForm').dataset.editingId;
+                    }
+                } else {
+                    // Create new event
+                    const newEvent = {
+                        id: Math.max(...events.map(e => e.id), 0) + 1,
+                        ...updatedEvent,
+                        brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No',
+                        compost: 'No', opsCheckin: 'No', reminder: 'No',
+                        report: 'No', treeMap: 'No', thankYou: 'No',
+                        coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No'
+                    };
+                    events.push(newEvent);
+                }
+
                 saveEvents();
                 closeEventModal();
                 renderCalendar();
@@ -2154,7 +2170,10 @@
                                 </div>
                             </div>
                             <div class="event-status" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                                <button onclick="deleteEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🗑 Delete</button>
+                                <div style="display: flex; gap: 6px;">
+                                    <button onclick="editEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#3b82f6';this.style.color='#3b82f6'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">✏ Edit</button>
+                                    <button onclick="deleteEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🗑 Delete</button>
+                                </div>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${progress}%"></div>
                                 </div>
@@ -2260,6 +2279,28 @@
 
             const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${startStr}/${endStr}`;
             window.open(url, '_blank');
+        }
+
+        function editEvent(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            selectedDate = event.date;
+            document.getElementById('eventName').value = event.name;
+            document.getElementById('eventType').value = event.type;
+            document.getElementById('eventDate').value = formatDateForInput(event.date);
+            document.getElementById('eventTime').value = event.time || '';
+            document.getElementById('eventEndTime').value = event.endTime || '';
+            document.getElementById('eventLocation').value = event.location || '';
+            document.getElementById('eventOwner').value = event.owner;
+            document.getElementById('eventStatus').value = event.status || 'Planning';
+            document.getElementById('eventPrimary').value = event.primaryCategory;
+            document.getElementById('eventSecondary').value = event.secondaryCategory || '';
+
+            document.querySelector('.modal-header h3').textContent = `Edit: ${event.name}`;
+            document.getElementById('eventForm').style.display = 'block';
+            document.getElementById('eventModal').classList.add('active');
+            document.getElementById('eventForm').dataset.editingId = eventId;
         }
 
         function deleteEvent(eventId) {
