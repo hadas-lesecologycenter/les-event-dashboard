@@ -2285,6 +2285,11 @@
                     return;
                 }
 
+                // Special handling for comms task - open comms form
+                if (taskKey === 'comms' && isChecked) {
+                    openCommsForm(event);
+                }
+
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
 
@@ -2355,6 +2360,26 @@
             document.getElementById('briefModal').classList.remove('active');
             document.getElementById('briefForm').reset();
             currentBriefEvent = null;
+        }
+
+        function openCommsForm(event) {
+            const commsFormUrl = 'https://sites.google.com/lesecologycenter.org/commsintranet/request-form';
+
+            // Pre-fill info for reference (user can see in window title/tab)
+            const windowName = `Comms Request - ${event.name}`;
+
+            // Open the comms form in a new window
+            window.open(commsFormUrl, windowName, 'width=1000,height=800');
+
+            // Show confirmation
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            toast.textContent = `📧 Comms request form opened for "${event.name}"`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 3000);
         }
 
         function saveBriefDraft() {
