@@ -1570,7 +1570,8 @@
                                     ${event.location ? `<span class="meta-item">📍 ${event.location}</span>` : ''}
                                 </div>
                             </div>
-                            <div class="event-status">
+                            <div class="event-status" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
+                                <button onclick="deleteEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🗑 Delete</button>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${progress}%"></div>
                                 </div>
@@ -1661,6 +1662,15 @@
 
             const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${startStr}/${endStr}`;
             window.open(url, '_blank');
+        }
+
+        function deleteEvent(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+            if (!confirm(`Are you sure you want to delete "${event.name}"? This cannot be undone.`)) return;
+            events = events.filter(e => e.id !== eventId);
+            saveEvents();
+            applyFilters();
         }
 
         function handleTaskToggle(e) {
