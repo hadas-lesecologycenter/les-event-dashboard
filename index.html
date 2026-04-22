@@ -185,6 +185,134 @@
             accent-color: #1d5432;
         }
 
+        /* Elegant pill-based filter bar */
+        .filter-bar {
+            background: white;
+            padding: 14px 18px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .filter-search {
+            position: relative;
+        }
+
+        .filter-search input {
+            width: 100%;
+            padding: 10px 14px 10px 40px;
+            border: 1.5px solid #e6e2d8;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.95em;
+            transition: all 0.2s ease;
+        }
+
+        .filter-search input:focus {
+            outline: none;
+            border-color: #1d5432;
+            box-shadow: 0 0 0 3px rgba(29, 84, 50, 0.08);
+        }
+
+        .filter-search::before {
+            content: '🔍';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.9em;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group-label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #6a5a4a;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+        }
+
+        .filter-pills {
+            display: flex;
+            gap: 6px;
+        }
+
+        .filter-pill {
+            padding: 5px 12px;
+            border: 1.5px solid #e6e2d8;
+            border-radius: 999px;
+            background: white;
+            color: #6a5a4a;
+            font-size: 0.85em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-family: 'DM Sans', sans-serif;
+            user-select: none;
+        }
+
+        .filter-pill:hover {
+            border-color: #1d5432;
+            color: #1d5432;
+        }
+
+        .filter-pill.active {
+            background: #1d5432;
+            border-color: #1d5432;
+            color: white;
+        }
+
+        .filter-pill[data-color="outreach"].active { background: #f59e0b; border-color: #f59e0b; }
+        .filter-pill[data-color="education"].active { background: #3b82f6; border-color: #3b82f6; }
+        .filter-pill[data-color="stewardship"].active { background: #10b981; border-color: #10b981; }
+        .filter-pill[data-color="maddy"].active { background: #8b3a3a; border-color: #8b3a3a; }
+        .filter-pill[data-color="hadas"].active { background: #3a5a8b; border-color: #3a5a8b; }
+        .filter-pill[data-color="gretel"].active { background: #5a3a8b; border-color: #5a3a8b; }
+        .filter-pill[data-color="planning"].active { background: #fbbf24; border-color: #fbbf24; color: #1a1a1a; }
+        .filter-pill[data-color="hold"].active { background: #ef4444; border-color: #ef4444; }
+        .filter-pill[data-color="confirmed"].active { background: #10b981; border-color: #10b981; }
+
+        .filter-select {
+            padding: 5px 10px;
+            border: 1.5px solid #e6e2d8;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.85em;
+            background: white;
+            cursor: pointer;
+            color: #1d5432;
+            font-weight: 500;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #1d5432;
+        }
+
+        .filter-divider {
+            width: 1px;
+            height: 24px;
+            background: #e6e2d8;
+        }
+
         .control-group select[multiple] {
             min-height: 80px;
             padding: 8px;
@@ -773,49 +901,47 @@
         </div>
 
         <div id="listView" class="list-view-container">
-            <div class="controls" style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end; flex-wrap: wrap;">
-                <div>
-                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Owner:</label>
-                    <div class="checkbox-group" id="filterOwner" style="border: none; padding: 0; background: none; display: flex; gap: 12px; flex-direction: row;">
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Maddy"> Maddy</label>
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Hadas"> Hadas</label>
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Gretel"> Gretel</label>
-                    </div>
+            <div class="filter-bar">
+                <div class="filter-search">
+                    <input type="text" id="searchEvents" placeholder="Search events by name or location...">
                 </div>
-                <div>
-                    <label for="filterTiming" style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Timing:</label>
-                    <select id="filterTiming" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                        <option value="">All Events</option>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <span class="filter-group-label">Owner</span>
+                        <div class="filter-pills" id="filterOwner">
+                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
+                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
+                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
+                        </div>
+                    </div>
+                    <div class="filter-divider"></div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Category</span>
+                        <div class="filter-pills" id="filterCategory">
+                            <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
+                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
+                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
+                        </div>
+                    </div>
+                    <div class="filter-divider"></div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Status</span>
+                        <div class="filter-pills" id="filterStatus">
+                            <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
+                            <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
+                            <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
+                        </div>
+                    </div>
+                    <div style="flex: 1"></div>
+                    <select id="filterTiming" class="filter-select">
+                        <option value="">All time</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
                     </select>
-                </div>
-                <div>
-                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Category:</label>
-                    <div class="checkbox-group" id="filterCategory" style="border: none; padding: 0; background: none; display: flex; gap: 12px; flex-direction: row;">
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Outreach"> Outreach</label>
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Education"> Education</label>
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Stewardship"> Stewardship</label>
-                    </div>
-                </div>
-                <div>
-                    <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Status:</label>
-                    <div class="checkbox-group" id="filterStatus" style="border: none; padding: 0; background: none; display: flex; gap: 12px; flex-direction: row;">
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Planning"> Planning</label>
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Hold"> Hold</label>
-                        <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em; border: none;"><input type="checkbox" value="Confirmed"> Confirmed</label>
-                    </div>
-                </div>
-                <div>
-                    <label for="sortOrder" style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Sort:</label>
-                    <select id="sortOrder" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                        <option value="earliest">Earliest to Latest</option>
-                        <option value="latest">Latest to Earliest</option>
+                    <select id="sortOrder" class="filter-select">
+                        <option value="earliest">↑ Earliest first</option>
+                        <option value="latest">↓ Latest first</option>
                     </select>
-                </div>
-                <div style="flex: 1; min-width: 200px;">
-                    <label for="searchEvents" style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Search:</label>
-                    <input type="text" id="searchEvents" placeholder="Event name or location..." style="width: 100%; padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.9em;">
                 </div>
             </div>
 
@@ -1313,18 +1439,21 @@
         }
 
         function setupEventListeners() {
-            document.querySelectorAll('#filterOwner input[type="checkbox"]').forEach(cb => cb.addEventListener('change', applyFilters));
-            document.querySelectorAll('#filterCategory input[type="checkbox"]').forEach(cb => cb.addEventListener('change', applyFilters));
-            document.querySelectorAll('#filterStatus input[type="checkbox"]').forEach(cb => cb.addEventListener('change', applyFilters));
+            document.querySelectorAll('.filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
+                    applyFilters();
+                });
+            });
             document.getElementById('filterTiming').addEventListener('change', applyFilters);
             document.getElementById('sortOrder').addEventListener('change', applyFilters);
             document.getElementById('searchEvents').addEventListener('input', applyFilters);
         }
 
         function applyFilters() {
-            const selectedOwners = Array.from(document.querySelectorAll('#filterOwner input[type="checkbox"]:checked')).map(cb => cb.value);
-            const selectedCategories = Array.from(document.querySelectorAll('#filterCategory input[type="checkbox"]:checked')).map(cb => cb.value);
-            const selectedStatuses = Array.from(document.querySelectorAll('#filterStatus input[type="checkbox"]:checked')).map(cb => cb.value);
+            const selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
+            const selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
+            const selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
 
             const timing = document.getElementById('filterTiming').value;
             const sortOrder = document.getElementById('sortOrder').value;
