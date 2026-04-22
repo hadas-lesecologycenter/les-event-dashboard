@@ -2308,9 +2308,13 @@
                 saveEvents();
 
                 if (isChecked) {
-                    // Open Google Calendar for calendar and eventbrite tasks
-                    if (taskKey === 'calendar' || taskKey === 'eventbrite') {
+                    // Open Google Calendar for calendar task
+                    if (taskKey === 'calendar') {
                         openGoogleCalendar(event);
+                    }
+                    // Open Eventbrite for eventbrite task
+                    if (taskKey === 'eventbrite') {
+                        openEventbriteForm(event);
                     }
 
                     // Show completion feedback
@@ -2424,6 +2428,35 @@
             setTimeout(() => {
                 if (toast.parentNode) toast.remove();
             }, 3000);
+        }
+
+        function openEventbriteForm(event) {
+            // Open Eventbrite create event page
+            window.open('https://www.eventbrite.com/create/event/', `Eventbrite - ${event.name}`, 'width=1200,height=900');
+
+            // Show notification with event details to fill in
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = monthNames[event.date.getMonth()];
+            const day = event.date.getDate();
+            const year = event.date.getFullYear();
+            const eventDateStr = `${month} ${day}, ${year}`;
+
+            const details = `
+Event Name: ${event.name}
+Date: ${eventDateStr}
+Time: ${event.time || 'TBD'}
+Location: ${event.location || 'TBD'}
+Category: ${event.primaryCategory}
+            `;
+
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #f59e0b; color: white; padding: 16px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 300px; white-space: pre-line; font-size: 0.9em;';
+            toast.textContent = `🎫 Eventbrite page opened\n\nFill in:\n${details}`;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 6000);
         }
 
         function saveBriefDraft() {
