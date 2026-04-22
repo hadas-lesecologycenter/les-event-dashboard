@@ -1617,7 +1617,8 @@
             'PUBLIC PROGRAM': {
                 setup: [
                     { key: 'calendar', label: 'Add to LES events calendar', daysOffset: 0 },
-                    { key: 'eventbrite', label: 'Create event brief & Eventbrite page', daysOffset: -30 },
+                    { key: 'brief', label: 'Create event brief', daysOffset: -30 },
+                    { key: 'eventbrite', label: 'Create Eventbrite page', daysOffset: -30 },
                     { key: 'comms', label: 'Submit comms request (social/newsletter/website)', daysOffset: -30 }
                 ],
                 execution: [
@@ -2263,8 +2264,8 @@
                 const value = event[task.key];
                 const isNA = value === 'N/A';
                 const isChecked = value === 'Yes' || value === true;
-                const hasDraft = task.key === 'eventbrite' && event.eventbriefDraft && !event.eventbriefCompleted;
-                const isCompleted = task.key === 'eventbrite' && event.eventbriefCompleted;
+                const hasDraft = task.key === 'brief' && event.eventbriefDraft && !event.eventbriefCompleted;
+                const isCompleted = task.key === 'brief' && event.eventbriefCompleted;
 
                 let draftLinkHTML = '';
                 if (hasDraft) {
@@ -2330,8 +2331,8 @@
 
             const event = events.find(e => e.id === eventId);
             if (event) {
-                // Special handling for eventbrite task - open brief modal instead
-                if (taskKey === 'eventbrite' && isChecked) {
+                // Special handling for brief task - open brief modal instead
+                if (taskKey === 'brief' && isChecked) {
                     e.target.checked = false; // Revert checkbox since we're handling it specially
                     openBriefModal(event);
                     return;
@@ -2341,8 +2342,8 @@
                 saveEvents();
 
                 if (isChecked) {
-                    // Open Google Calendar for calendar task
-                    if (taskKey === 'calendar') {
+                    // Open Google Calendar for calendar and eventbrite tasks
+                    if (taskKey === 'calendar' || taskKey === 'eventbrite') {
                         openGoogleCalendar(event);
                     }
 
@@ -2476,7 +2477,7 @@
             currentBriefEvent.eventbriefDraftDate = new Date().toISOString();
             currentBriefEvent.eventbriefCompleted = true;
             currentBriefEvent.eventbriefCompletedDate = new Date().toISOString();
-            currentBriefEvent.eventbrite = 'Yes'; // Mark task as complete
+            currentBriefEvent.brief = 'Yes'; // Mark task as complete
             saveEvents();
 
             // Show confirmation
