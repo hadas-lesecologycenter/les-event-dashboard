@@ -1310,34 +1310,37 @@
 
             const timing = document.getElementById('filterTiming').value;
             const sortOrder = document.getElementById('sortOrder').value;
-            const search = document.getElementById('searchEvents').value.toLowerCase();
+            const search = document.getElementById('searchEvents').value.toLowerCase().trim();
 
             const now = new Date();
+            now.setHours(0, 0, 0, 0);
 
             filteredEvents = events.filter(event => {
+                const eventDate = new Date(event.date);
+                eventDate.setHours(0, 0, 0, 0);
+
                 if (selectedOwners.length > 0 && !selectedOwners.includes(event.owner)) return false;
 
                 if (selectedCategories.length > 0) {
-                    const hasMatchingCategory = selectedCategories.some(cat =>
-                        event.primaryCategory === cat || event.secondaryCategory === cat
-                    );
-                    if (!hasMatchingCategory) return false;
+                    const cats = [event.primaryCategory, event.secondaryCategory].filter(Boolean);
+                    if (!selectedCategories.some(c => cats.includes(c))) return false;
                 }
 
                 if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
 
-                if (timing === 'upcoming' && event.date < now) return false;
-                if (timing === 'past' && event.date >= now) return false;
+                if (timing === 'upcoming' && eventDate < now) return false;
+                if (timing === 'past' && eventDate >= now) return false;
 
-                const location = event.location || '';
-                if (search && !event.name.toLowerCase().includes(search) && !location.toLowerCase().includes(search)) return false;
+                if (search) {
+                    const haystack = `${event.name} ${event.location || ''}`.toLowerCase();
+                    if (!haystack.includes(search)) return false;
+                }
 
                 return true;
             });
 
             filteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
 
-            updateStats();
             renderEvents();
         }
 
