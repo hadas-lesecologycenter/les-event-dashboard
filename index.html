@@ -2285,13 +2285,16 @@
                     return;
                 }
 
-                // Special handling for comms task - open comms form (requires brief to be completed)
+                // Special handling for comms task - open comms form (requires brief AND eventbrite to be completed)
                 if (taskKey === 'comms' && isChecked) {
-                    if (event.brief !== 'Yes') {
+                    if (event.brief !== 'Yes' || event.eventbrite !== 'Yes') {
                         e.target.checked = false;
+                        const missing = [];
+                        if (event.brief !== 'Yes') missing.push('Create event brief');
+                        if (event.eventbrite !== 'Yes') missing.push('Create Eventbrite page');
                         const toast = document.createElement('div');
                         toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                        toast.textContent = '❌ Complete "Create event brief" first';
+                        toast.textContent = `❌ Complete: ${missing.join(', ')}`;
                         document.body.appendChild(toast);
                         setTimeout(() => {
                             if (toast.parentNode) toast.remove();
