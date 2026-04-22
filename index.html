@@ -2363,12 +2363,19 @@
         }
 
         function openCommsForm(event) {
-            const commsFormUrl = 'https://sites.google.com/lesecologycenter.org/commsintranet/request-form';
+            // Airtable form URL with pre-filled fields
+            const baseUrl = 'https://airtable.com/embed/appx176zY7YFcuzWD/pagsqtsbITsaExhaw/form';
 
-            // Pre-fill info for reference (user can see in window title/tab)
-            const windowName = `Comms Request - ${event.name}`;
+            // Pre-fill fields from event data
+            const params = new URLSearchParams();
+            params.append('prefill_Title of Request', event.name);
+            params.append('prefill_Program Area', event.primaryCategory);
+            params.append('prefill_What do you need to promote?', 'Event');
+
+            const commsFormUrl = `${baseUrl}?${params.toString()}`;
 
             // Open the comms form in a new window
+            const windowName = `Comms Request - ${event.name}`;
             window.open(commsFormUrl, windowName, 'width=1000,height=800');
 
             // Show confirmation
