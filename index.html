@@ -904,7 +904,13 @@
                 </div>
                 <div class="form-group">
                     <label for="eventType">Event Type</label>
-                    <input type="text" id="eventType" placeholder="e.g., Workshop, Tabling, STC Event">
+                    <select id="eventType" required>
+                        <option value="">Select Event Type</option>
+                        <option value="FIELD TRIP">🏫 FIELD TRIP</option>
+                        <option value="PRIVATE VOLUNTEER EVENT">🤝 PRIVATE VOLUNTEER EVENT</option>
+                        <option value="PUBLIC VOLUNTEER EVENT">📣 PUBLIC VOLUNTEER EVENT</option>
+                        <option value="PUBLIC PROGRAM">📋 PUBLIC PROGRAM</option>
+                    </select>
                 </div>
                 <div class="form-group">
                     <label for="eventStatus">Status</label>
@@ -938,24 +944,89 @@
             'Stewardship': '#10b981'
         };
 
-        const TASK_DEADLINES = {
-            setup: [
-                { key: 'brief', label: 'Event Brief Created', daysOffset: -30 },
-                { key: 'eventbrite', label: 'EventBrite Created', daysOffset: -30 },
-                { key: 'calendar', label: 'Calendar Event Created', daysOffset: 0 },
-                { key: 'comms', label: 'Comms Form Submitted', daysOffset: -30 }
-            ],
-            execution: [
-                { key: 'compost', label: 'Order Placed on Compost Tracker', daysOffset: -14 },
-                { key: 'opsCheckin', label: 'Compost Ops Check-In', daysOffset: -7 },
-                { key: 'reminder', label: 'Reminder Email Sent', daysOffset: -7 }
-            ],
-            completion: [
-                { key: 'report', label: 'Activity Report Completed', daysOffset: 1 },
-                { key: 'treeMap', label: 'Tree Map Data Completed', daysOffset: 1 },
-                { key: 'thankYou', label: 'Thank You Email Sent', daysOffset: 1 }
-            ]
+        const TASK_WORKFLOWS = {
+            'FIELD TRIP': {
+                setup: [
+                    { key: 'brief', label: 'Create event in master spreadsheet', daysOffset: 0 },
+                    { key: 'calendar', label: 'Add to planning calendar', daysOffset: 0 },
+                    { key: 'eventbrite', label: 'Add to LES events calendar', daysOffset: 0 },
+                    { key: 'comms', label: 'Confirm date/time/location with coordinator', daysOffset: 0 }
+                ],
+                execution: [
+                    { key: 'compost', label: 'Order compost', daysOffset: -14 },
+                    { key: 'opsCheckin', label: 'Identify target block', daysOffset: -14 },
+                    { key: 'reminder', label: 'Email confirmation to group', daysOffset: -7 },
+                    { key: 'scouting', label: 'Block walk / Google Maps view', daysOffset: -7 },
+                    { key: 'equipment', label: 'Reserve equipment', daysOffset: -7 }
+                ],
+                completion: [
+                    { key: 'report', label: 'Complete event reporting', daysOffset: 0 },
+                    { key: 'treeMap', label: 'Report trees stewarded in NYC tree map', daysOffset: 1 },
+                    { key: 'thankYou', label: 'Clean and return tools', daysOffset: 1 }
+                ]
+            },
+            'PRIVATE VOLUNTEER EVENT': {
+                setup: [
+                    { key: 'brief', label: 'Create event in master spreadsheet', daysOffset: 0 },
+                    { key: 'calendar', label: 'Add to planning calendar', daysOffset: 0 },
+                    { key: 'eventbrite', label: 'Add to LES events calendar', daysOffset: 0 },
+                    { key: 'comms', label: 'Confirm date/time/location with coordinator', daysOffset: 0 },
+                    { key: 'volunteer', label: 'Add to volunteer stewardship spreadsheet', daysOffset: 0 }
+                ],
+                execution: [
+                    { key: 'compost', label: 'Order compost', daysOffset: -14 },
+                    { key: 'opsCheckin', label: 'Identify target block', daysOffset: -14 },
+                    { key: 'reminder', label: 'Email confirmation to group', daysOffset: -7 },
+                    { key: 'scouting', label: 'Block walk / Google Maps view', daysOffset: -7 },
+                    { key: 'equipment', label: 'Reserve equipment', daysOffset: -7 }
+                ],
+                completion: [
+                    { key: 'report', label: 'Complete event reporting', daysOffset: 0 },
+                    { key: 'treeMap', label: 'Report trees stewarded in NYC tree map', daysOffset: 1 },
+                    { key: 'thankYou', label: 'Clean and return tools', daysOffset: 1 }
+                ]
+            },
+            'PUBLIC VOLUNTEER EVENT': {
+                setup: [
+                    { key: 'brief', label: 'Create event in master spreadsheet', daysOffset: 0 },
+                    { key: 'calendar', label: 'Add to planning calendar', daysOffset: 0 },
+                    { key: 'eventbrite', label: 'Create event brief & Eventbrite page', daysOffset: -30 },
+                    { key: 'comms', label: 'Submit comms request (social/newsletter/website)', daysOffset: -30 }
+                ],
+                execution: [
+                    { key: 'compost', label: 'Order compost', daysOffset: -14 },
+                    { key: 'opsCheckin', label: 'Identify target block', daysOffset: -7 },
+                    { key: 'reminder', label: 'Email confirmation / reminder to registrants', daysOffset: -7 },
+                    { key: 'scouting', label: 'Block walk / Google Maps view', daysOffset: -7 },
+                    { key: 'equipment', label: 'Reserve equipment', daysOffset: -7 }
+                ],
+                completion: [
+                    { key: 'report', label: 'Complete event reporting', daysOffset: 0 },
+                    { key: 'treeMap', label: 'Report trees stewarded in NYC tree map', daysOffset: 1 },
+                    { key: 'thankYou', label: 'Clean and return tools', daysOffset: 1 }
+                ]
+            },
+            'PUBLIC PROGRAM': {
+                setup: [
+                    { key: 'brief', label: 'Create event in master spreadsheet', daysOffset: 0 },
+                    { key: 'calendar', label: 'Add to planning calendar', daysOffset: 0 },
+                    { key: 'eventbrite', label: 'Create event brief & Eventbrite page', daysOffset: -30 },
+                    { key: 'comms', label: 'Submit comms request (social/newsletter/website)', daysOffset: -30 }
+                ],
+                execution: [
+                    { key: 'opsCheckin', label: 'Complete content creation (lesson plan, talking points)', daysOffset: -14 },
+                    { key: 'equipment', label: 'Ensure vendors & orders confirmed', daysOffset: -14 },
+                    { key: 'reminder', label: 'Email confirmation to registrants', daysOffset: -7 }
+                ],
+                completion: [
+                    { key: 'report', label: 'Complete event reporting / record participation', daysOffset: 0 },
+                    { key: 'thankYou', label: 'Send thank-you email', daysOffset: 1 }
+                ]
+            }
         };
+
+        // For backwards compatibility
+        const TASK_DEADLINES = TASK_WORKFLOWS['FIELD TRIP'];
 
         function renderCalendar() {
             const year = currentMonth.getFullYear();
