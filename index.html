@@ -1637,6 +1637,32 @@
             }).join('') || '';
         }
 
+        function openGoogleCalendar(event) {
+            const pad = n => String(n).padStart(2, '0');
+            const d = new Date(event.date);
+            const dateStr = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
+
+            let startStr, endStr;
+            if (event.time) {
+                const [sh, sm] = event.time.split(':');
+                startStr = `${dateStr}T${pad(sh)}${pad(sm)}00`;
+                if (event.endTime) {
+                    const [eh, em] = event.endTime.split(':');
+                    endStr = `${dateStr}T${pad(eh)}${pad(em)}00`;
+                } else {
+                    const endD = new Date(d);
+                    endD.setHours(parseInt(sh) + 1, parseInt(sm));
+                    endStr = `${dateStr}T${pad(endD.getHours())}${pad(endD.getMinutes())}00`;
+                }
+            } else {
+                startStr = dateStr;
+                endStr = dateStr;
+            }
+
+            const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${startStr}/${endStr}`;
+            window.open(url, '_blank');
+        }
+
         function handleTaskToggle(e) {
             const eventId = parseInt(e.target.dataset.eventId);
             const taskKey = e.target.dataset.taskKey;
@@ -1648,6 +1674,11 @@
                 saveEvents();
 
                 if (isChecked) {
+                    // Open Google Calendar for calendar-related tasks
+                    if (taskKey === 'calendar' || taskKey === 'eventbrite') {
+                        openGoogleCalendar(event);
+                    }
+
                     // Show completion feedback
                     const taskLabel = e.target.nextElementSibling.textContent;
                     const toast = document.createElement('div');
