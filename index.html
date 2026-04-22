@@ -1039,6 +1039,20 @@
             }
         };
 
+        const CATEGORY_TASKS = {
+            'Outreach': {
+                setup: [
+                    { key: 'coordConfirm', label: 'Confirm date, time, location with coordinator', daysOffset: 0 }
+                ],
+                execution: [
+                    { key: 'coordEmail', label: 'Email confirmation to coordinator', daysOffset: -1 }
+                ],
+                completion: [
+                    { key: 'outreachReport', label: 'Complete event reporting', daysOffset: 1 }
+                ]
+            }
+        };
+
         // For backwards compatibility
         const TASK_DEADLINES = TASK_WORKFLOWS['FIELD TRIP'];
 
@@ -1230,7 +1244,8 @@
                     status: document.getElementById('eventStatus').value || 'Planning',
                     brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No',
                     compost: 'No', opsCheckin: 'No', reminder: 'No',
-                    report: 'No', treeMap: 'No', thankYou: 'No'
+                    report: 'No', treeMap: 'No', thankYou: 'No',
+                    coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No'
                 };
 
                 events.push(newEvent);
@@ -1287,7 +1302,10 @@
 
         function loadEvents() {
             localStorage.removeItem('lesEvents');
-            events = getSampleData();
+            events = getSampleData().map(e => ({
+                coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No',
+                ...e
+            }));
         }
 
         function saveEvents() {
@@ -1613,7 +1631,14 @@
 
         function getEventWorkflow(event) {
             const eventType = event.type || 'FIELD TRIP';
-            return TASK_WORKFLOWS[eventType] || TASK_WORKFLOWS['FIELD TRIP'];
+            const base = TASK_WORKFLOWS[eventType] || TASK_WORKFLOWS['FIELD TRIP'];
+            const catTasks = CATEGORY_TASKS[event.primaryCategory];
+            if (!catTasks) return base;
+            return {
+                setup:      [...base.setup,      ...catTasks.setup],
+                execution:  [...base.execution,  ...catTasks.execution],
+                completion: [...base.completion, ...catTasks.completion]
+            };
         }
 
         function renderTasks(event, phase) {
