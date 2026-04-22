@@ -2366,11 +2366,26 @@
             // Airtable form URL with pre-filled fields
             const baseUrl = 'https://airtable.com/embed/appx176zY7YFcuzWD/pagsqtsbITsaExhaw/form';
 
+            // Format date as "mmmm d, yyyy" (e.g., "April 22, 2026")
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+            const month = monthNames[event.date.getMonth()];
+            const day = event.date.getDate();
+            const year = event.date.getFullYear();
+            const formattedDate = `${month} ${day}, ${year}`;
+
             // Pre-fill fields from event data
             const params = new URLSearchParams();
             params.append('prefill_Title of Request', event.name);
             params.append('prefill_Program Area', event.primaryCategory);
             params.append('prefill_What do you need to promote?', 'Event');
+            params.append('prefill_Venue Name & Address', event.location || '');
+            params.append('prefill_Start date', formattedDate);
+            if (event.time) {
+                params.append('prefill_Start time', event.time);
+            }
+            if (event.endTime) {
+                params.append('prefill_End time', event.endTime);
+            }
 
             const commsFormUrl = `${baseUrl}?${params.toString()}`;
 
