@@ -2384,8 +2384,9 @@
             const year = event.date.getFullYear();
             const formattedDate = `${month} ${day}, ${year}`;
 
-            // Get description from brief if available
+            // Get description and photo from brief if available
             const description = event.eventbriefDraft?.description || '';
+            const photo = event.eventbriefDraft?.visual || '';
 
             // Pre-fill fields from event data
             const params = new URLSearchParams();
@@ -2393,6 +2394,9 @@
             params.append('prefill_Program Area', event.primaryCategory);
             params.append('prefill_What do you need to promote?', 'Event');
             params.append('prefill_Request Description', description);
+            if (photo) {
+                params.append('prefill_Photo', photo);
+            }
             params.append('prefill_Venue Name & Address', event.location || '');
             params.append('prefill_Start date', formattedDate);
             if (event.time) {
