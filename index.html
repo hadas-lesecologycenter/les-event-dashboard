@@ -910,6 +910,7 @@
                         <option value="PRIVATE VOLUNTEER EVENT">🤝 PRIVATE VOLUNTEER EVENT</option>
                         <option value="PUBLIC VOLUNTEER EVENT">📣 PUBLIC VOLUNTEER EVENT</option>
                         <option value="PUBLIC PROGRAM">📋 PUBLIC PROGRAM</option>
+                        <option value="TABLING">🪑 TABLING</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1022,6 +1023,15 @@
                     { key: 'report', label: 'Complete event reporting / record participation', daysOffset: 0 },
                     { key: 'thankYou', label: 'Send thank-you email', daysOffset: 1 }
                 ]
+            },
+            'TABLING': {
+                setup: [
+                    { key: 'calendar', label: 'Add to calendar', daysOffset: 0 }
+                ],
+                execution: [
+                    { key: 'equipment', label: 'Reserve equipment', daysOffset: -1 }
+                ],
+                completion: []
             }
         };
 
