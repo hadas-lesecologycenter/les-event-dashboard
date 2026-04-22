@@ -1310,24 +1310,22 @@
                         </div>
                         <div class="brief-grid">
                             <div class="brief-field">
-                                <label>Time</label>
-                                <input type="text" name="time" placeholder="e.g., 2-4p">
+                                <label>Start Time</label>
+                                <input type="time" name="startTime">
                             </div>
+                            <div class="brief-field">
+                                <label>End Time</label>
+                                <input type="time" name="endTime">
+                            </div>
+                        </div>
+                        <div class="brief-grid">
                             <div class="brief-field">
                                 <label>Location/Venue</label>
                                 <input type="text" name="location">
                             </div>
-                        </div>
-                        <div class="brief-grid full">
                             <div class="brief-field">
                                 <label>Partner/s (We are facilitating a public program)</label>
                                 <input type="text" name="partners" placeholder="e.g., CM Epstein's office">
-                            </div>
-                        </div>
-                        <div class="brief-grid full">
-                            <div class="brief-field">
-                                <label>Client/s (We are facilitating a private program)</label>
-                                <input type="text" name="clients" placeholder="e.g., Girl Scouts">
                             </div>
                         </div>
                         <div class="brief-field">
@@ -1401,57 +1399,6 @@
                             <div class="brief-field">
                                 <label>Visual / Image</label>
                                 <input type="text" name="visual" placeholder="Link to image from Google Photos library">
-                            </div>
-                        </div>
-                        <div class="brief-field">
-                            <label>Marketing Channels</label>
-                            <div class="brief-checkbox-group">
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Org email">
-                                    <label>Org's email (monthly, first week of the month)</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Volunteer email">
-                                    <label>Volunteer email (monthly, mid-month)</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Instagram Post">
-                                    <label>Instagram Post</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Instagram Reel">
-                                    <label>Instagram Reel</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Instagram Story">
-                                    <label>Instagram Story</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="TikTok">
-                                    <label>TikTok</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Facebook">
-                                    <label>Facebook</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Partner cross-promotion">
-                                    <label>Partner cross-promotion</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Event listicles">
-                                    <label>Event listicles (e.g., the Skint)</label>
-                                </div>
-                                <div class="brief-checkbox-item">
-                                    <input type="checkbox" name="marketingChannels" value="Flyering">
-                                    <label>Flyering (e.g., at Partybus)</label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="brief-grid full">
-                            <div class="brief-field">
-                                <label>Eventbrite Link</label>
-                                <input type="url" name="eventbriteLink" placeholder="https://www.eventbrite.com/...">
                             </div>
                         </div>
                     </div>
@@ -2373,7 +2320,8 @@
             briefForm.eventNameInternal.value = event.name;
             briefForm.eventLead.value = event.owner || '';
             briefForm.briefDate.value = event.date.toISOString().split('T')[0];
-            briefForm.time.value = event.time || '';
+            briefForm.startTime.value = event.time || '';
+            briefForm.endTime.value = event.endTime || '';
             briefForm.location.value = event.location || '';
             briefForm.principalCategory.value = event.primaryCategory || '';
 
