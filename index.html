@@ -934,7 +934,7 @@
                     </div>
                     <div style="flex: 1"></div>
                     <select id="filterTiming" class="filter-select">
-                        <option value="">All time</option>
+                        <option value="next10">Next 10 days</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
                     </select>
@@ -1475,8 +1475,12 @@
 
                 if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
 
-                if (timing === 'upcoming' && eventDate < now) return false;
-                if (timing === 'past' && eventDate >= now) return false;
+                if (timing === 'next10') {
+                    const tenDaysFromNow = new Date(now);
+                    tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
+                    if (eventDate < now || eventDate > tenDaysFromNow) return false;
+                } else if (timing === 'upcoming' && eventDate < now) return false;
+                else if (timing === 'past' && eventDate >= now) return false;
 
                 if (search) {
                     const haystack = `${event.name} ${event.location || ''}`.toLowerCase();
