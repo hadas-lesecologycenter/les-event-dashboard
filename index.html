@@ -1099,33 +1099,24 @@
                         <div class="progress-bar"><div class="progress-fill" style="width: ${progress}%"></div></div>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
-                        <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
-                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">📋 Setup</div>
-                            ${['brief', 'eventbrite', 'calendar', 'comms'].map(key => {
-                                const task = TASK_DEADLINES.setup.find(t => t.key === key);
-                                const value = event[key];
-                                const isChecked = value === 'Yes' || value === true;
-                                return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
-                            }).join('')}
-                        </div>
-                        <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
-                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">🚀 Execution</div>
-                            ${['compost', 'opsCheckin', 'reminder'].map(key => {
-                                const task = TASK_DEADLINES.execution.find(t => t.key === key);
-                                const value = event[key];
-                                const isChecked = value === 'Yes' || value === true;
-                                return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
-                            }).join('')}
-                        </div>
-                        <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
-                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">✅ Completion</div>
-                            ${['report', 'treeMap', 'thankYou'].map(key => {
-                                const task = TASK_DEADLINES.completion.find(t => t.key === key);
-                                const value = event[key];
-                                const isChecked = value === 'Yes' || value === true;
-                                return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
-                            }).join('')}
-                        </div>
+                        ${(() => {
+                            const workflow = getEventWorkflow(event);
+                            return ['setup', 'execution', 'completion'].map((phase, idx) => {
+                                const phaseIcons = { setup: '📋', execution: '🚀', completion: '✅' };
+                                const phaseNames = { setup: 'Setup', execution: 'Execution', completion: 'Completion' };
+                                const tasks = workflow[phase] || [];
+                                return `
+                                    <div style="background: #f9f7f2; padding: 12px; border-radius: 8px;">
+                                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 8px; font-size: 0.9em;">${phaseIcons[phase]} ${phaseNames[phase]}</div>
+                                        ${tasks.map(task => {
+                                            const value = event[task.key];
+                                            const isChecked = value === 'Yes' || value === true;
+                                            return `<div style="font-size: 0.85em; margin-bottom: 4px; color: ${isChecked ? '#999' : '#333'}; text-decoration: ${isChecked ? 'line-through' : 'none'};"><input type="checkbox" ${isChecked ? 'checked' : ''} disabled style="margin-right: 4px;"> ${task.label}</div>`;
+                                        }).join('')}
+                                    </div>
+                                `;
+                            }).join('');
+                        })()}
                     </div>
                 </div>
             `;
@@ -1524,7 +1515,8 @@
 
         function getEventProgress(event) {
             let completed = 0, total = 0;
-            Object.values(TASK_DEADLINES).forEach(phase => {
+            const workflow = getEventWorkflow(event);
+            Object.values(workflow).forEach(phase => {
                 phase.forEach(task => {
                     const value = event[task.key];
                     if (value !== 'N/A') {
@@ -1601,11 +1593,16 @@
             });
         }
 
+        function getEventWorkflow(event) {
+            const eventType = event.type || 'FIELD TRIP';
+            return TASK_WORKFLOWS[eventType] || TASK_WORKFLOWS['FIELD TRIP'];
+        }
+
         function renderTasks(event, phase) {
-            return Object.values(TASK_DEADLINES).find((_, idx) => {
-                const phases = ['setup', 'execution', 'completion'];
-                return phases[idx] === phase;
-            })?.map(task => {
+            const workflow = getEventWorkflow(event);
+            const phaseTasks = workflow[phase] || [];
+
+            return phaseTasks.map(task => {
                 const value = event[task.key];
                 const isNA = value === 'N/A';
                 const isChecked = value === 'Yes' || value === true;
