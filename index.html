@@ -1170,7 +1170,6 @@
                         <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Category</th>
                         <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Status</th>
                         <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Progress</th>
-                        <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Actions</th>
                     </tr>
                 </thead>
                 <tbody id="tableViewBody">
@@ -1978,14 +1977,19 @@
                 const completedCount = allTasks.filter(task => event[task.key] === 'Yes').length;
                 const progress = allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : 0;
 
-                const statusColor = {
-                    'Planning': '#fbbf24',
-                    'Confirmed': '#10b981',
-                    'Completed': '#8b5cf6'
-                }[event.status] || '#6b7280';
+                const taskCheckboxes = allTasks.map(task => {
+                    const isChecked = event[task.key] === 'Yes';
+                    const isNA = event[task.key] === 'N/A';
+                    return `
+                        <label style="display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; margin-bottom: 6px; padding: 4px 8px; background: ${isNA ? '#f3f4f6' : 'transparent'}; border-radius: 4px; font-size: 0.85em; cursor: pointer;">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} ${isNA ? 'disabled' : ''} data-event-id="${event.id}" data-task-key="${task.key}" style="cursor: ${isNA ? 'not-allowed' : 'pointer'};"/>
+                            <span style="text-decoration: ${isChecked ? 'line-through' : 'none'}; opacity: ${isNA ? 0.5 : 1};">${task.label}</span>
+                        </label>
+                    `;
+                }).join('');
 
                 return `
-                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;">
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
                         <td style="padding: 12px; font-weight: 500;">${event.name}</td>
                         <td style="padding: 12px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
                         <td style="padding: 12px; font-size: 0.9em;">${formatDate(event.date)}</td>
@@ -1994,14 +1998,36 @@
                         <td style="padding: 12px; font-size: 0.9em;"><span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span></td>
                         <td style="padding: 12px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span></td>
                         <td style="padding: 12px; text-align: center; font-size: 0.9em; font-weight: 500;">${progress}%</td>
-                        <td style="padding: 12px; text-align: center;">
-                            <button onclick="editEvent(${event.id})" style="background: none; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85em;" onmouseover="this.style.background='#3b82f6'; this.style.color='white'" onmouseout="this.style.background='none'; this.style.color='#3b82f6'">Edit</button>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+                        <td colspan="8" style="padding: 12px 12px 8px 12px;">
+                            <div style="display: flex; flex-wrap: wrap; gap: 0; margin: 0;">
+                                ${taskCheckboxes}
+                            </div>
                         </td>
                     </tr>
                 `;
             }).join('');
 
             tbody.innerHTML = rows || '<tr><td colspan="9" style="padding: 40px; text-align: center; color: #999;">No events match your filters</td></tr>';
+
+            // Add event listeners to task checkboxes
+            document.querySelectorAll('#tableViewBody input[type="checkbox"][data-task-key]').forEach(checkbox => {
+                checkbox.addEventListener('change', handleTableTaskToggle);
+            });
+        }
+
+        function handleTableTaskToggle(e) {
+            const eventId = parseInt(e.target.dataset.eventId);
+            const taskKey = e.target.dataset.taskKey;
+            const isChecked = e.target.checked;
+
+            const event = events.find(e => e.id === eventId);
+            if (event) {
+                event[taskKey] = isChecked ? 'Yes' : 'No';
+                saveEvents();
+                renderTableView();
+            }
         }
 
         function createPieChart(data, colors, containerWidth = 200) {
