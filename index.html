@@ -1796,8 +1796,8 @@
                     name: document.getElementById('eventName').value,
                     owner: document.getElementById('eventOwner').value,
                     date: eventDate,
-                    time: document.getElementById('eventTime').value || '12:00 PM',
-                    endTime: document.getElementById('eventEndTime').value || '',
+                    time: to12HourTime(document.getElementById('eventTime').value) || '12:00 PM',
+                    endTime: to12HourTime(document.getElementById('eventEndTime').value) || '',
                     location: document.getElementById('eventLocation').value,
                     primaryCategory: primaryCategory,
                     secondaryCategory: document.getElementById('eventSecondaryCategory').value,
@@ -2285,6 +2285,21 @@
 
             const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(event.name)}&dates=${startStr}/${endStr}`;
             window.open(url, '_blank');
+        }
+
+        function to12HourTime(timeStr) {
+            if (!timeStr) return '';
+            // If already has AM/PM, return as-is
+            if (/AM|PM/i.test(timeStr)) return timeStr;
+            // Convert "14:00" to "2:00 PM"
+            const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+            if (!match) return timeStr;
+            let [, hours, minutes] = match;
+            hours = parseInt(hours, 10);
+            const period = hours >= 12 ? 'PM' : 'AM';
+            if (hours === 0) hours = 12;
+            else if (hours > 12) hours -= 12;
+            return `${hours}:${minutes} ${period}`;
         }
 
         function to24HourTime(timeStr) {
