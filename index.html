@@ -2287,21 +2287,39 @@
             window.open(url, '_blank');
         }
 
+        function to24HourTime(timeStr) {
+            if (!timeStr) return '';
+            // If already in 24-hour format (HH:MM), return as-is
+            if (/^\d{1,2}:\d{2}$/.test(timeStr) && !/AM|PM/i.test(timeStr)) {
+                const [h, m] = timeStr.split(':');
+                return `${h.padStart(2, '0')}:${m}`;
+            }
+            // Convert "2:00 PM" style to 24-hour
+            const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return '';
+            let [, hours, minutes, period] = match;
+            hours = parseInt(hours, 10);
+            if (period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+            if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
+            return `${String(hours).padStart(2, '0')}:${minutes}`;
+        }
+
         function editEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
 
-            selectedDate = event.date;
+            const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
+            selectedDate = eventDate;
             document.getElementById('eventName').value = event.name;
             document.getElementById('eventType').value = event.type;
-            document.getElementById('eventDate').value = formatDateForInput(event.date);
-            document.getElementById('eventTime').value = event.time || '';
-            document.getElementById('eventEndTime').value = event.endTime || '';
+            document.getElementById('eventDate').value = formatDateForInput(eventDate);
+            document.getElementById('eventTime').value = to24HourTime(event.time);
+            document.getElementById('eventEndTime').value = to24HourTime(event.endTime);
             document.getElementById('eventLocation').value = event.location || '';
             document.getElementById('eventOwner').value = event.owner;
             document.getElementById('eventStatus').value = event.status || 'Planning';
-            document.getElementById('eventPrimary').value = event.primaryCategory;
-            document.getElementById('eventSecondary').value = event.secondaryCategory || '';
+            document.getElementById('eventPrimaryCategory').value = event.primaryCategory;
+            document.getElementById('eventSecondaryCategory').value = event.secondaryCategory || '';
 
             document.querySelector('.modal-header h3').textContent = `Edit: ${event.name}`;
             document.getElementById('eventForm').style.display = 'block';
