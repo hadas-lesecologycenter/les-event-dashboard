@@ -1163,9 +1163,10 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Due Date</span>
                         <div class="filter-pills" id="filterDueDateTasks">
-                            <button class="filter-pill" data-value="upcoming" data-color="planning">Upcoming</button>
-                            <button class="filter-pill" data-value="today" data-color="confirmed">Today</button>
                             <button class="filter-pill" data-value="overdue" data-color="hold">Overdue</button>
+                            <button class="filter-pill" data-value="today" data-color="confirmed">Today</button>
+                            <button class="filter-pill" data-value="next7" data-color="planning">Next 7 days</button>
+                            <button class="filter-pill" data-value="upcoming" data-color="planning">Upcoming</button>
                         </div>
                     </div>
                 </div>
@@ -3025,7 +3026,8 @@
                     selectedDueDates.forEach(dateFilter => {
                         if (dateFilter === 'overdue' && task.daysUntil < 0) dateMatch = true;
                         if (dateFilter === 'today' && task.daysUntil === 0) dateMatch = true;
-                        if (dateFilter === 'upcoming' && task.daysUntil > 0) dateMatch = true;
+                        if (dateFilter === 'next7' && task.daysUntil > 0 && task.daysUntil <= 7) dateMatch = true;
+                        if (dateFilter === 'upcoming' && task.daysUntil > 7) dateMatch = true;
                     });
                     if (!dateMatch) return false;
                 }
