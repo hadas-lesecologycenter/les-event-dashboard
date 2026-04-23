@@ -1089,6 +1089,7 @@
         <div class="view-toggle">
             <button class="view-btn active" data-view="list">📋 List View</button>
             <button class="view-btn" data-view="calendar">📅 Calendar View</button>
+            <button class="view-btn" data-view="table">📊 Table View</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
             <button class="view-btn" data-view="stats">📊 Stats</button>
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
@@ -1155,6 +1156,26 @@
                 <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Gretel"> Gretel</label>
             </div>
             <div id="openTasksContainer"></div>
+        </div>
+
+        <div id="tableView" style="display: none; padding: 20px; overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                <thead>
+                    <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Event Name</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Owner</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Date</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Time</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Location</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Category</th>
+                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Status</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Progress</th>
+                        <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="tableViewBody">
+                </tbody>
+            </table>
         </div>
 
         <div id="statsView" class="stats-bar" style="display: none;"></div>
@@ -1734,11 +1755,13 @@
             document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
             document.getElementById('listView').style.display = view === 'list' ? 'block' : 'none';
+            document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
             document.getElementById('calendarView').classList.toggle('active', view === 'calendar');
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
             document.getElementById('statsView').style.display = view === 'stats' ? 'flex' : 'none';
 
             if (view === 'calendar') renderCalendar();
+            if (view === 'table') renderTableView();
             if (view === 'tasks') renderOpenTasks();
             if (view === 'stats') updateStats();
         }
@@ -1946,6 +1969,41 @@
             renderEvents();
         }
 
+        function renderTableView() {
+            const tbody = document.getElementById('tableViewBody');
+
+            const rows = filteredEvents.map(event => {
+                const workflow = getEventWorkflow(event);
+                const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
+                const completedCount = allTasks.filter(task => event[task.key] === 'Yes').length;
+                const progress = allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : 0;
+
+                const statusColor = {
+                    'Planning': '#fbbf24',
+                    'Confirmed': '#10b981',
+                    'Completed': '#8b5cf6'
+                }[event.status] || '#6b7280';
+
+                return `
+                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;">
+                        <td style="padding: 12px; font-weight: 500;">${event.name}</td>
+                        <td style="padding: 12px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
+                        <td style="padding: 12px; font-size: 0.9em;">${formatDate(event.date)}</td>
+                        <td style="padding: 12px; font-size: 0.9em;">${event.time || '—'}</td>
+                        <td style="padding: 12px; font-size: 0.9em;">${event.location || '—'}</td>
+                        <td style="padding: 12px; font-size: 0.9em;"><span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span></td>
+                        <td style="padding: 12px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span></td>
+                        <td style="padding: 12px; text-align: center; font-size: 0.9em; font-weight: 500;">${progress}%</td>
+                        <td style="padding: 12px; text-align: center;">
+                            <button onclick="editEvent(${event.id})" style="background: none; border: 1px solid #3b82f6; color: #3b82f6; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.85em;" onmouseover="this.style.background='#3b82f6'; this.style.color='white'" onmouseout="this.style.background='none'; this.style.color='#3b82f6'">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            tbody.innerHTML = rows || '<tr><td colspan="9" style="padding: 40px; text-align: center; color: #999;">No events match your filters</td></tr>';
+        }
+
         function createPieChart(data, colors, containerWidth = 200) {
             const items = Object.entries(data).filter(([_, count]) => count > 0);
             if (items.length === 0) return '<div style="text-align: center; color: #999;">No data</div>';
@@ -2151,8 +2209,11 @@
             const container = document.getElementById('eventsContainer');
             if (filteredEvents.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>No events match your filters.</p></div>';
+                renderTableView();
                 return;
             }
+
+            renderTableView();
 
             const now = new Date();
             container.innerHTML = filteredEvents.map(event => {
