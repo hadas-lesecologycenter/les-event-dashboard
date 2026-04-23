@@ -1158,23 +1158,71 @@
             <div id="openTasksContainer"></div>
         </div>
 
-        <div id="tableView" style="display: none; padding: 20px; overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <thead>
-                    <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Event Name</th>
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Owner</th>
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Date</th>
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Time</th>
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Location</th>
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Category</th>
-                        <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Status</th>
-                        <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Progress</th>
-                    </tr>
-                </thead>
-                <tbody id="tableViewBody">
-                </tbody>
-            </table>
+        <div id="tableView" style="display: none;">
+            <div class="filter-bar" style="margin-bottom: 20px;">
+                <div class="filter-search">
+                    <input type="text" id="searchEventsTable" placeholder="Search events by name or location...">
+                </div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <span class="filter-group-label">Owner</span>
+                        <div class="filter-pills" id="filterOwnerTable">
+                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
+                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
+                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Category</span>
+                        <div class="filter-pills" id="filterCategoryTable">
+                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
+                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
+                            <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Status</span>
+                        <div class="filter-pills" id="filterStatusTable">
+                            <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
+                            <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
+                        </div>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Timing</span>
+                        <select id="filterTimingTable" style="padding: 8px 12px; border: 1px solid #d4cec0; border-radius: 6px; font-family: 'DM Sans', sans-serif; cursor: pointer;">
+                            <option value="">All</option>
+                            <option value="upcoming">Upcoming</option>
+                            <option value="next10">Next 10 Days</option>
+                            <option value="past">Past</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Sort</span>
+                        <select id="sortOrderTable" style="padding: 8px 12px; border: 1px solid #d4cec0; border-radius: 6px; font-family: 'DM Sans', sans-serif; cursor: pointer;">
+                            <option value="earliest">Earliest First</option>
+                            <option value="latest">Latest First</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div style="overflow-x: auto; padding: 0 20px 20px 20px;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <thead>
+                        <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Event Name</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Owner</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Date</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Time</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Location</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Category</th>
+                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Status</th>
+                            <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableViewBody">
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <div id="statsView" class="stats-bar" style="display: none;"></div>
@@ -1760,7 +1808,10 @@
             document.getElementById('statsView').style.display = view === 'stats' ? 'flex' : 'none';
 
             if (view === 'calendar') renderCalendar();
-            if (view === 'table') renderTableView();
+            if (view === 'table') {
+                setupTableViewFilters();
+                applyTableFilters();
+            }
             if (view === 'tasks') renderOpenTasks();
             if (view === 'stats') updateStats();
         }
@@ -1968,10 +2019,79 @@
             renderEvents();
         }
 
-        function renderTableView() {
+        function setupTableViewFilters() {
+            document.querySelectorAll('#filterOwnerTable .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
+                    applyTableFilters();
+                });
+            });
+            document.querySelectorAll('#filterCategoryTable .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
+                    applyTableFilters();
+                });
+            });
+            document.querySelectorAll('#filterStatusTable .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
+                    applyTableFilters();
+                });
+            });
+            document.getElementById('filterTimingTable').addEventListener('change', applyTableFilters);
+            document.getElementById('sortOrderTable').addEventListener('change', applyTableFilters);
+            document.getElementById('searchEventsTable').addEventListener('input', applyTableFilters);
+        }
+
+        function applyTableFilters() {
+            const selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTable .filter-pill.active')).map(p => p.dataset.value);
+            const selectedCategories = Array.from(document.querySelectorAll('#filterCategoryTable .filter-pill.active')).map(p => p.dataset.value);
+            const selectedStatuses = Array.from(document.querySelectorAll('#filterStatusTable .filter-pill.active')).map(p => p.dataset.value);
+
+            const timing = document.getElementById('filterTimingTable').value;
+            const sortOrder = document.getElementById('sortOrderTable').value;
+            const search = document.getElementById('searchEventsTable').value.toLowerCase().trim();
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            let tableFilteredEvents = events.filter(event => {
+                const eventDate = new Date(event.date);
+                eventDate.setHours(0, 0, 0, 0);
+
+                if (selectedOwners.length > 0 && !selectedOwners.includes(event.owner)) return false;
+
+                if (selectedCategories.length > 0) {
+                    const cats = [event.primaryCategory, event.secondaryCategory].filter(Boolean);
+                    if (!selectedCategories.some(c => cats.includes(c))) return false;
+                }
+
+                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
+
+                if (timing === 'next10') {
+                    const tenDaysFromNow = new Date(now);
+                    tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
+                    if (eventDate < now || eventDate > tenDaysFromNow) return false;
+                } else if (timing === 'upcoming' && eventDate < now) return false;
+                else if (timing === 'past' && eventDate >= now) return false;
+
+                if (search) {
+                    const haystack = `${event.name} ${event.location || ''}`.toLowerCase();
+                    if (!haystack.includes(search)) return false;
+                }
+
+                return true;
+            });
+
+            tableFilteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
+
+            renderTableView(tableFilteredEvents);
+        }
+
+        function renderTableView(eventsToRender = filteredEvents) {
             const tbody = document.getElementById('tableViewBody');
 
-            const rows = filteredEvents.map(event => {
+            const rows = eventsToRender.map(event => {
                 const workflow = getEventWorkflow(event);
                 const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
                 const completedCount = allTasks.filter(task => event[task.key] === 'Yes').length;
