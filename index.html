@@ -1158,8 +1158,8 @@
             <div id="openTasksContainer"></div>
         </div>
 
-        <div id="tableView" style="display: none;">
-            <div class="filter-bar" style="margin-bottom: 20px;">
+        <div id="tableView" class="list-view-container" style="display: none;">
+            <div class="filter-bar">
                 <div class="filter-search">
                     <input type="text" id="searchEventsTable" placeholder="Search events by name or location...">
                 </div>
@@ -1172,51 +1172,49 @@
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
                         </div>
                     </div>
+                    <div class="filter-divider"></div>
                     <div class="filter-group">
                         <span class="filter-group-label">Category</span>
                         <div class="filter-pills" id="filterCategoryTable">
-                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
-                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
                             <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
+                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
+                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
                         </div>
                     </div>
+                    <div class="filter-divider"></div>
                     <div class="filter-group">
                         <span class="filter-group-label">Status</span>
                         <div class="filter-pills" id="filterStatusTable">
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
+                            <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
                             <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
                         </div>
                     </div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Timing</span>
-                        <select id="filterTimingTable" style="padding: 8px 12px; border: 1px solid #d4cec0; border-radius: 6px; font-family: 'DM Sans', sans-serif; cursor: pointer;">
-                            <option value="">All</option>
-                            <option value="upcoming">Upcoming</option>
-                            <option value="next10">Next 10 Days</option>
-                            <option value="past">Past</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Sort</span>
-                        <select id="sortOrderTable" style="padding: 8px 12px; border: 1px solid #d4cec0; border-radius: 6px; font-family: 'DM Sans', sans-serif; cursor: pointer;">
-                            <option value="earliest">Earliest First</option>
-                            <option value="latest">Latest First</option>
-                        </select>
-                    </div>
+                    <div style="flex: 1"></div>
+                    <select id="filterTimingTable" class="filter-select">
+                        <option value="next10">Next 10 days</option>
+                        <option value="upcoming">Upcoming</option>
+                        <option value="past">Past</option>
+                    </select>
+                    <select id="sortOrderTable" class="filter-select">
+                        <option value="earliest">↑ Earliest first</option>
+                        <option value="latest">↓ Latest first</option>
+                    </select>
                 </div>
             </div>
-            <div style="overflow-x: auto; padding: 0 20px 20px 20px;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; margin: 0 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <thead>
                         <tr style="background: #f3f4f6; border-bottom: 2px solid #e5e7eb;">
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Event Name</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Owner</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Date</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Time</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Location</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Category</th>
-                            <th style="padding: 12px; text-align: left; font-weight: 600; font-size: 0.9em;">Status</th>
-                            <th style="padding: 12px; text-align: center; font-weight: 600; font-size: 0.9em;">Progress</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Event Name</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Owner</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Date</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Time</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Location</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Category</th>
+                            <th style="padding: 12px 20px; text-align: left; font-weight: 600; font-size: 0.9em;">Status</th>
+                            <th style="padding: 12px 20px; text-align: center; font-weight: 600; font-size: 0.9em;">Progress</th>
                         </tr>
                     </thead>
                     <tbody id="tableViewBody">
@@ -2020,27 +2018,48 @@
         }
 
         function setupTableViewFilters() {
-            document.querySelectorAll('#filterOwnerTable .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
-                    applyTableFilters();
+            // Remove old listeners if they exist
+            const filterOwnerTable = document.getElementById('filterOwnerTable');
+            const filterCategoryTable = document.getElementById('filterCategoryTable');
+            const filterStatusTable = document.getElementById('filterStatusTable');
+
+            if (filterOwnerTable) {
+                filterOwnerTable.replaceWith(filterOwnerTable.cloneNode(true));
+                document.querySelectorAll('#filterOwnerTable .filter-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        pill.classList.toggle('active');
+                        applyTableFilters();
+                    });
                 });
-            });
-            document.querySelectorAll('#filterCategoryTable .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
-                    applyTableFilters();
+            }
+
+            if (filterCategoryTable) {
+                filterCategoryTable.replaceWith(filterCategoryTable.cloneNode(true));
+                document.querySelectorAll('#filterCategoryTable .filter-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        pill.classList.toggle('active');
+                        applyTableFilters();
+                    });
                 });
-            });
-            document.querySelectorAll('#filterStatusTable .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
-                    applyTableFilters();
+            }
+
+            if (filterStatusTable) {
+                filterStatusTable.replaceWith(filterStatusTable.cloneNode(true));
+                document.querySelectorAll('#filterStatusTable .filter-pill').forEach(pill => {
+                    pill.addEventListener('click', () => {
+                        pill.classList.toggle('active');
+                        applyTableFilters();
+                    });
                 });
-            });
-            document.getElementById('filterTimingTable').addEventListener('change', applyTableFilters);
-            document.getElementById('sortOrderTable').addEventListener('change', applyTableFilters);
-            document.getElementById('searchEventsTable').addEventListener('input', applyTableFilters);
+            }
+
+            const timingSelect = document.getElementById('filterTimingTable');
+            const sortSelect = document.getElementById('sortOrderTable');
+            const searchInput = document.getElementById('searchEventsTable');
+
+            if (timingSelect) timingSelect.addEventListener('change', applyTableFilters);
+            if (sortSelect) sortSelect.addEventListener('change', applyTableFilters);
+            if (searchInput) searchInput.addEventListener('input', applyTableFilters);
         }
 
         function applyTableFilters() {
@@ -2109,18 +2128,18 @@
                 }).join('');
 
                 return `
-                    <tr style="border-bottom: 1px solid #e5e7eb;">
-                        <td style="padding: 12px; font-weight: 500;">${event.name}</td>
-                        <td style="padding: 12px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
-                        <td style="padding: 12px; font-size: 0.9em;">${formatDate(event.date)}</td>
-                        <td style="padding: 12px; font-size: 0.9em;">${event.time || '—'}</td>
-                        <td style="padding: 12px; font-size: 0.9em;">${event.location || '—'}</td>
-                        <td style="padding: 12px; font-size: 0.9em;"><span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span></td>
-                        <td style="padding: 12px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span></td>
-                        <td style="padding: 12px; text-align: center; font-size: 0.9em; font-weight: 500;">${progress}%</td>
+                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+                        <td style="padding: 12px 20px; font-weight: 500;">${event.name}</td>
+                        <td style="padding: 12px 20px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
+                        <td style="padding: 12px 20px; font-size: 0.9em;">${formatDate(event.date)}</td>
+                        <td style="padding: 12px 20px; font-size: 0.9em;">${event.time || '—'}</td>
+                        <td style="padding: 12px 20px; font-size: 0.9em;">${event.location || '—'}</td>
+                        <td style="padding: 12px 20px; font-size: 0.9em;"><span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span></td>
+                        <td style="padding: 12px 20px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span></td>
+                        <td style="padding: 12px 20px; text-align: center; font-size: 0.9em; font-weight: 500;">${progress}%</td>
                     </tr>
                     <tr style="border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
-                        <td colspan="8" style="padding: 12px 12px 8px 12px;">
+                        <td colspan="8" style="padding: 12px 20px 8px 20px;">
                             <div style="display: flex; flex-wrap: wrap; gap: 0; margin: 0;">
                                 ${taskCheckboxes}
                             </div>
