@@ -1147,13 +1147,28 @@
             </div>
         </div>
 
-        <div id="tasksView" class="tasks-view-container" style="display: none;">
-            <div id="tasksFilterOwner" style="display: flex; gap: 12px; margin-bottom: 20px; align-items: center;">
-                <label style="font-weight: 600; font-size: 0.95em; white-space: nowrap;">Owner:</label>
-                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="all" checked> All</label>
-                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Maddy"> Maddy</label>
-                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Hadas"> Hadas</label>
-                <label style="display: flex; align-items: center; gap: 4px; margin: 0; font-size: 0.9em;"><input type="checkbox" value="Gretel"> Gretel</label>
+        <div id="tasksView" class="list-view-container" style="display: none;">
+            <div class="filter-bar">
+                <div style="margin-bottom: 0;"></div>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <span class="filter-group-label">Owner</span>
+                        <div class="filter-pills" id="filterOwnerTasks">
+                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
+                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
+                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
+                        </div>
+                    </div>
+                    <div class="filter-divider"></div>
+                    <div class="filter-group">
+                        <span class="filter-group-label">Due Date</span>
+                        <div class="filter-pills" id="filterDueDateTasks">
+                            <button class="filter-pill" data-value="upcoming" data-color="planning">Upcoming</button>
+                            <button class="filter-pill" data-value="today" data-color="confirmed">Today</button>
+                            <button class="filter-pill" data-value="overdue" data-color="hold">Overdue</button>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div id="openTasksContainer"></div>
         </div>
@@ -1810,7 +1825,10 @@
                 setupTableViewFilters();
                 applyTableFilters();
             }
-            if (view === 'tasks') renderOpenTasks();
+            if (view === 'tasks') {
+                setupTasksFilters();
+                renderOpenTasks();
+            }
             if (view === 'stats') updateStats();
         }
 
@@ -2945,9 +2963,29 @@
             applyFilters();
         }
 
+        function setupTasksFilters() {
+            document.querySelectorAll('#filterOwnerTasks .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
+                    applyTasksFilters();
+                });
+            });
+            document.querySelectorAll('#filterDueDateTasks .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
+                    applyTasksFilters();
+                });
+            });
+        }
+
+        function applyTasksFilters() {
+            renderOpenTasks();
+        }
+
         function renderOpenTasks() {
             const container = document.getElementById('openTasksContainer');
             const now = new Date();
+            now.setHours(0, 0, 0, 0);
             const openTasks = [];
 
             events.forEach(event => {
@@ -2975,9 +3013,25 @@
 
             openTasks.sort((a, b) => a.deadline - b.deadline);
 
-            const selectedOwners = Array.from(document.querySelectorAll('#tasksFilterOwner input[type="checkbox"]:checked')).map(cb => cb.value);
-            const showAll = selectedOwners.includes('all');
-            const filteredTasks = openTasks.filter(task => showAll || selectedOwners.includes(task.owner));
+            // Apply filters
+            const selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            const selectedDueDates = Array.from(document.querySelectorAll('#filterDueDateTasks .filter-pill.active')).map(p => p.dataset.value);
+
+            const filteredTasks = openTasks.filter(task => {
+                if (selectedOwners.length > 0 && !selectedOwners.includes(task.owner)) return false;
+
+                if (selectedDueDates.length > 0) {
+                    let dateMatch = false;
+                    selectedDueDates.forEach(dateFilter => {
+                        if (dateFilter === 'overdue' && task.daysUntil < 0) dateMatch = true;
+                        if (dateFilter === 'today' && task.daysUntil === 0) dateMatch = true;
+                        if (dateFilter === 'upcoming' && task.daysUntil > 0) dateMatch = true;
+                    });
+                    if (!dateMatch) return false;
+                }
+
+                return true;
+            });
 
             if (filteredTasks.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>No open tasks! All confirmed events are on track.</p></div>';
