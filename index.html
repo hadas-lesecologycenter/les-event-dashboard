@@ -2044,38 +2044,30 @@
         }
 
         function renderMetricsDisplay(metrics, event) {
-            if (!metrics || Object.keys(metrics).length === 0) return '';
-            if (metrics.error) return '';
+            if (!metrics) return '';
+            if (metrics.error) {
+                return `<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #fef2f2; border-radius: 6px; border-left: 3px solid #ef4444; font-size: 0.9em; color: #991b1b;">❌ ${metrics.error}</div>`;
+            }
 
             const normalizedType = normalizeEventType(event.type);
-            const hasData = (metrics.participants !== null && metrics.participants !== undefined) ||
-                           (metrics.volunteers !== null && metrics.volunteers !== undefined) ||
-                           (metrics.trees !== null && metrics.trees !== undefined) ||
-                           (metrics.hours !== null && metrics.hours !== undefined && metrics.hours > 0);
-
-            if (!hasData) return '';
-
             let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
-            html += '<div style="font-weight: 600; color: #1d5432; margin-bottom: 6px;">📊 Reported Metrics</div>';
+            html += '<div style="font-weight: 600; color: #1d5432; margin-bottom: 6px;">📊 Metrics</div>';
 
             if (normalizedType === 'PUBLIC_PROGRAM' || normalizedType === 'TABLING') {
-                if (metrics.participants !== null && metrics.participants !== undefined) {
-                    html += `<div>👥 Participants: <strong>${metrics.participants || 0}</strong></div>`;
-                }
+                const participants = metrics.participants || metrics.participants === 0 ? metrics.participants : '-';
+                const hours = metrics.hours || metrics.hours === 0 ? metrics.hours : '-';
+                html += `<div>👥 Participants: <strong>${participants}</strong></div>`;
+                html += `<div>⏱️ Hours: <strong>${hours}</strong></div>`;
             }
             if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
-                if (metrics.volunteers !== null && metrics.volunteers !== undefined) {
-                    html += `<div>👥 Volunteers: <strong>${metrics.volunteers || 0}</strong></div>`;
-                }
-                if (metrics.trees !== null && metrics.trees !== undefined) {
-                    html += `<div>🌳 Trees: <strong>${metrics.trees || 0}</strong></div>`;
-                }
-                if (metrics.compost !== null && metrics.compost !== undefined) {
-                    html += `<div>♻️ Compost: <strong>${metrics.compost || 0} lbs</strong></div>`;
-                }
-            }
-            if (metrics.hours !== null && metrics.hours !== undefined && metrics.hours > 0) {
-                html += `<div>⏱️ Hours: <strong>${metrics.hours}</strong></div>`;
+                const volunteers = metrics.volunteers || metrics.volunteers === 0 ? metrics.volunteers : '-';
+                const trees = metrics.trees || metrics.trees === 0 ? metrics.trees : '-';
+                const compost = metrics.compost || metrics.compost === 0 ? metrics.compost : '-';
+                const hours = metrics.hours || metrics.hours === 0 ? metrics.hours : '-';
+                html += `<div>👥 Volunteers: <strong>${volunteers}</strong></div>`;
+                html += `<div>🌳 Trees: <strong>${trees}</strong></div>`;
+                html += `<div>♻️ Compost: <strong>${compost} lbs</strong></div>`;
+                html += `<div>⏱️ Hours: <strong>${hours}</strong></div>`;
             }
 
             html += '</div>';
