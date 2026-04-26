@@ -2031,10 +2031,15 @@
                     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'getImpactMetrics' })
                 });
-                return await response.json();
+                const result = await response.json();
+                if (result.error) {
+                    console.error('Apps Script error:', result.error);
+                    return result;
+                }
+                return result;
             } catch (error) {
-                console.log('Error fetching impact metrics:', error);
-                return {};
+                console.error('Fetch error for impact metrics:', error);
+                return { error: error.message };
             }
         }
 
