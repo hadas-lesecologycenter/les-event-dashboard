@@ -1094,6 +1094,7 @@
             <button class="view-btn" data-view="stats">📊 Stats</button>
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
             <button id="syncGoogleTasksBtn" style="padding: 12px 30px; background: #4285f4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3); transition: all 0.3s ease;">🔗 Sync to Google Tasks</button>
+            <button id="forceCompleteBtn" style="padding: 12px 30px; background: #e5e7eb; color: #6b7280; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;">⚙️ Force Complete OFF</button>
         </div>
 
         <div id="listView" class="list-view-container">
@@ -1581,6 +1582,7 @@
         let currentMonth = new Date();
         let selectedDate = null;
         let currentBriefEvent = null;
+        let forceCompleteMode = false;
 
         const CATEGORY_COLORS = {
             'Outreach': '#f59e0b',
@@ -2032,6 +2034,23 @@
 
             // Google Tasks button listener
             document.getElementById('syncGoogleTasksBtn').addEventListener('click', syncToGoogleTasks);
+
+            // Force Complete toggle listener
+            document.getElementById('forceCompleteBtn').addEventListener('click', () => {
+                forceCompleteMode = !forceCompleteMode;
+                const btn = document.getElementById('forceCompleteBtn');
+                if (forceCompleteMode) {
+                    btn.style.background = '#ef4444';
+                    btn.style.color = 'white';
+                    btn.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
+                    btn.textContent = '⚙️ Force Complete ON';
+                } else {
+                    btn.style.background = '#e5e7eb';
+                    btn.style.color = '#6b7280';
+                    btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
+                    btn.textContent = '⚙️ Force Complete OFF';
+                }
+            });
         }
 
         function setupCalendarListeners() {
@@ -2798,15 +2817,15 @@
 
             const event = events.find(e => e.id === eventId);
             if (event) {
-                // Special handling for brief task - open brief modal instead
-                if (taskKey === 'brief' && isChecked) {
+                // Special handling for brief task - open brief modal instead (unless force complete is on)
+                if (taskKey === 'brief' && isChecked && !forceCompleteMode) {
                     e.target.checked = false; // Revert checkbox since we're handling it specially
                     openBriefModal(event);
                     return;
                 }
 
-                // Special handling for comms task - open comms form (requires brief AND eventbrite to be completed)
-                if (taskKey === 'comms' && isChecked) {
+                // Special handling for comms task - open comms form (requires brief AND eventbrite to be completed, unless force complete is on)
+                if (taskKey === 'comms' && isChecked && !forceCompleteMode) {
                     if (event.brief !== 'Yes' || event.eventbrite !== 'Yes') {
                         e.target.checked = false;
                         const missing = [];
@@ -2821,7 +2840,9 @@
                         }, 3000);
                         return;
                     }
-                    openCommsForm(event);
+                    if (!forceCompleteMode) {
+                        openCommsForm(event);
+                    }
                 }
 
                 event[taskKey] = isChecked ? 'Yes' : 'No';
