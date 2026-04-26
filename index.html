@@ -1952,11 +1952,11 @@
                     };
                 });
 
-                // POST to Google Apps Script
+                // POST to Google Apps Script (text/plain to avoid CORS preflight)
                 const response = await fetch('https://script.google.com/macros/s/AKfycbz8uyrHsyvcQpN7CetxEXn0x6ibY_DPdGRfmQHCdFxm7l4nnEpXONIUZxH66HYMdvdJ/exec', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'text/plain;charset=utf-8'
                     },
                     body: JSON.stringify(tasksForGoogle)
                 });
@@ -1991,6 +1991,11 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz8uyrHsyvcQpN7CetxEXn0x6ibY_DPdGRfmQHCdFxm7l4nnEpXONIUZxH66HYMdvdJ/exec';
         const metricsCache = {};
 
+        function normalizeEventType(type) {
+            if (!type) return '';
+            return String(type).toUpperCase().replace(/\s+/g, '_');
+        }
+
         async function fetchEventMetrics(event) {
             const cacheKey = `${event.name}-${event.date.toISOString()}`;
             if (metricsCache[cacheKey]) {
@@ -1998,14 +2003,15 @@
             }
 
             try {
+                // Use text/plain to avoid CORS preflight (Apps Script can't handle OPTIONS)
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({
                         action: 'getEventMetrics',
                         eventName: event.name,
                         eventDate: event.date.toISOString().split('T')[0],
-                        eventType: event.type
+                        eventType: normalizeEventType(event.type)
                     })
                 });
 
@@ -2013,7 +2019,7 @@
                 metricsCache[cacheKey] = metrics;
                 return metrics;
             } catch (error) {
-                console.log('Error fetching metrics:', error);
+                console.log('Error fetching metrics for', event.name, ':', error);
                 return {};
             }
         }
@@ -2022,7 +2028,7 @@
             try {
                 const response = await fetch(APPS_SCRIPT_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                     body: JSON.stringify({ action: 'getImpactMetrics' })
                 });
                 return await response.json();
@@ -2034,22 +2040,37 @@
 
         function renderMetricsDisplay(metrics, event) {
             if (!metrics || Object.keys(metrics).length === 0) return '';
+            if (metrics.error) return '';
 
-            let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
+            const normalizedType = normalizeEventType(event.type);
+            const hasData = (metrics.participants !== null && metrics.participants !== undefined) ||
+                           (metrics.volunteers !== null && metrics.volunteers !== undefined) ||
+                           (metrics.trees !== null && metrics.trees !== undefined) ||
+                           (metrics.hours !== null && metrics.hours !== undefined && metrics.hours > 0);
 
-            if (event.type === 'PUBLIC_PROGRAM' && metrics.participants !== undefined) {
-                html += `<div>👥 Participants: <strong>${metrics.participants || '-'}</strong></div>`;
+            if (!hasData) return '';
+
+            let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
+            html += '<div style="font-weight: 600; color: #1d5432; margin-bottom: 6px;">📊 Reported Metrics</div>';
+
+            if (normalizedType === 'PUBLIC_PROGRAM' || normalizedType === 'TABLING') {
+                if (metrics.participants !== null && metrics.participants !== undefined) {
+                    html += `<div>👥 Participants: <strong>${metrics.participants || 0}</strong></div>`;
+                }
             }
-            if (event.type === 'TABLING' && metrics.participants !== undefined) {
-                html += `<div>👥 Participants: <strong>${metrics.participants || '-'}</strong></div>`;
+            if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
+                if (metrics.volunteers !== null && metrics.volunteers !== undefined) {
+                    html += `<div>👥 Volunteers: <strong>${metrics.volunteers || 0}</strong></div>`;
+                }
+                if (metrics.trees !== null && metrics.trees !== undefined) {
+                    html += `<div>🌳 Trees: <strong>${metrics.trees || 0}</strong></div>`;
+                }
+                if (metrics.compost !== null && metrics.compost !== undefined) {
+                    html += `<div>♻️ Compost: <strong>${metrics.compost || 0} lbs</strong></div>`;
+                }
             }
-            if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(event.type)) {
-                if (metrics.volunteers !== undefined) html += `<div>👥 Volunteers: <strong>${metrics.volunteers || '-'}</strong></div>`;
-                if (metrics.trees !== undefined) html += `<div>🌳 Trees: <strong>${metrics.trees || '-'}</strong></div>`;
-                if (metrics.compost !== undefined) html += `<div>♻️ Compost: <strong>${metrics.compost || '-'} lbs</strong></div>`;
-            }
-            if (metrics.hours !== undefined && metrics.hours > 0) {
-                html += `<div>⏱️ Hours: <strong>${metrics.hours || '-'}</strong></div>`;
+            if (metrics.hours !== null && metrics.hours !== undefined && metrics.hours > 0) {
+                html += `<div>⏱️ Hours: <strong>${metrics.hours}</strong></div>`;
             }
 
             html += '</div>';
@@ -2112,11 +2133,11 @@
                     };
                 });
 
-                // POST to Google Apps Script
+                // POST to Google Apps Script (text/plain to avoid CORS preflight)
                 const response = await fetch('https://script.google.com/macros/s/AKfycbz8uyrHsyvcQpN7CetxEXn0x6ibY_DPdGRfmQHCdFxm7l4nnEpXONIUZxH66HYMdvdJ/exec', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'text/plain;charset=utf-8'
                     },
                     body: JSON.stringify(tasksForGoogle)
                 });
