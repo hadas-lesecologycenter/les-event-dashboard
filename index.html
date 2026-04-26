@@ -2636,8 +2636,10 @@
                             <div class="event-status" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                                 <div style="display: flex; gap: 6px;">
                                     <button onclick="editEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#3b82f6';this.style.color='#3b82f6'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">✏ Edit</button>
-                                    <button onclick="syncEventTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#4285f4';this.style.color='#4285f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🔗 Sync</button>
                                     <button onclick="deleteEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🗑 Delete</button>
+                                </div>
+                                <div>
+                                    <button onclick="syncEventTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#4285f4';this.style.color='#4285f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🔗 Sync Tasks</button>
                                 </div>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${progress}%"></div>
