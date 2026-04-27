@@ -1092,6 +1092,8 @@
             <button class="view-btn" data-view="table">📊 Table View</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
             <button class="view-btn" data-view="impact">📊 Impact & Stats</button>
+            <button class="view-btn" data-view="kanban">🎯 Kanban</button>
+
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
         </div>
 
@@ -1104,6 +1106,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Owner</span>
                         <div class="filter-pills" id="filterOwner">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
                             <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
@@ -1113,6 +1116,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Category</span>
                         <div class="filter-pills" id="filterCategory">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
                             <button class="filter-pill" data-value="Education" data-color="education">Education</button>
                             <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
@@ -1122,9 +1126,10 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Status</span>
                         <div class="filter-pills" id="filterStatus">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                             <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
+                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
                         </div>
                     </div>
                     <div style="flex: 1"></div>
@@ -1155,6 +1160,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Owner</span>
                         <div class="filter-pills" id="filterOwnerTasks">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
                             <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
@@ -1184,6 +1190,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Owner</span>
                         <div class="filter-pills" id="filterOwnerTable">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
                             <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
@@ -1193,6 +1200,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Category</span>
                         <div class="filter-pills" id="filterCategoryTable">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
                             <button class="filter-pill" data-value="Education" data-color="education">Education</button>
                             <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
@@ -1202,9 +1210,10 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Status</span>
                         <div class="filter-pills" id="filterStatusTable">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                             <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
+                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
                         </div>
                     </div>
                     <div style="flex: 1"></div>
@@ -1244,6 +1253,27 @@
         <div id="statsView" class="stats-bar" style="display: none;"></div>
 
         <div id="impactView" class="impact-report" style="display: none; padding: 30px; background: white; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+
+        <div id="kanbanView" style="display: none; padding: 20px; background: white; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; height: calc(100vh - 300px);">
+                <div class="kanban-column" data-column="planning" style="background: #fef3c7; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #fbbf24;">
+                    <h3 style="font-weight: 600; color: #92400e; margin-bottom: 15px; font-size: 1.1em;">📋 Planning</h3>
+                    <div class="kanban-cards" data-status="Planning" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="hold" style="background: #fee2e2; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #ef4444;">
+                    <h3 style="font-weight: 600; color: #991b1b; margin-bottom: 15px; font-size: 1.1em;">⏸ Hold</h3>
+                    <div class="kanban-cards" data-status="Hold" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="in-progress" style="background: #dcfce7; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #10b981;">
+                    <h3 style="font-weight: 600; color: #166534; margin-bottom: 15px; font-size: 1.1em;">🚀 In Progress</h3>
+                    <div class="kanban-cards" data-status="In Progress" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="complete" style="background: #d1fae5; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #059669;">
+                    <h3 style="font-weight: 600; color: #065f46; margin-bottom: 15px; font-size: 1.1em;">✅ Complete</h3>
+                    <div class="kanban-cards" data-status="Complete" style="min-height: 100px;"></div>
+                </div>
+            </div>
+        </div>
 
         <div id="calendarView" class="calendar-container">
             <div class="calendar-header">
@@ -1327,7 +1357,7 @@
                     <label for="eventStatus">Status <span style="color:#ef4444">*</span></label>
                     <select id="eventStatus" required>
                         <option value="Planning">Planning</option>
-                        <option value="Confirmed">Confirmed</option>
+                        <option value="In Progress">In Progress</option>
                         <option value="Hold">Hold</option>
                     </select>
                 </div>
@@ -1818,136 +1848,100 @@
 
         async function displayImpactReport() {
             const impactView = document.getElementById('impactView');
-            const statsView = document.getElementById('statsView');
 
-            const now = new Date();
+            const selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All';
+            const selectedYear = localStorage.getItem('selectedStatsYear') || String(new Date().getFullYear());
+            const filtered = getEventsByMonthYear(selectedMonth, selectedYear);
 
-            // Get all months and years from tree care events
-            const monthSet = new Set();
-            const yearSet = new Set();
-            events.forEach(e => {
-                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
-                                   e.name.toLowerCase().includes('stc') ||
-                                   e.primaryCategory === 'Stewardship';
-                if (isTreeEvent) {
-                    monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
-                    yearSet.add(e.date.getFullYear().toString());
-                }
+            // All 12 months distribution for selected year
+            const monthOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const byMonth = {};
+            monthOrder.forEach(m => { byMonth[m] = 0; });
+            getEventsByMonthYear('All', selectedYear).forEach(e => {
+                const m = e.date.toLocaleDateString('en-US', { month: 'short' });
+                byMonth[m] = (byMonth[m] || 0) + 1;
             });
-            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
-            const yearOptions = ['All', ...Array.from(yearSet).sort()];
+            const maxMonthCount = Math.max(...Object.values(byMonth), 1);
 
-            let selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All';
-            let selectedYear = localStorage.getItem('selectedStatsYear') || 'All';
-            if (!monthOptions.includes(selectedMonth)) selectedMonth = 'All';
-            if (!yearOptions.includes(selectedYear)) selectedYear = 'All';
-            localStorage.setItem('selectedStatsMonth', selectedMonth);
-            localStorage.setItem('selectedStatsYear', selectedYear);
-
-            const filteredEventsByMonth = getEventsByMonthYear(selectedMonth, selectedYear);
-            const impactMetrics = await fetchImpactMetrics();
-
-            // Calculate stats
+            // Pie chart data from dashboard events
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
-            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
-            let confirmedCount = 0;
-            let completedCount = 0;
-
-            filteredEventsByMonth.forEach(e => {
-                byOwner[e.owner]++;
-                byCategory[e.primaryCategory]++;
-                byStatus[e.status || 'Planning']++;
-                if (e.status === 'Confirmed') confirmedCount++;
-                if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
+            const byStatus = { Planning: 0, Hold: 0, In Progress: 0 };
+            filtered.forEach(e => {
+                if (byOwner.hasOwnProperty(e.owner)) byOwner[e.owner]++;
+                if (byCategory.hasOwnProperty(e.primaryCategory)) byCategory[e.primaryCategory]++;
+                const status = e.status || 'Planning';
+                if (byStatus.hasOwnProperty(status)) byStatus[status]++;
             });
 
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', In Progress: '#34d399' };
 
-            // Calculate efficiency metrics
-            const volunteersPerEvent = filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalVolunteers || 0) / filteredEventsByMonth.length) : 0;
-            const hoursPerEvent = filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalHours || 0) / filteredEventsByMonth.length * 10) / 10 : 0;
-            const participantsPerEvent = filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalParticipants || 0) / filteredEventsByMonth.length) : 0;
-
-            statsView.innerHTML = `
-                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
-                    <div>
-                        <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Month:</label>
-                        <select id="statsMonthFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                            ${monthOptions.map(month => `<option value="${month}" ${month === selectedMonth ? 'selected' : ''}>${month}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Year:</label>
-                        <select id="statsYearFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                            ${yearOptions.map(year => `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${year}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-            `;
+            // Impact from reporting spreadsheet
+            const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
+            const totalVolunteers = impactMetrics.totalVolunteers || 0;
+            const totalParticipants = impactMetrics.totalParticipants || 0;
+            const totalTrees = impactMetrics.totalTrees || 0;
+            const totalHours = Math.round(impactMetrics.totalHours || 0);
+            const hasImpactData = !impactMetrics.error && (totalVolunteers + totalParticipants + totalTrees + totalHours) > 0;
 
             impactView.innerHTML = `
                 <div style="padding: 20px;">
-                    <h2 style="font-family: 'Playfair Display', serif; color: #1d5432; margin-bottom: 25px; text-align: center; font-size: 2em;">📊 Impact & Stats Dashboard</h2>
+                    <h2 style="font-family: 'Playfair Display', serif; color: #1d5432; margin-bottom: 20px; text-align: center; font-size: 2em;">📊 Impact & Stats Dashboard</h2>
 
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 25px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${filteredEventsByMonth.length}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Events</div>
+                    ${hasImpactData ? `
+                    <div style="margin-bottom: 25px;">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
+                            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalVolunteers}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250,112,154,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalParticipants}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Participants</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalTrees}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalHours}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
+                            </div>
                         </div>
+                    </div>
+                    ` : impactMetrics.error ? `
+                    <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 16px; color: #991b1b; margin-bottom: 25px; font-size: 0.9em;">
+                        ⚠️ Could not load impact data from reporting spreadsheet.
+                    </div>
+                    ` : `
+                    <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 20px; text-align: center; color: #6b7280; margin-bottom: 25px; font-size: 0.95em;">
+                        No impact data found for this period.
+                    </div>
+                    `}
 
-                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${impactMetrics.totalVolunteers || 0}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
-                        </div>
-
-                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${impactMetrics.totalParticipants || 0}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Participants</div>
-                        </div>
-
-                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${impactMetrics.totalTrees || 0}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
-                        </div>
-
-                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${Math.round(impactMetrics.totalHours || 0)}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
+                    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 16px; font-size: 0.95em;">Monthly Distribution — Tree Events</div>
+                        <div style="display: flex; align-items: flex-end; gap: 8px; height: 130px;">
+                            ${monthOrder.map(m => {
+                                const count = byMonth[m] || 0;
+                                const barHeight = count > 0 ? Math.max((count / maxMonthCount) * 90, 8) : 0;
+                                const isSelected = selectedMonth === 'All' || selectedMonth === m;
+                                return \`
+                                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                        <div style="font-size: 0.72em; color: #666; height: 16px;">\${count > 0 ? count : ''}</div>
+                                        <div style="width: 100%; display: flex; align-items: flex-end; height: 90px;">
+                                            <div style="width: 100%; height: \${barHeight}px; background: \${isSelected && count > 0 ? '#1d5432' : count > 0 ? '#a3c4b5' : 'transparent'}; border-radius: 4px 4px 0 0;"></div>
+                                        </div>
+                                        <div style="font-size: 0.72em; color: #666;">\${m}</div>
+                                    </div>
+                                \`;
+                            }).join('')}
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 25px;">
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #667eea;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Confirmed</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${confirmedCount}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #4facfe;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Volunteers/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${volunteersPerEvent}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #fa709a;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">People/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${participantsPerEvent}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #10b981;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Trees/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalTrees || 0) / filteredEventsByMonth.length) : 0}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #f093fb;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Hours/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${hoursPerEvent}</div>
-                        </div>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                         <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                             <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
                             ${createPieChart(byOwner, ownerColors)}
@@ -1963,19 +1957,9 @@
                     </div>
                 </div>
             `;
-
-            document.getElementById('statsMonthFilter').addEventListener('change', (e) => {
-                localStorage.setItem('selectedStatsMonth', e.target.value);
-                displayImpactReport();
-            });
-
-            document.getElementById('statsYearFilter').addEventListener('change', (e) => {
-                localStorage.setItem('selectedStatsYear', e.target.value);
-                displayImpactReport();
-            });
         }
 
-        function switchView(view) {
+                function switchView(view) {
             document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
@@ -1985,6 +1969,7 @@
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
             document.getElementById('statsView').style.display = view === 'impact' ? 'flex' : 'none';
             document.getElementById('impactView').style.display = view === 'impact' ? 'block' : 'none';
+            document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
 
             if (view === 'calendar') renderCalendar();
             if (view === 'table') {
@@ -1998,6 +1983,9 @@
             if (view === 'impact') {
                 updateStats();
                 displayImpactReport();
+            }
+            if (view === 'kanban') {
+                renderKanban();
             }
         }
 
@@ -2031,10 +2019,10 @@
             now.setHours(0, 0, 0, 0);
             const eventTasks = [];
 
-            if (event.status !== 'Confirmed') {
+            if (event.status !== 'In Progress') {
                 const toast = document.createElement('div');
                 toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                toast.textContent = '⚠️ Only confirmed events can sync tasks';
+                toast.textContent = '⚠️ Only in-progress events can sync tasks';
                 document.body.appendChild(toast);
                 setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
                 return;
@@ -2083,7 +2071,7 @@
                 });
 
                 // POST to Google Apps Script
-                const response = await fetch('https://script.google.com/macros/s/AKfycbytndyCJmwlKuHNCwA--8UX3KJU_bjbm4aaHuf9jH_1E0qpdGzdjVm9N64oZnPic6LE/exec?action=createTasks', {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbwlquYJW1Uy-G_0UUkfEVBoQapGW0SAgSNXPVhaG-k75Xyl0h8D4z6hzZ0mAL-CqhRF/exec?action=createTasks', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'
@@ -2120,7 +2108,7 @@
 
 
 
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwY86DWkKE8TbTY3VWHyWTvBjFiTMxInzgU9_cWzza_z3U4oXpAcxkI4S1XuaDz8GhH/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlquYJW1Uy-G_0UUkfEVBoQapGW0SAgSNXPVhaG-k75Xyl0h8D4z6hzZ0mAL-CqhRF/exec';
 
         const metricsCache = {};
 
@@ -2152,9 +2140,12 @@
             }
         }
 
-        async function fetchImpactMetrics() {
+        async function fetchImpactMetrics(month, year) {
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=getImpactMetrics`);
+                const params = new URLSearchParams({ action: 'getImpactMetrics' });
+                if (month && month !== 'All') params.set('month', month);
+                if (year && year !== 'All') params.set('year', year);
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const result = await response.json();
                 if (result.error) console.error('Apps Script error:', result.error);
                 return result;
@@ -2297,7 +2288,7 @@
                 const openTasks = [];
 
                 events.forEach(event => {
-                    if (event.status !== 'Confirmed') return;
+                    if (event.status !== 'In Progress') return;
 
                     Object.entries(TASK_DEADLINES).forEach(([phase, tasks]) => {
                         tasks.forEach(task => {
@@ -2479,43 +2470,43 @@
 
         function getSampleData() {
             const data = [
-                { id: 1, name: 'MulchFest', owner: 'Maddy', date: new Date(2026, 0, 10), time: '2:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
-                { id: 2, name: 'Tool Lending Library Info Session #1', owner: 'Maddy', date: new Date(2026, 1, 25), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: 'Education', category: 'Outreach, Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 1, name: 'MulchFest', owner: 'Maddy', date: new Date(2026, 0, 10), time: '2:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 2, name: 'Tool Lending Library Info Session #1', owner: 'Maddy', date: new Date(2026, 1, 25), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: 'Education', category: 'Outreach, Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
                 { id: 3, name: 'Tool Lending Library Info Session #2', owner: 'Maddy', date: new Date(2026, 2, 11), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: 'Education', category: 'Outreach, Education', type: 'PUBLIC PROGRAM', status: 'Planning', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 4, name: 'Tree Beds Spring Cleaning w/t Henry Street CRT', owner: 'Hadas', date: new Date(2026, 2, 12), time: '3:00 PM', endTime: '', location: 'Henry Street Settlement', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'N/A' },
-                { id: 5, name: 'CBLES Kick-Off Event', owner: 'Maddy', date: new Date(2026, 2, 17), time: '12:00 AM', endTime: '', location: 'Lower Eastside Girls Club', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 5, name: 'CBLES Kick-Off Event', owner: 'Maddy', date: new Date(2026, 2, 17), time: '12:00 AM', endTime: '', location: 'Lower Eastside Girls Club', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
                 { id: 6, name: 'STC w/t Whole Foods', owner: 'Hadas', date: new Date(2026, 2, 19), time: '2:00 PM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 7, name: 'Spring into Tree Care', owner: 'Maddy', date: new Date(2026, 2, 22), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
-                { id: 8, name: 'STC with PS/MS 188', owner: 'Hadas', date: new Date(2026, 2, 24), time: '2:00 PM', endTime: '', location: 'P.S. 188 The Island School', primaryCategory: 'Education', secondaryCategory: 'Stewardship', category: 'Education, Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 7, name: 'Spring into Tree Care', owner: 'Maddy', date: new Date(2026, 2, 22), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 8, name: 'STC with PS/MS 188', owner: 'Hadas', date: new Date(2026, 2, 24), time: '2:00 PM', endTime: '', location: 'P.S. 188 The Island School', primaryCategory: 'Education', secondaryCategory: 'Stewardship', category: 'Education, Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
                 { id: 9, name: 'Corlears Hook Park Spring Fest', owner: 'Hadas', date: new Date(2026, 2, 29), time: '11:00 AM', endTime: '', location: 'Corlears Hook Park', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'No', thankYou: 'No' },
-                { id: 10, name: 'Signs of Spring Virtual Walk', owner: 'Hadas', date: new Date(2026, 3, 1), time: '6:45 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 10, name: 'Signs of Spring Virtual Walk', owner: 'Hadas', date: new Date(2026, 3, 1), time: '6:45 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
                 { id: 11, name: 'STC w/t Girl Scouts', owner: 'Maddy', date: new Date(2026, 3, 8), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: 'Education', category: 'Stewardship, Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'Yes', reminder: 'No', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 12, name: 'Watercolor + Tree ID Workshop', owner: 'Maddy', date: new Date(2026, 3, 9), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
-                { id: 13, name: 'Tree Trivia - Earth Month Celebration', owner: 'Maddy', date: new Date(2026, 3, 13), time: '12:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'N/A', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'No', thankYou: 'N/A' },
-                { id: 14, name: 'CBLES Info Session', owner: 'Maddy', date: new Date(2026, 3, 13), time: '6:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
-                { id: 15, name: 'STC w/t Elena Brill and associates', owner: 'Hadas', date: new Date(2026, 3, 15), time: '9:30 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 16, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 16), time: '10:00 AM', endTime: '', location: 'Lower East Side Ecology Center', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 17, name: 'NYU Students Group Volunteering (Contact - Itzel)', owner: 'Hadas', date: new Date(2026, 3, 17), time: '10:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 18, name: 'STC w/t Columbia Alumni', owner: 'Maddy', date: new Date(2026, 3, 18), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 19, name: 'Spring Tree Walk', owner: 'Hadas', date: new Date(2026, 3, 19), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
-                { id: 20, name: 'Soil Testing - Earth Month Celebration', owner: 'Hadas', date: new Date(2026, 3, 22), time: '2:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'No', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 21, name: 'STC w/ Sixth Street Community Center', owner: 'Maddy', date: new Date(2026, 3, 23), time: '4:30 PM', endTime: '', location: 'Sixth Street Community Center', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 22, name: 'Tabling at Alfred E Smith Rec Center for Earth Day', owner: 'Hadas', date: new Date(2026, 3, 23), time: '3:00 PM', endTime: '', location: 'Alfred E. Smith Recreation Center', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'Confirmed', brief: 'N/A', eventbrite: 'No', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 12, name: 'Watercolor + Tree ID Workshop', owner: 'Maddy', date: new Date(2026, 3, 9), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 13, name: 'Tree Trivia - Earth Month Celebration', owner: 'Maddy', date: new Date(2026, 3, 13), time: '12:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'N/A', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'No', thankYou: 'N/A' },
+                { id: 14, name: 'CBLES Info Session', owner: 'Maddy', date: new Date(2026, 3, 13), time: '6:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 15, name: 'STC w/t Elena Brill and associates', owner: 'Hadas', date: new Date(2026, 3, 15), time: '9:30 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
+                { id: 16, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 16), time: '10:00 AM', endTime: '', location: 'Lower East Side Ecology Center', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
+                { id: 17, name: 'NYU Students Group Volunteering (Contact - Itzel)', owner: 'Hadas', date: new Date(2026, 3, 17), time: '10:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 18, name: 'STC w/t Columbia Alumni', owner: 'Maddy', date: new Date(2026, 3, 18), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 19, name: 'Spring Tree Walk', owner: 'Hadas', date: new Date(2026, 3, 19), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 20, name: 'Soil Testing - Earth Month Celebration', owner: 'Hadas', date: new Date(2026, 3, 22), time: '2:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'No', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 21, name: 'STC w/ Sixth Street Community Center', owner: 'Maddy', date: new Date(2026, 3, 23), time: '4:30 PM', endTime: '', location: 'Sixth Street Community Center', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 22, name: 'Tabling at Alfred E Smith Rec Center for Earth Day', owner: 'Hadas', date: new Date(2026, 3, 23), time: '3:00 PM', endTime: '', location: 'Alfred E. Smith Recreation Center', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'In Progress', brief: 'N/A', eventbrite: 'No', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 23, name: 'Arbor Day Volunteer Event w/ CM Harvey Epstein', owner: 'Hadas', date: new Date(2026, 3, 24), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC VOLUNTEER EVENT', status: 'Planning', brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 24, name: 'STC w/t ConEdison', owner: 'Gretel', date: new Date(2026, 3, 25), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 25, name: 'CBLES Info Session', owner: 'Maddy', date: new Date(2026, 3, 27), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'Planning', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 26, name: 'STC w/ LOMA', owner: 'Maddy', date: new Date(2026, 3, 28), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 27, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 30), time: '10:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 28, name: 'Jane\'s Walk: A History of the LES in 10 Trees', owner: 'Hadas', date: new Date(2026, 4, 1), time: '11:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'N/A', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 27, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 30), time: '10:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 28, name: 'Jane\'s Walk: A History of the LES in 10 Trees', owner: 'Hadas', date: new Date(2026, 4, 1), time: '11:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'N/A', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 29, name: 'PS 110 STC Workshop Pt 1', owner: 'Maddy', date: new Date(2026, 4, 6), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 30, name: 'STC w/ Henry St CRT', owner: 'Maddy', date: new Date(2026, 4, 7), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 31, name: 'Street Tree Care w/ Hort Training Program', owner: 'Maddy', date: new Date(2026, 4, 8), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: 'Education', category: 'Stewardship, Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 32, name: 'Peck Slip Field Trip STC', owner: 'Maddy', date: new Date(2026, 4, 11), time: '12:00 AM', endTime: '', location: 'The Peck Slip School', primaryCategory: 'Stewardship', secondaryCategory: 'Education', category: 'Stewardship, Education', type: 'FIELD TRIP', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 33, name: 'PS 110 STC Workshop Pt 2', owner: 'Maddy', date: new Date(2026, 4, 12), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 34, name: 'Mother\'s Day STC + Community Engagement Team', owner: 'Hadas', date: new Date(2026, 4, 10), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC VOLUNTEER EVENT', status: 'Planning', brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 35, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 7), time: '4:00 PM', endTime: '6:00 PM', location: 'Clyde Garden', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 36, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 21), time: '12:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 37, name: 'Tree Leaf ID Walk', owner: 'Gretel', date: new Date(2026, 4, 30), time: '11:00 AM', endTime: '12:30 PM', location: 'Seward Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' }
+                { id: 35, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 7), time: '4:00 PM', endTime: '6:00 PM', location: 'Clyde Garden', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 36, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 21), time: '12:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 37, name: 'Tree Leaf ID Walk', owner: 'Gretel', date: new Date(2026, 4, 30), time: '11:00 AM', endTime: '12:30 PM', location: 'Seward Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' }
             ];
             return data;
         }
@@ -2535,7 +2526,17 @@
         function setupEventListeners() {
             document.querySelectorAll('.filter-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
+                    const group = pill.closest('.filter-pills');
+                    const isAll = pill.dataset.value === 'All';
+
+                    if (isAll) {
+                        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                    } else {
+                        const allBtn = group.querySelector('[data-value="All"]');
+                        if (allBtn) allBtn.classList.remove('active');
+                        pill.classList.toggle('active');
+                    }
                     applyFilters();
                 });
             });
@@ -2545,9 +2546,13 @@
         }
 
         function applyFilters() {
-            const selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
-            const selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
-            const selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
+            let selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
+            let selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
+
+            selectedOwners = selectedOwners.filter(v => v !== 'All');
+            selectedCategories = selectedCategories.filter(v => v !== 'All');
+            selectedStatuses = selectedStatuses.filter(v => v !== 'All');
 
             const timing = document.getElementById('filterTiming').value;
             const sortOrder = document.getElementById('sortOrder').value;
@@ -2796,12 +2801,11 @@
 
         function getEventsByMonthYear(month, year) {
             return events.filter(e => {
-                // Only include tree care events
+                if (!e.date) return false;
                 const isTreeEvent = e.name.toLowerCase().includes('tree') ||
                                    e.name.toLowerCase().includes('stc') ||
                                    e.primaryCategory === 'Stewardship';
                 if (!isTreeEvent) return false;
-
                 const eventMonth = e.date.toLocaleDateString('en-US', { month: 'short' });
                 const eventYear = e.date.getFullYear().toString();
                 const monthMatch = month === 'All' || eventMonth === month;
@@ -2827,7 +2831,7 @@
                 }
             });
             const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
+            const monthOptions = ['All', ...monthOrder]; // always show all 12 months
             const yearOptions = ['All', ...Array.from(yearSet).sort()];
 
             // Get selected month and year from localStorage
@@ -2844,7 +2848,7 @@
             // Basic counts
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
-            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
+            const byStatus = { Planning: 0, Hold: 0, In Progress: 0 };
             const byMonth = {};
             let confirmedCount = 0;
             let completedCount = 0;
@@ -2857,13 +2861,13 @@
                 const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                 byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
 
-                if (e.status === 'Confirmed') confirmedCount++;
+                if (e.status === 'In Progress') confirmedCount++;
                 if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
             });
             const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', In Progress: '#34d399' };
 
             statsBar.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
@@ -2888,7 +2892,7 @@
                     </div>
                     <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${confirmedCount}</div>
-                        <div class="stat-label">Confirmed</div>
+                        <div class="stat-label">In Progress</div>
                     </div>
                     <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${completedCount}</div>
@@ -2939,10 +2943,12 @@
             document.getElementById('statsMonthFilter').addEventListener('change', (e) => {
                 localStorage.setItem('selectedStatsMonth', e.target.value);
                 updateStats();
+                displayImpactReport();
             });
             document.getElementById('statsYearFilter').addEventListener('change', (e) => {
                 localStorage.setItem('selectedStatsYear', e.target.value);
                 updateStats();
+                displayImpactReport();
             });
         }
 
@@ -2999,6 +3005,7 @@
                                     <button onclick="deleteEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🗑 Delete</button>
                                 </div>
                                 <div>
+                                    <button onclick="checkAllTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#10b981';this.style.color='#10b981'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">☑️ Check All</button>
                                     <button onclick="syncEventTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#4285f4';this.style.color='#4285f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🔗 Sync Tasks</button>
                                     <button onclick="toggleForceComplete()" id="forceBtn-${event.id}" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af; margin-left: 6px;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="updateForceBtnStyle(${event.id})">⚙️ Force OFF</button>
                                 </div>
@@ -3559,7 +3566,17 @@
         function setupTasksFilters() {
             document.querySelectorAll('#filterOwnerTasks .filter-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
+                    const group = pill.closest('.filter-pills');
+                    const isAll = pill.dataset.value === 'All';
+
+                    if (isAll) {
+                        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                    } else {
+                        const allBtn = group.querySelector('[data-value="All"]');
+                        if (allBtn) allBtn.classList.remove('active');
+                        pill.classList.toggle('active');
+                    }
                     applyTasksFilters();
                 });
             });
@@ -3582,7 +3599,7 @@
             const openTasks = [];
 
             events.forEach(event => {
-                if (event.status !== 'Confirmed') return;
+                if (event.status !== 'In Progress') return;
 
                 Object.entries(TASK_DEADLINES).forEach(([phase, tasks]) => {
                     tasks.forEach(task => {
@@ -3607,7 +3624,8 @@
             openTasks.sort((a, b) => a.deadline - b.deadline);
 
             // Apply filters
-            const selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            selectedOwners = selectedOwners.filter(v => v !== 'All');
             const selectedDueDates = Array.from(document.querySelectorAll('#filterDueDateTasks .filter-pill.active')).map(p => p.dataset.value);
 
             const filteredTasks = openTasks.filter(task => {
@@ -3691,6 +3709,127 @@
         function formatDate(date) {
             const options = { month: 'short', day: 'numeric', year: 'numeric' };
             return date.toLocaleDateString('en-US', options);
+        }
+
+        function checkAllTasks(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            const workflow = getEventWorkflow(event);
+            Object.values(workflow).forEach(phase => {
+                phase.forEach(task => {
+                    if (event[task.key] !== 'N/A') {
+                        event[task.key] = 'Yes';
+                    }
+                });
+            });
+
+            event.report = 'Yes';
+            event.treeMap = 'Yes';
+            event.status = 'In Progress';
+
+            saveEvents();
+            applyFilters();
+
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            toast.textContent = `✓ All tasks checked and moved to In Progress`;
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+        }
+
+        function renderKanban() {
+            const columns = {
+                'Planning': document.querySelector('[data-status="Planning"].kanban-cards'),
+                'Hold': document.querySelector('[data-status="Hold"].kanban-cards'),
+                'In Progress': document.querySelector('[data-status="In Progress"].kanban-cards'),
+                'Complete': document.querySelector('[data-status="Complete"].kanban-cards')
+            };
+
+            Object.values(columns).forEach(col => col.innerHTML = '');
+
+            filteredEvents.forEach(event => {
+                const status = event.status || 'Planning';
+                const column = columns[status];
+                if (!column) return;
+
+                const progress = getEventProgress(event);
+                const completionPercent = progress;
+
+                const card = document.createElement('div');
+                card.draggable = true;
+                card.style.cssText = `
+                    background: white;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    cursor: grab;
+                    border-left: 4px solid #1d5432;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    transition: all 0.2s ease;
+                `;
+                card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)'; };
+                card.onmouseleave = () => { card.style.transform = 'translateY(0)'; card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'; };
+
+                const categoryBg = { 'Outreach': '#fef3c7', 'Education': '#e0f2fe', 'Stewardship': '#dcfce7' };
+                const categoryColor = { 'Outreach': '#92400e', 'Education': '#0c4a6e', 'Stewardship': '#166534' };
+
+                card.innerHTML = `
+                    <div style="font-weight: 600; color: #1d5432; margin-bottom: 6px; font-size: 0.95em;">${event.name}</div>
+                    <div style="font-size: 0.8em; color: #6a5a4a; margin-bottom: 4px;">👤 ${event.owner}</div>
+                    <div style="font-size: 0.8em; color: #6a5a4a; margin-bottom: 6px;">📅 ${formatDate(event.date)}</div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75em; color: #6a5a4a;">
+                        <div style="width: 100%; height: 4px; background: #e8ddd0; border-radius: 2px; overflow: hidden;">
+                            <div style="height: 100%; background: linear-gradient(90deg, #1d5432, #2d7a52); width: ${completionPercent}%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <span style="white-space: nowrap;">${completionPercent}%</span>
+                    </div>
+                `;
+
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('eventId', event.id);
+                    card.style.opacity = '0.7';
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.style.opacity = '1';
+                });
+
+                column.appendChild(card);
+            });
+
+            document.querySelectorAll('.kanban-cards').forEach(dropZone => {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    dropZone.style.backgroundColor = 'rgba(29, 84, 50, 0.1)';
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.style.backgroundColor = '';
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.style.backgroundColor = '';
+
+                    const eventId = parseInt(e.dataTransfer.getData('eventId'));
+                    const event = events.find(ev => ev.id === eventId);
+                    if (!event) return;
+
+                    const newStatus = dropZone.dataset.status;
+                    event.status = newStatus;
+
+                    if (newStatus === 'Complete') {
+                        event.report = 'Yes';
+                        event.treeMap = 'Yes';
+                    }
+
+                    saveEvents();
+                    renderKanban();
+                });
+            });
         }
 
         init();
