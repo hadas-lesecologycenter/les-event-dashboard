@@ -1626,6 +1626,19 @@
         </div>
     </div>
 
+    <!-- Event Details Modal -->
+    <div id="eventDetailsModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3 id="eventDetailsTitle">Event Details</h3>
+                <button class="modal-close" onclick="closeEventDetailsModal()">&times;</button>
+            </div>
+            <div id="eventDetailsContent" style="padding: 20px;">
+                <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
     <script>
         let events = [];
         let filteredEvents = [];
@@ -2732,7 +2745,7 @@
 
                 return `
                     <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
-                        <td style="padding: 12px 20px; font-weight: 500;">${event.name}</td>
+                        <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${formatDate(event.date)}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${event.time || '—'}</td>
@@ -3001,7 +3014,7 @@
                 const progress = getEventProgress(event);
 
                 return `
-                    <div class="event-card ${isPast ? 'past' : ''}">
+                    <div class="event-card ${isPast ? 'past' : ''}" onclick="openEventDetailsModal(${event.id})" style="cursor: pointer;">
                         <div class="event-header">
                             <div class="event-title">
                                 <h3>${event.name}</h3>
@@ -3816,6 +3829,12 @@
                     card.style.opacity = '1';
                 });
 
+                card.addEventListener('click', (e) => {
+                    if (e.detail < 2) {
+                        openEventDetailsModal(event.id);
+                    }
+                });
+
                 column.appendChild(card);
             });
 
@@ -3908,6 +3927,110 @@
                     }
                 });
             });
+        }
+
+        function openEventDetailsModal(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            const modal = document.getElementById('eventDetailsModal');
+            const title = document.getElementById('eventDetailsTitle');
+            const content = document.getElementById('eventDetailsContent');
+
+            title.textContent = event.name;
+
+            const workflow = getEventWorkflow(event);
+            const progress = getEventProgress(event);
+
+            content.innerHTML = `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Owner</label>
+                            <div style="color: #1d5432; font-weight: 500;">${event.owner}</div>
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Date</label>
+                            <div style="color: #1d5432; font-weight: 500;">${formatDate(event.date)}</div>
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Category</label>
+                            <div style="color: #1d5432; font-weight: 500;">${event.primaryCategory}</div>
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Status</label>
+                            <div style="color: #1d5432; font-weight: 500;">${event.status || 'Planning'}</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Progress</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1; height: 8px; background: #e8ddd0; border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; background: linear-gradient(90deg, #1d5432, #2d7a52); width: ${progress}%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <span style="font-weight: 600; color: #1d5432;">${progress}%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #e8ddd0; padding-top: 20px;">
+                    <h4 style="font-weight: 600; color: #1d5432; margin-bottom: 15px;">Tasks</h4>
+                    ${Object.entries(workflow).map(([phase, tasks]) => `
+                        <div style="margin-bottom: 20px;">
+                            <h5 style="font-weight: 600; color: #6a5a4a; font-size: 0.9em; margin-bottom: 10px;">
+                                ${phase === 'setup' ? '📋 Setup' : phase === 'execution' ? '🚀 Execution' : '✅ Completion'}
+                            </h5>
+                            <div style="display: flex; flex-direction: column; gap: 8px;">
+                                ${tasks.map(task => {
+                                    const value = event[task.key];
+                                    const isNA = value === 'N/A';
+                                    const isChecked = value === 'Yes' || value === true;
+                                    return `
+                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: ${isNA ? 0.5 : 1};">
+                                            <input type="checkbox"
+                                                data-event-id="${event.id}"
+                                                data-task-key="${task.key}"
+                                                ${isChecked ? 'checked' : ''}
+                                                ${isNA ? 'disabled' : ''}
+                                                onchange="handleTaskToggleFromModal(this)"
+                                                style="cursor: ${isNA ? 'not-allowed' : 'pointer'};">
+                                            <span style="color: #2c2416; font-size: 0.9em;">${task.label}</span>
+                                        </label>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="border-top: 1px solid #e8ddd0; padding-top: 20px; margin-top: 20px; display: flex; gap: 10px;">
+                    <button onclick="editEvent(${event.id}); closeEventDetailsModal();" style="flex: 1; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">✏️ Edit Event</button>
+                    <button onclick="deleteEvent(${event.id}); closeEventDetailsModal();" style="flex: 1; padding: 10px; background: #ef4444; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 500;">🗑 Delete</button>
+                </div>
+            `;
+
+            modal.style.display = 'flex';
+            modal.classList.add('active');
+        }
+
+        function closeEventDetailsModal() {
+            const modal = document.getElementById('eventDetailsModal');
+            modal.style.display = 'none';
+            modal.classList.remove('active');
+        }
+
+        function handleTaskToggleFromModal(checkbox) {
+            const eventId = parseInt(checkbox.dataset.eventId);
+            const taskKey = checkbox.dataset.taskKey;
+            const isChecked = checkbox.checked;
+
+            const event = events.find(e => e.id === eventId);
+            if (event) {
+                event[taskKey] = isChecked ? 'Yes' : 'No';
+                saveEvents();
+                openEventDetailsModal(eventId);
+            }
         }
 
         init();
