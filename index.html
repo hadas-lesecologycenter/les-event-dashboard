@@ -1953,7 +1953,7 @@
                 });
 
                 // POST to Google Apps Script (text/plain to avoid CORS preflight)
-                const response = await fetch('https://script.google.com/macros/s/AKfycbzdEnsSQN6fmolMErX0OnyH3qUYdj7PhhOFaIrh39abz21cfqdROJDxX43-vXk3oq2l/exec', {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxnttlOzJeuPffnvjmmVcKdr8XGywkufbLYVdM8wRKKub_QuaB2cub2Xzbcg1z34JGa/exec', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'
@@ -1988,7 +1988,7 @@
             }
         }
 
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzdEnsSQN6fmolMErX0OnyH3qUYdj7PhhOFaIrh39abz21cfqdROJDxX43-vXk3oq2l/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxnttlOzJeuPffnvjmmVcKdr8XGywkufbLYVdM8wRKKub_QuaB2cub2Xzbcg1z34JGa/exec';
         const metricsCache = {};
 
         function normalizeEventType(type) {
@@ -2003,39 +2003,27 @@
             }
 
             try {
-                // Use text/plain to avoid CORS preflight (Apps Script can't handle OPTIONS)
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({
-                        action: 'getEventMetrics',
-                        eventName: event.name,
-                        eventDate: event.date.toISOString().split('T')[0],
-                        eventType: normalizeEventType(event.type)
-                    })
+                const params = new URLSearchParams({
+                    action: 'getEventMetrics',
+                    eventName: event.name,
+                    eventDate: event.date.toISOString().split('T')[0],
+                    eventType: normalizeEventType(event.type)
                 });
-
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const metrics = await response.json();
                 metricsCache[cacheKey] = metrics;
                 return metrics;
             } catch (error) {
-                console.log('Error fetching metrics for', event.name, ':', error);
-                return {};
+                console.error('Error fetching metrics for', event.name, ':', error);
+                return { error: error.message };
             }
         }
 
         async function fetchImpactMetrics() {
             try {
-                const response = await fetch(APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ action: 'getImpactMetrics' })
-                });
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=getImpactMetrics`);
                 const result = await response.json();
-                if (result.error) {
-                    console.error('Apps Script error:', result.error);
-                    return result;
-                }
+                if (result.error) console.error('Apps Script error:', result.error);
                 return result;
             } catch (error) {
                 console.error('Fetch error for impact metrics:', error);
@@ -2131,7 +2119,7 @@
                 });
 
                 // POST to Google Apps Script (text/plain to avoid CORS preflight)
-                const response = await fetch('https://script.google.com/macros/s/AKfycbzdEnsSQN6fmolMErX0OnyH3qUYdj7PhhOFaIrh39abz21cfqdROJDxX43-vXk3oq2l/exec', {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbxnttlOzJeuPffnvjmmVcKdr8XGywkufbLYVdM8wRKKub_QuaB2cub2Xzbcg1z34JGa/exec', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'
