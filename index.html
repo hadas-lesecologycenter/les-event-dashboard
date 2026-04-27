@@ -1827,74 +1827,64 @@
             const impactView = document.getElementById('impactView');
 
             const selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All';
-            const selectedYear = localStorage.getItem('selectedStatsYear') || 'All';
+            const selectedYear = localStorage.getItem('selectedStatsYear') || String(new Date().getFullYear());
             const filtered = getEventsByMonthYear(selectedMonth, selectedYear);
 
-            let confirmedCount = 0, completedCount = 0, openTasksCount = 0;
+            // All 12 months distribution for selected year
+            const monthOrder = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const byMonth = {};
+            monthOrder.forEach(m => { byMonth[m] = 0; });
+            getEventsByMonthYear('All', selectedYear).forEach(e => {
+                const m = e.date.toLocaleDateString('en-US', { month: 'short' });
+                byMonth[m] = (byMonth[m] || 0) + 1;
+            });
+            const maxMonthCount = Math.max(...Object.values(byMonth), 1);
+
+            // Pie chart data from dashboard events
+            const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
+            const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
+            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
             filtered.forEach(e => {
+                if (byOwner.hasOwnProperty(e.owner)) byOwner[e.owner]++;
+                if (byCategory.hasOwnProperty(e.primaryCategory)) byCategory[e.primaryCategory]++;
                 const status = e.status || 'Planning';
-                if (status === 'Confirmed') confirmedCount++;
-                if (e.report === 'Yes') completedCount++;
-                if (status === 'Confirmed') {
-                    Object.entries(TASK_DEADLINES).forEach(([, tasks]) => {
-                        tasks.forEach(task => {
-                            if (e[task.key] === 'No' || e[task.key] === false) openTasksCount++;
-                        });
-                    });
-                }
+                if (byStatus.hasOwnProperty(status)) byStatus[status]++;
             });
 
-            const completionRate = confirmedCount > 0 ? Math.round((completedCount / confirmedCount) * 100) : 0;
+            const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
+            const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
 
+            // Impact from reporting spreadsheet
             const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
             const totalVolunteers = impactMetrics.totalVolunteers || 0;
             const totalParticipants = impactMetrics.totalParticipants || 0;
             const totalTrees = impactMetrics.totalTrees || 0;
-            const totalHours = impactMetrics.totalHours || 0;
+            const totalHours = Math.round(impactMetrics.totalHours || 0);
             const hasImpactData = !impactMetrics.error && (totalVolunteers + totalParticipants + totalTrees + totalHours) > 0;
 
             impactView.innerHTML = `
                 <div style="padding: 20px;">
-                    <h2 style="font-family: 'Playfair Display', serif; color: #1d5432; margin-bottom: 25px; text-align: center; font-size: 2em;">📊 Impact & Stats Dashboard</h2>
-
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                            <div style="font-size: 2.2em; font-weight: bold;">${filtered.length}</div>
-                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Tree Events</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #34d399 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);">
-                            <div style="font-size: 2.2em; font-weight: bold;">${confirmedCount}</div>
-                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Confirmed</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
-                            <div style="font-size: 2.2em; font-weight: bold;">${completionRate}%</div>
-                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Reports Complete</div>
-                        </div>
-                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);">
-                            <div style="font-size: 2.2em; font-weight: bold;">${openTasksCount}</div>
-                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Open Tasks</div>
-                        </div>
-                    </div>
+                    <h2 style="font-family: 'Playfair Display', serif; color: #1d5432; margin-bottom: 20px; text-align: center; font-size: 2em;">📊 Impact & Stats Dashboard</h2>
 
                     ${hasImpactData ? `
                     <div style="margin-bottom: 25px;">
-                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 1em;">Impact <span style="font-weight: 400; font-size: 0.85em; color: #6b7280;">from reporting spreadsheet</span></div>
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
-                                <div style="font-size: 2em; font-weight: bold;">${totalVolunteers}</div>
-                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
+                            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalVolunteers}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
                             </div>
-                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250,112,154,0.3);">
-                                <div style="font-size: 2em; font-weight: bold;">${totalParticipants}</div>
-                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Participants</div>
+                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250,112,154,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalParticipants}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Participants</div>
                             </div>
-                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
-                                <div style="font-size: 2em; font-weight: bold;">${totalTrees}</div>
-                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalTrees}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
                             </div>
-                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
-                                <div style="font-size: 2em; font-weight: bold;">${totalHours}</div>
-                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
+                                <div style="font-size: 2.2em; font-weight: bold;">${totalHours}</div>
+                                <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
                             </div>
                         </div>
                     </div>
@@ -1904,14 +1894,49 @@
                     </div>
                     ` : `
                     <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 20px; text-align: center; color: #6b7280; margin-bottom: 25px; font-size: 0.95em;">
-                        No impact data found in the reporting spreadsheet for this period.
+                        No impact data found for this period.
                     </div>
                     `}
+
+                    <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px;">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 16px; font-size: 0.95em;">Monthly Distribution — Tree Events</div>
+                        <div style="display: flex; align-items: flex-end; gap: 8px; height: 130px;">
+                            ${monthOrder.map(m => {
+                                const count = byMonth[m] || 0;
+                                const barHeight = count > 0 ? Math.max((count / maxMonthCount) * 90, 8) : 0;
+                                const isSelected = selectedMonth === 'All' || selectedMonth === m;
+                                return \`
+                                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                                        <div style="font-size: 0.72em; color: #666; height: 16px;">\${count > 0 ? count : ''}</div>
+                                        <div style="width: 100%; display: flex; align-items: flex-end; height: 90px;">
+                                            <div style="width: 100%; height: \${barHeight}px; background: \${isSelected && count > 0 ? '#1d5432' : count > 0 ? '#a3c4b5' : 'transparent'}; border-radius: 4px 4px 0 0;"></div>
+                                        </div>
+                                        <div style="font-size: 0.72em; color: #666;">\${m}</div>
+                                    </div>
+                                \`;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
+                            ${createPieChart(byOwner, ownerColors)}
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Category</div>
+                            ${createPieChart(byCategory, categoryColors)}
+                        </div>
+                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Status</div>
+                            ${createPieChart(byStatus, statusColors)}
+                        </div>
+                    </div>
                 </div>
             `;
         }
 
-        function switchView(view) {
+                function switchView(view) {
             document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
