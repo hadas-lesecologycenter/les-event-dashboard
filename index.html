@@ -1827,11 +1827,15 @@
             const impactView = document.getElementById('impactView');
             const statsView = document.getElementById('statsView');
 
-            // Build month/year options from ALL events
+            // Build month/year options from tree care events only
             const monthSet = new Set();
             const yearSet = new Set();
             events.forEach(e => {
                 if (!e.date) return;
+                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
+                                   e.name.toLowerCase().includes('stc') ||
+                                   e.primaryCategory === 'Stewardship';
+                if (!isTreeEvent) return;
                 monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
                 yearSet.add(e.date.getFullYear().toString());
             });
@@ -2825,6 +2829,10 @@
         function getEventsByMonthYear(month, year) {
             return events.filter(e => {
                 if (!e.date) return false;
+                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
+                                   e.name.toLowerCase().includes('stc') ||
+                                   e.primaryCategory === 'Stewardship';
+                if (!isTreeEvent) return false;
                 const eventMonth = e.date.toLocaleDateString('en-US', { month: 'short' });
                 const eventYear = e.date.getFullYear().toString();
                 const monthMatch = month === 'All' || eventMonth === month;
