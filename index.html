@@ -1827,19 +1827,13 @@
             const impactView = document.getElementById('impactView');
             const statsView = document.getElementById('statsView');
 
-            const now = new Date();
-
-            // Get all months and years from tree care events
+            // Build month/year options from ALL events
             const monthSet = new Set();
             const yearSet = new Set();
             events.forEach(e => {
-                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
-                                   e.name.toLowerCase().includes('stc') ||
-                                   e.primaryCategory === 'Stewardship';
-                if (isTreeEvent) {
-                    monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
-                    yearSet.add(e.date.getFullYear().toString());
-                }
+                if (!e.date) return;
+                monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
+                yearSet.add(e.date.getFullYear().toString());
             });
             const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
@@ -1852,45 +1846,70 @@
             localStorage.setItem('selectedStatsMonth', selectedMonth);
             localStorage.setItem('selectedStatsYear', selectedYear);
 
-            const filteredEventsByMonth = getEventsByMonthYear(selectedMonth, selectedYear);
-            const impactMetrics = await fetchImpactMetrics();
+            const filtered = getEventsByMonthYear(selectedMonth, selectedYear);
 
-            // Calculate stats
+            // Count by owner, category, status
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
             const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
             let confirmedCount = 0;
             let completedCount = 0;
+            let openTasksCount = 0;
 
-            filteredEventsByMonth.forEach(e => {
-                byOwner[e.owner]++;
-                byCategory[e.primaryCategory]++;
-                byStatus[e.status || 'Planning']++;
-                if (e.status === 'Confirmed') confirmedCount++;
-                if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
+            // Aggregate impact from per-event manual metrics stored in localStorage
+            let totalVolunteers = 0, totalParticipants = 0, totalTrees = 0, totalHours = 0, totalCompost = 0;
+            let eventsWithMetrics = 0;
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            filtered.forEach(e => {
+                if (byOwner.hasOwnProperty(e.owner)) byOwner[e.owner]++;
+                if (byCategory.hasOwnProperty(e.primaryCategory)) byCategory[e.primaryCategory]++;
+                const status = e.status || 'Planning';
+                if (byStatus.hasOwnProperty(status)) byStatus[status]++;
+                if (status === 'Confirmed') confirmedCount++;
+                if (e.report === 'Yes') completedCount++;
+
+                // Count open tasks for confirmed events
+                if (status === 'Confirmed') {
+                    Object.entries(TASK_DEADLINES).forEach(([, tasks]) => {
+                        tasks.forEach(task => {
+                            if (e[task.key] === 'No' || e[task.key] === false) openTasksCount++;
+                        });
+                    });
+                }
+
+                // Pull impact from localStorage metrics
+                const m = getManualMetrics(e.id);
+                if (m && !m.error) {
+                    eventsWithMetrics++;
+                    totalVolunteers += Number(m.volunteers) || 0;
+                    totalParticipants += Number(m.participants) || 0;
+                    totalTrees += Number(m.trees) || 0;
+                    totalHours += Number(m.hours) || 0;
+                    totalCompost += Number(m.compost) || 0;
+                }
             });
+
+            const completionRate = confirmedCount > 0 ? Math.round((completedCount / confirmedCount) * 100) : 0;
 
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
             const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
-
-            // Calculate efficiency metrics
-            const volunteersPerEvent = filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalVolunteers || 0) / filteredEventsByMonth.length) : 0;
-            const hoursPerEvent = filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalHours || 0) / filteredEventsByMonth.length * 10) / 10 : 0;
-            const participantsPerEvent = filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalParticipants || 0) / filteredEventsByMonth.length) : 0;
 
             statsView.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
                     <div>
                         <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Month:</label>
                         <select id="statsMonthFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                            ${monthOptions.map(month => `<option value="${month}" ${month === selectedMonth ? 'selected' : ''}>${month}</option>`).join('')}
+                            ${monthOptions.map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`).join('')}
                         </select>
                     </div>
                     <div>
                         <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Year:</label>
                         <select id="statsYearFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                            ${yearOptions.map(year => `<option value="${year}" ${year === selectedYear ? 'selected' : ''}>${year}</option>`).join('')}
+                            ${yearOptions.map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`).join('')}
                         </select>
                     </div>
                 </div>
@@ -1900,61 +1919,58 @@
                 <div style="padding: 20px;">
                     <h2 style="font-family: 'Playfair Display', serif; color: #1d5432; margin-bottom: 25px; text-align: center; font-size: 2em;">📊 Impact & Stats Dashboard</h2>
 
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 25px;">
-                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${filteredEventsByMonth.length}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Events</div>
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                            <div style="font-size: 2.2em; font-weight: bold;">${filtered.length}</div>
+                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Total Events</div>
                         </div>
-
-                        <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79, 172, 254, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${impactMetrics.totalVolunteers || 0}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
+                        <div style="background: linear-gradient(135deg, #34d399 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);">
+                            <div style="font-size: 2.2em; font-weight: bold;">${confirmedCount}</div>
+                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Confirmed</div>
                         </div>
-
-                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${impactMetrics.totalParticipants || 0}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Participants</div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
+                            <div style="font-size: 2.2em; font-weight: bold;">${completionRate}%</div>
+                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Reports Complete</div>
                         </div>
-
-                        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${impactMetrics.totalTrees || 0}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
-                        </div>
-
-                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
-                            <div style="font-size: 2em; font-weight: bold;">${Math.round(impactMetrics.totalHours || 0)}</div>
-                            <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
+                        <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250, 112, 154, 0.3);">
+                            <div style="font-size: 2.2em; font-weight: bold;">${openTasksCount}</div>
+                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Open Tasks</div>
                         </div>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 25px;">
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #667eea;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Confirmed</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${confirmedCount}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #4facfe;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Volunteers/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${volunteersPerEvent}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #fa709a;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">People/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${participantsPerEvent}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #10b981;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Trees/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${filteredEventsByMonth.length > 0 ? Math.round((impactMetrics.totalTrees || 0) / filteredEventsByMonth.length) : 0}</div>
-                        </div>
-
-                        <div style="background: #f3f4f6; padding: 14px; border-radius: 12px; text-align: center; border-left: 3px solid #f093fb;">
-                            <div style="font-size: 0.75em; color: #666; margin-bottom: 6px; font-weight: 600;">Hours/Event</div>
-                            <div style="font-size: 1.8em; font-weight: bold; color: #1d5432;">${hoursPerEvent}</div>
+                    ${eventsWithMetrics > 0 ? `
+                    <div style="margin-bottom: 25px;">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 1em;">Impact Metrics <span style="font-weight: 400; font-size: 0.85em; color: #6b7280;">(from ${eventsWithMetrics} event${eventsWithMetrics !== 1 ? 's' : ''} with recorded data)</span></div>
+                        <div style="display: grid; grid-template-columns: repeat(${totalCompost > 0 ? 5 : 4}, 1fr); gap: 12px;">
+                            ${totalVolunteers > 0 ? `<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
+                                <div style="font-size: 2em; font-weight: bold;">${totalVolunteers}</div>
+                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
+                            </div>` : ''}
+                            ${totalParticipants > 0 ? `<div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250,112,154,0.3);">
+                                <div style="font-size: 2em; font-weight: bold;">${totalParticipants}</div>
+                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Participants</div>
+                            </div>` : ''}
+                            ${totalTrees > 0 ? `<div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                                <div style="font-size: 2em; font-weight: bold;">${totalTrees}</div>
+                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
+                            </div>` : ''}
+                            ${totalHours > 0 ? `<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
+                                <div style="font-size: 2em; font-weight: bold;">${Math.round(totalHours)}</div>
+                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
+                            </div>` : ''}
+                            ${totalCompost > 0 ? `<div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1d5432; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                                <div style="font-size: 2em; font-weight: bold;">${totalCompost}</div>
+                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Compost (lbs)</div>
+                            </div>` : ''}
                         </div>
                     </div>
+                    ` : `
+                    <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 20px; text-align: center; color: #6b7280; margin-bottom: 25px; font-size: 0.95em;">
+                        No impact metrics recorded for this period. Add metrics to individual events using the Edit button on each event card.
+                    </div>
+                    `}
 
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
                         <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                             <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
                             ${createPieChart(byOwner, ownerColors)}
@@ -1975,7 +1991,6 @@
                 localStorage.setItem('selectedStatsMonth', e.target.value);
                 displayImpactReport();
             });
-
             document.getElementById('statsYearFilter').addEventListener('change', (e) => {
                 localStorage.setItem('selectedStatsYear', e.target.value);
                 displayImpactReport();
@@ -2817,12 +2832,7 @@
 
         function getEventsByMonthYear(month, year) {
             return events.filter(e => {
-                // Only include tree care events
-                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
-                                   e.name.toLowerCase().includes('stc') ||
-                                   e.primaryCategory === 'Stewardship';
-                if (!isTreeEvent) return false;
-
+                if (!e.date) return false;
                 const eventMonth = e.date.toLocaleDateString('en-US', { month: 'short' });
                 const eventYear = e.date.getFullYear().toString();
                 const monthMatch = month === 'All' || eventMonth === month;
