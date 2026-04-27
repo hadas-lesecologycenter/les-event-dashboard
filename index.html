@@ -2684,6 +2684,12 @@
 
         function getEventsByMonthYear(month, year) {
             return events.filter(e => {
+                // Only include tree care events
+                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
+                                   e.name.toLowerCase().includes('stc') ||
+                                   e.primaryCategory === 'Stewardship';
+                if (!isTreeEvent) return false;
+
                 const eventMonth = e.date.toLocaleDateString('en-US', { month: 'short' });
                 const eventYear = e.date.getFullYear().toString();
                 const monthMatch = month === 'All' || eventMonth === month;
@@ -2696,12 +2702,17 @@
             const statsBar = document.getElementById('statsView');
             const now = new Date();
 
-            // Get all months and years from events
+            // Get all months and years from tree care events
             const monthSet = new Set();
             const yearSet = new Set();
             events.forEach(e => {
-                monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
-                yearSet.add(e.date.getFullYear().toString());
+                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
+                                   e.name.toLowerCase().includes('stc') ||
+                                   e.primaryCategory === 'Stewardship';
+                if (isTreeEvent) {
+                    monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
+                    yearSet.add(e.date.getFullYear().toString());
+                }
             });
             const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
