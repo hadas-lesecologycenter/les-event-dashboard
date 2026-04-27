@@ -69,6 +69,10 @@ function doPost(e) {
       return handleCreateTasks(payload);
     }
 
+    if (action === 'saveMetrics') {
+      return handleSaveMetrics(payload);
+    }
+
     const { eventName, taskField, value } = payload;
 
     if (!eventName || !taskField) {
@@ -112,6 +116,103 @@ function doPost(e) {
     return HtmlService.createHtmlOutput(JSON.stringify({
       success: true,
       message: `Updated ${taskField} for ${eventName}`,
+      timestamp: new Date().toISOString()
+    })).setMimeType(MimeType.JSON);
+
+  } catch (error) {
+    return HtmlService.createHtmlOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(MimeType.JSON);
+  }
+}
+
+/**
+ * Handle saving metrics to the reporting spreadsheet
+ */
+function handleSaveMetrics(metricsData) {
+  try {
+    const { eventName, eventDate, eventType, metrics, owner } = metricsData;
+
+    if (!eventName || !eventDate || !eventType || !metrics) {
+      throw new Error('Missing required fields');
+    }
+
+    const spreadsheet = SpreadsheetApp.openById(REPORTING_SHEET_ID);
+    let sheetName = '';
+
+    // Determine which sheet to write to based on event type
+    const normalizedType = String(eventType).toUpperCase().replace(/\s+/g, '_');
+
+    if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
+      sheetName = 'Volunteer Activities';
+    } else if (['PUBLIC_PROGRAM', 'TABLING', 'WORKSHOP'].includes(normalizedType)) {
+      sheetName = 'Workshop/Outreach';
+    }
+
+    if (!sheetName) {
+      throw new Error(`Unknown event type: ${eventType}`);
+    }
+
+    const sheet = spreadsheet.getSheetByName(sheetName);
+    if (!sheet) {
+      throw new Error(`Sheet "${sheetName}" not found in reporting spreadsheet`);
+    }
+
+    // Get headers
+    const headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+
+    // Find or create row for this event
+    const allData = sheet.getDataRange().getValues();
+    let eventRow = -1;
+    for (let i = 1; i < allData.length; i++) {
+      if (String(allData[i][0]).includes(eventName)) {
+        eventRow = i;
+        break;
+      }
+    }
+
+    // If no existing row, add new row
+    if (eventRow === -1) {
+      sheet.appendRow([''] * sheet.getLastColumn());
+      eventRow = sheet.getLastRow() - 1;
+    }
+
+    // Write metrics to appropriate columns
+    const metricsMapping = {
+      'Volunteer Activities': {
+        'Date': eventDate,
+        'Workshop/Event Title': eventName,
+        'Number of tree care volunteers': metrics.volunteers || 0,
+        'Number of trees cared for': metrics.trees || 0,
+        'Length of tree care event in hours': metrics.hours || 0,
+        'Compost collected (lbs)': metrics.compost || 0
+      },
+      'Workshop/Outreach': {
+        'Date': eventDate,
+        'Workshop/Event Title': eventName,
+        'Number of Participants': metrics.participants || 0,
+        'Length of Activity/Events (in hours)': metrics.hours || 0
+      }
+    };
+
+    const rowMapping = metricsMapping[sheetName];
+    for (const [columnName, value] of Object.entries(rowMapping)) {
+      const colIndex = headerRow.indexOf(columnName);
+      if (colIndex !== -1) {
+        sheet.getRange(eventRow + 1, colIndex + 1).setValue(value);
+      }
+    }
+
+    // Set owner/team member name
+    const ownerColIndex = headerRow.findIndex(h => String(h).toLowerCase().includes('owner') || String(h).toLowerCase().includes('name'));
+    if (ownerColIndex !== -1) {
+      sheet.getRange(eventRow + 1, ownerColIndex + 1).setValue(owner);
+    }
+
+    return HtmlService.createHtmlOutput(JSON.stringify({
+      success: true,
+      message: `Metrics saved for ${eventName}`,
       timestamp: new Date().toISOString()
     })).setMimeType(MimeType.JSON);
 

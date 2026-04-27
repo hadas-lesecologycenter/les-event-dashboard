@@ -2268,6 +2268,9 @@
         }
 
         function saveMetricsEdit(eventId, eventType) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
             const newMetrics = {};
             if (eventType === 'PUBLIC_PROGRAM' || eventType === 'TABLING') {
                 const participants = document.getElementById('metric-participants')?.value;
@@ -2287,11 +2290,39 @@
             newMetrics.type = eventType;
             saveManualMetrics(eventId, newMetrics);
 
+            // Sync to Apps Script
+            syncMetricsToAppsScript(event, newMetrics, eventType);
+
             const metricsDiv = document.getElementById(`metrics-${eventId}`);
             if (metricsDiv) {
-                const event = events.find(e => e.id === eventId);
                 metricsDiv.innerHTML = renderMetricsDisplay(newMetrics, event);
             }
+        }
+
+        function syncMetricsToAppsScript(event, metrics, eventType) {
+            const payload = {
+                eventName: event.name,
+                eventDate: event.date instanceof Date ? event.date.toISOString().split('T')[0] : event.date,
+                eventType: eventType,
+                owner: event.owner,
+                metrics: metrics
+            };
+
+            fetch(`${APPS_SCRIPT_URL}?action=saveMetrics`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      console.log('Metrics synced to reporting sheet');
+                  } else {
+                      console.error('Failed to sync metrics:', data.error);
+                  }
+              })
+              .catch(error => console.error('Error syncing metrics:', error));
         }
 
         async function syncToGoogleTasks() {
