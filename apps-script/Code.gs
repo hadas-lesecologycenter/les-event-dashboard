@@ -173,7 +173,7 @@ function handleCreateTasks(tasks) {
 function getImpactMetrics(month, year) {
   try {
     const spreadsheet = SpreadsheetApp.openById(REPORTING_SHEET_ID);
-    let totalVolunteers = 0, totalTrees = 0, totalHours = 0;
+    let totalVolunteers = 0, totalParticipants = 0, totalTrees = 0, totalHours = 0;
 
     const volSheet = spreadsheet.getSheetByName('Volunteer Activities');
     if (volSheet) {
@@ -193,7 +193,28 @@ function getImpactMetrics(month, year) {
       }
     }
 
-    return { totalVolunteers, totalTrees, totalHours: Math.round(totalHours) };
+    const workSheet = spreadsheet.getSheetByName('Workshop/Outreach');
+    if (workSheet) {
+      const workData = workSheet.getDataRange().getValues();
+      const workHeaders = workData[0];
+      const dateIdx = findColumnIndex(workHeaders, 'Date');
+      const titleIdx = findColumnIndex(workHeaders, 'Workshop/Event Title');
+      const participantsIdx = workHeaders.indexOf('Number of Participants');
+      const workHoursIdx = workHeaders.indexOf('Length of Activity/Events (in hours)');
+
+      for (let i = 1; i < workData.length; i++) {
+        const row = workData[i];
+        if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
+        // Only include tree-related workshops/programs
+        const title = String(row[titleIdx] || '').toLowerCase();
+        const isTreeRelated = title.includes('tree') || title.includes('stc') || title.includes('stewardship');
+        if (!isTreeRelated) continue;
+        totalParticipants += Number(row[participantsIdx]) || 0;
+        totalHours += Number(row[workHoursIdx]) || 0;
+      }
+    }
+
+    return { totalVolunteers, totalParticipants, totalTrees, totalHours: Math.round(totalHours) };
   } catch (error) {
     Logger.log('Error in getImpactMetrics: ' + error);
     return { error: error.toString() };

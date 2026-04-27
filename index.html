@@ -1848,9 +1848,10 @@
 
             const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
             const totalVolunteers = impactMetrics.totalVolunteers || 0;
+            const totalParticipants = impactMetrics.totalParticipants || 0;
             const totalTrees = impactMetrics.totalTrees || 0;
             const totalHours = impactMetrics.totalHours || 0;
-            const hasImpactData = !impactMetrics.error && (totalVolunteers + totalTrees + totalHours) > 0;
+            const hasImpactData = !impactMetrics.error && (totalVolunteers + totalParticipants + totalTrees + totalHours) > 0;
 
             impactView.innerHTML = `
                 <div style="padding: 20px;">
@@ -1878,10 +1879,14 @@
                     ${hasImpactData ? `
                     <div style="margin-bottom: 25px;">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 1em;">Impact <span style="font-weight: 400; font-size: 0.85em; color: #6b7280;">from reporting spreadsheet</span></div>
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
                             <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
                                 <div style="font-size: 2em; font-weight: bold;">${totalVolunteers}</div>
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
+                            </div>
+                            <div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250,112,154,0.3);">
+                                <div style="font-size: 2em; font-weight: bold;">${totalParticipants}</div>
+                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Participants</div>
                             </div>
                             <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
                                 <div style="font-size: 2em; font-weight: bold;">${totalTrees}</div>
