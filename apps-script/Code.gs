@@ -1,20 +1,27 @@
 /**
  * LES Ecology Center - Event Dashboard Google Apps Script
  *
- * This script provides server-side functionality for syncing event data
- * between Google Sheets and the Event Workflow Dashboard.
- *
  * Deployment: Deploy as a web app accessible to anyone with the link
  */
 
-// Configuration
 const TRACKER_SHEET_ID = '1EKZHAAlNOPPQEgxDgR7IMBKXWY5aR3VEURl4crImsrY';
-const SHEET_NAME = 'Sheet1'; // Change if your sheet has a different name
+const SHEET_NAME = 'Sheet1';
+const REPORTING_SHEET_ID = '1RqQl5Wx-DUhMDQwTk2APz0VulodV3FaS51Y9WGuYwAs';
 
 /**
- * GET endpoint: Retrieve all events from the tracker sheet
+ * GET endpoint: Retrieve all events, impact metrics, or per-event metrics
  */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'getImpactMetrics') {
+    const metrics = getImpactMetrics(e.parameter.month, e.parameter.year);
+    return HtmlService.createHtmlOutput(JSON.stringify(metrics)).setMimeType(MimeType.JSON);
+  }
+
+  if (e && e.parameter && e.parameter.action === 'getEventMetrics') {
+    const metrics = getEventMetrics(e.parameter.eventName, e.parameter.eventType);
+    return HtmlService.createHtmlOutput(JSON.stringify(metrics)).setMimeType(MimeType.JSON);
+  }
+
   try {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -29,17 +36,11 @@ function doGet(e) {
     const headers = data[0];
     const events = [];
 
-    // Parse each row into an event object
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-
-      // Skip empty rows
       if (!row[0]) continue;
-
       const event = parseEventRow(row, headers);
-      if (event) {
-        events.push(event);
-      }
+      if (event) events.push(event);
     }
 
     return HtmlService.createHtmlOutput(JSON.stringify({
@@ -57,8 +58,7 @@ function doGet(e) {
 }
 
 /**
- * POST endpoint: Handle task creation and updates
- * Expects JSON body with task data
+ * POST endpoint: Handle task updates, task creation to Chat, and metrics saving
  */
 function doPost(e) {
   try {
@@ -84,7 +84,6 @@ function doPost(e) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
-    // Find the event row
     let eventRow = -1;
     for (let i = 1; i < data.length; i++) {
       if (data[i][0] === eventName) {
@@ -93,11 +92,8 @@ function doPost(e) {
       }
     }
 
-    if (eventRow === -1) {
-      throw new Error(`Event "${eventName}" not found`);
-    }
+    if (eventRow === -1) throw new Error(`Event "${eventName}" not found`);
 
-    // Find the task column
     let taskCol = -1;
     for (let j = 0; j < headers.length; j++) {
       if (headers[j] === taskField) {
@@ -106,11 +102,8 @@ function doPost(e) {
       }
     }
 
-    if (taskCol === -1) {
-      throw new Error(`Task field "${taskField}" not found`);
-    }
+    if (taskCol === -1) throw new Error(`Task field "${taskField}" not found`);
 
-    // Update the cell (converting to 1-based indexing for Sheets)
     sheet.getRange(eventRow + 1, taskCol + 1).setValue(value);
 
     return HtmlService.createHtmlOutput(JSON.stringify({
@@ -128,7 +121,67 @@ function doPost(e) {
 }
 
 /**
- * Handle saving metrics to the reporting spreadsheet
+ * Read per-event metrics from the reporting spreadsheet (form responses)
+ */
+function getEventMetrics(eventName, eventType) {
+  try {
+    if (!eventName) return { error: 'eventName required' };
+
+    const spreadsheet = SpreadsheetApp.openById(REPORTING_SHEET_ID);
+    const normalizedType = String(eventType || '').toUpperCase().replace(/\s+/g, '_');
+
+    let sheetName = '';
+    if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
+      sheetName = 'Volunteer Activities';
+    } else if (['PUBLIC_PROGRAM', 'TABLING', 'WORKSHOP'].includes(normalizedType)) {
+      sheetName = 'Workshop/Outreach';
+    }
+
+    // If type unknown, search both sheets
+    const sheetsToSearch = sheetName ? [sheetName] : ['Volunteer Activities', 'Workshop/Outreach'];
+
+    for (const name of sheetsToSearch) {
+      const sheet = spreadsheet.getSheetByName(name);
+      if (!sheet) continue;
+
+      const data = sheet.getDataRange().getValues();
+      const headers = data[0];
+
+      for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        const titleIdx = findColumnIndex(headers, 'Workshop/Event Title');
+        if (titleIdx === -1) continue;
+        const rowTitle = String(row[titleIdx] || '').toLowerCase().trim();
+        if (!rowTitle.includes(eventName.toLowerCase().trim())) continue;
+
+        if (name === 'Volunteer Activities') {
+          return {
+            volunteers: Number(row[findColumnIndex(headers, 'Number of tree care volunteers')]) || 0,
+            trees: Number(row[findColumnIndex(headers, 'Number of trees cared for')]) || 0,
+            hours: Number(row[findColumnIndex(headers, 'Length of tree care event in hours')]) || 0,
+            compost: Number(row[findColumnIndex(headers, 'Compost collected (lbs)')]) || 0,
+            source: 'reporting_sheet'
+          };
+        } else {
+          return {
+            participants: Number(row[headers.indexOf('Number of Participants')]) || 0,
+            hours: Number(row[headers.indexOf('Length of Activity/Events (in hours)')]) || 0,
+            source: 'reporting_sheet'
+          };
+        }
+      }
+    }
+
+    return { notFound: true };
+
+  } catch (error) {
+    Logger.log('Error in getEventMetrics: ' + error);
+    return { error: error.toString() };
+  }
+}
+
+/**
+ * Save manually entered metrics to the reporting spreadsheet
  */
 function handleSaveMetrics(metricsData) {
   try {
@@ -139,10 +192,8 @@ function handleSaveMetrics(metricsData) {
     }
 
     const spreadsheet = SpreadsheetApp.openById(REPORTING_SHEET_ID);
-    let sheetName = '';
-
-    // Determine which sheet to write to based on event type
     const normalizedType = String(eventType).toUpperCase().replace(/\s+/g, '_');
+    let sheetName = '';
 
     if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
       sheetName = 'Volunteer Activities';
@@ -150,35 +201,28 @@ function handleSaveMetrics(metricsData) {
       sheetName = 'Workshop/Outreach';
     }
 
-    if (!sheetName) {
-      throw new Error(`Unknown event type: ${eventType}`);
-    }
+    if (!sheetName) throw new Error(`Unknown event type: ${eventType}`);
 
     const sheet = spreadsheet.getSheetByName(sheetName);
-    if (!sheet) {
-      throw new Error(`Sheet "${sheetName}" not found in reporting spreadsheet`);
-    }
+    if (!sheet) throw new Error(`Sheet "${sheetName}" not found in reporting spreadsheet`);
 
-    // Get headers
     const headerRow = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
 
-    // Find or create row for this event
     const allData = sheet.getDataRange().getValues();
     let eventRow = -1;
     for (let i = 1; i < allData.length; i++) {
-      if (String(allData[i][0]).includes(eventName)) {
+      if (String(allData[i][0]).toLowerCase().includes(eventName.toLowerCase())) {
         eventRow = i;
         break;
       }
     }
 
-    // If no existing row, add new row
     if (eventRow === -1) {
-      sheet.appendRow([''] * sheet.getLastColumn());
+      const emptyRow = new Array(sheet.getLastColumn()).fill('');
+      sheet.appendRow(emptyRow);
       eventRow = sheet.getLastRow() - 1;
     }
 
-    // Write metrics to appropriate columns
     const metricsMapping = {
       'Volunteer Activities': {
         'Date': eventDate,
@@ -204,10 +248,13 @@ function handleSaveMetrics(metricsData) {
       }
     }
 
-    // Set owner/team member name
-    const ownerColIndex = headerRow.findIndex(h => String(h).toLowerCase().includes('owner') || String(h).toLowerCase().includes('name'));
-    if (ownerColIndex !== -1) {
-      sheet.getRange(eventRow + 1, ownerColIndex + 1).setValue(owner);
+    if (owner) {
+      const ownerColIndex = headerRow.findIndex(h =>
+        String(h).toLowerCase().includes('owner') || String(h).toLowerCase().includes('name')
+      );
+      if (ownerColIndex !== -1) {
+        sheet.getRange(eventRow + 1, ownerColIndex + 1).setValue(owner);
+      }
     }
 
     return HtmlService.createHtmlOutput(JSON.stringify({
@@ -225,7 +272,7 @@ function handleSaveMetrics(metricsData) {
 }
 
 /**
- * Create tasks in Google Chat space via webhook
+ * Send task notifications to Google Chat via webhook
  */
 function handleCreateTasks(tasks) {
   try {
@@ -237,17 +284,13 @@ function handleCreateTasks(tasks) {
         text: `📋 Task: ${task.title}\nDue: ${task.due}\n${task.notes}\n\nAssigned to: ${task.owner}`
       };
 
-      const options = {
+      const response = UrlFetchApp.fetch(webhookUrl, {
         method: 'post',
         payload: JSON.stringify(message),
         contentType: 'application/json',
         muteHttpExceptions: true
-      };
-
-      const response = UrlFetchApp.fetch(webhookUrl, options);
-      if (response.getResponseCode() === 200) {
-        createdCount++;
-      }
+      });
+      if (response.getResponseCode() === 200) createdCount++;
     }
 
     return HtmlService.createHtmlOutput(JSON.stringify({
@@ -264,7 +307,90 @@ function handleCreateTasks(tasks) {
 }
 
 /**
- * Parse a sheet row into an event object
+ * Get aggregate impact metrics from the reporting spreadsheet, filtered by month/year
+ */
+function getImpactMetrics(month, year) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(REPORTING_SHEET_ID);
+    let totalVolunteers = 0, totalParticipants = 0, totalTrees = 0, totalHours = 0;
+
+    const volSheet = spreadsheet.getSheetByName('Volunteer Activities');
+    if (volSheet) {
+      const volData = volSheet.getDataRange().getValues();
+      const volHeaders = volData[0];
+      const dateIdx = findColumnIndex(volHeaders, 'Date');
+      const volVolunteersIdx = findColumnIndex(volHeaders, 'Number of tree care volunteers');
+      const treesIdx = findColumnIndex(volHeaders, 'Number of trees cared for');
+      const volHoursIdx = findColumnIndex(volHeaders, 'Length of tree care event in hours');
+
+      for (let i = 1; i < volData.length; i++) {
+        const row = volData[i];
+        if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
+        if (!rowContainsTeamMember(row)) continue;
+        totalVolunteers += Number(row[volVolunteersIdx]) || 0;
+        totalTrees += Number(row[treesIdx]) || 0;
+        totalHours += Number(row[volHoursIdx]) || 0;
+      }
+    }
+
+    const workSheet = spreadsheet.getSheetByName('Workshop/Outreach');
+    if (workSheet) {
+      const workData = workSheet.getDataRange().getValues();
+      const workHeaders = workData[0];
+      const dateIdx = findColumnIndex(workHeaders, 'Date');
+      const titleIdx = findColumnIndex(workHeaders, 'Workshop/Event Title');
+      const participantsIdx = workHeaders.indexOf('Number of Participants');
+      const workHoursIdx = workHeaders.indexOf('Length of Activity/Events (in hours)');
+
+      for (let i = 1; i < workData.length; i++) {
+        const row = workData[i];
+        if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
+        if (!rowContainsTeamMember(row)) continue;
+        const title = String(row[titleIdx] || '').toLowerCase();
+        const isTreeRelated = title.includes('tree') || title.includes('stc') || title.includes('stewardship');
+        if (!isTreeRelated) continue;
+        totalParticipants += Number(row[participantsIdx]) || 0;
+        totalHours += Number(row[workHoursIdx]) || 0;
+      }
+    }
+
+    return { totalVolunteers, totalParticipants, totalTrees, totalHours: Math.round(totalHours) };
+
+  } catch (error) {
+    Logger.log('Error in getImpactMetrics: ' + error);
+    return { error: error.toString() };
+  }
+}
+
+function rowContainsTeamMember(row) {
+  const team = ['maddy', 'hadas', 'gretel'];
+  return row.some(cell => {
+    const val = String(cell || '').toLowerCase();
+    return team.some(name => val.includes(name));
+  });
+}
+
+function rowMatchesMonthYear(dateVal, month, year) {
+  if (!dateVal) return false;
+  const d = new Date(dateVal);
+  if (isNaN(d)) return false;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const rowMonth = monthNames[d.getMonth()];
+  const rowYear = String(d.getFullYear());
+  const monthMatch = !month || month === 'All' || rowMonth === month;
+  const yearMatch = !year || year === 'All' || rowYear === year;
+  return monthMatch && yearMatch;
+}
+
+function findColumnIndex(headers, searchTerm) {
+  for (let i = 0; i < headers.length; i++) {
+    if (String(headers[i]).toLowerCase().includes(searchTerm.toLowerCase())) return i;
+  }
+  return -1;
+}
+
+/**
+ * Parse a tracker sheet row into an event object
  */
 function parseEventRow(row, headers) {
   const getColumn = (name) => {
@@ -293,18 +419,15 @@ function parseEventRow(row, headers) {
     collaboration: getColumn('Collaboration') || '',
     collaborationNotes: getColumn('Collaboration Notes/ General Notes') || '',
 
-    // Setup phase
     brief: normalizeValue(getColumn('Event Brief Created')),
     eventbrite: normalizeValue(getColumn('EventBrite Created')),
     calendar: normalizeValue(getColumn('LES Calendar Event Created')),
     comms: normalizeValue(getColumn('Comms Form Submitted')),
 
-    // Execution phase
     compost: normalizeValue(getColumn('Order Placed on Compost Tracker')),
     opsCheckin: normalizeValue(getColumn('Compost Ops Check-In')),
     reminder: normalizeValue(getColumn('Reminder Email Sent')),
 
-    // Completion phase
     report: normalizeValue(getColumn('Activity Report Completed')),
     treeMap: normalizeValue(getColumn('Tree Map Data Completed')),
     thankYou: normalizeValue(getColumn('Thank You Email Sent')),
@@ -313,9 +436,6 @@ function parseEventRow(row, headers) {
   };
 }
 
-/**
- * Normalize task values to Yes/No/N/A
- */
 function normalizeValue(value) {
   if (!value) return 'No';
   const str = value.toString().trim().toUpperCase();
@@ -325,24 +445,17 @@ function normalizeValue(value) {
   return 'No';
 }
 
-/**
- * Simple hash function for generating unique IDs
- */
 function hashCode(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
     hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32-bit integer
+    hash = hash & hash;
   }
   return Math.abs(hash);
 }
 
-/**
- * Test function to verify the script works
- */
 function testGetEvents() {
   const response = doGet({});
-  const content = response.getContent();
-  Logger.log(content);
+  Logger.log(response.getContent());
 }
