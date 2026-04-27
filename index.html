@@ -289,6 +289,7 @@
         .filter-pill[data-color="planning"].active { background: #fbbf24; border-color: #fbbf24; color: #1a1a1a; }
         .filter-pill[data-color="hold"].active { background: #ef4444; border-color: #ef4444; }
         .filter-pill[data-color="confirmed"].active { background: #10b981; border-color: #10b981; }
+        .filter-pill[data-color="canceled"].active { background: #6b7280; border-color: #6b7280; }
 
         .filter-select {
             padding: 5px 10px;
@@ -454,6 +455,16 @@
         .status-confirmed {
             background: #dcfce7;
             color: #166534;
+        }
+
+        .status-in-progress {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .status-canceled {
+            background: #f3f4f6;
+            color: #4b5563;
         }
 
         .progress-bar {
@@ -1092,6 +1103,8 @@
             <button class="view-btn" data-view="table">📊 Table View</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
             <button class="view-btn" data-view="impact">📊 Impact & Stats</button>
+            <button class="view-btn" data-view="kanban">🎯 Kanban</button>
+
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
         </div>
 
@@ -1127,7 +1140,8 @@
                             <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                             <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
+                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
+                            <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
                         </div>
                     </div>
                     <div style="flex: 1"></div>
@@ -1211,7 +1225,8 @@
                             <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                             <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
+                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
+                            <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
                         </div>
                     </div>
                     <div style="flex: 1"></div>
@@ -1251,6 +1266,31 @@
         <div id="statsView" class="stats-bar" style="display: none;"></div>
 
         <div id="impactView" class="impact-report" style="display: none; padding: 30px; background: white; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
+
+        <div id="kanbanView" style="display: none; padding: 20px; background: white; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; height: calc(100vh - 300px);">
+                <div class="kanban-column" data-column="planning" style="background: #fef3c7; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #fbbf24;">
+                    <h3 style="font-weight: 600; color: #92400e; margin-bottom: 15px; font-size: 1.1em;">📋 Planning</h3>
+                    <div class="kanban-cards" data-status="Planning" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="hold" style="background: #fee2e2; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #ef4444;">
+                    <h3 style="font-weight: 600; color: #991b1b; margin-bottom: 15px; font-size: 1.1em;">⏸ Hold</h3>
+                    <div class="kanban-cards" data-status="Hold" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="in-progress" style="background: #dcfce7; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #10b981;">
+                    <h3 style="font-weight: 600; color: #166534; margin-bottom: 15px; font-size: 1.1em;">🚀 In Progress</h3>
+                    <div class="kanban-cards" data-status="In Progress" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="complete" style="background: #d1fae5; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #059669;">
+                    <h3 style="font-weight: 600; color: #065f46; margin-bottom: 15px; font-size: 1.1em;">✅ Complete</h3>
+                    <div class="kanban-cards" data-status="Complete" style="min-height: 100px;"></div>
+                </div>
+                <div class="kanban-column" data-column="canceled" style="background: #f3f4f6; border-radius: 8px; padding: 15px; overflow-y: auto; border: 2px dashed #9ca3af;">
+                    <h3 style="font-weight: 600; color: #4b5563; margin-bottom: 15px; font-size: 1.1em;">❌ Canceled</h3>
+                    <div class="kanban-cards" data-status="Canceled" style="min-height: 100px;"></div>
+                </div>
+            </div>
+        </div>
 
         <div id="calendarView" class="calendar-container">
             <div class="calendar-header">
@@ -1334,8 +1374,9 @@
                     <label for="eventStatus">Status <span style="color:#ef4444">*</span></label>
                     <select id="eventStatus" required>
                         <option value="Planning">Planning</option>
-                        <option value="Confirmed">Confirmed</option>
+                        <option value="In Progress">In Progress</option>
                         <option value="Hold">Hold</option>
+                        <option value="Canceled">Canceled</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1758,7 +1799,7 @@
                     <div style="margin-bottom: 15px;">
                         <span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span>
                         ${event.secondaryCategory ? `<span class="category-badge category-${event.secondaryCategory.toLowerCase()}">${event.secondaryCategory}</span>` : ''}
-                        <span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span>
+                        <span class="status-badge status-${(event.status || 'planning').toLowerCase().replace(/\s+/g, '-')}">${event.status || 'Planning'}</span>
                     </div>
                     <div style="margin-bottom: 15px;">
                         <p style="margin: 5px 0;"><strong>Owner:</strong> ${event.owner}</p>
@@ -1843,7 +1884,7 @@
             // Pie chart data from dashboard events
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
-            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
+            const byStatus = { Planning: 0, Hold: 0, 'In Progress': 0, Canceled: 0 };
             filtered.forEach(e => {
                 if (byOwner.hasOwnProperty(e.owner)) byOwner[e.owner]++;
                 if (byCategory.hasOwnProperty(e.primaryCategory)) byCategory[e.primaryCategory]++;
@@ -1853,7 +1894,7 @@
 
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', 'In Progress': '#34d399', Canceled: '#9ca3af' };
 
             // Impact from reporting spreadsheet
             const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
@@ -1946,6 +1987,7 @@
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
             document.getElementById('statsView').style.display = view === 'impact' ? 'flex' : 'none';
             document.getElementById('impactView').style.display = view === 'impact' ? 'block' : 'none';
+            document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
 
             if (view === 'calendar') renderCalendar();
             if (view === 'table') {
@@ -1959,6 +2001,9 @@
             if (view === 'impact') {
                 updateStats();
                 displayImpactReport();
+            }
+            if (view === 'kanban') {
+                renderKanban();
             }
         }
 
@@ -1992,10 +2037,10 @@
             now.setHours(0, 0, 0, 0);
             const eventTasks = [];
 
-            if (event.status !== 'Confirmed') {
+            if (event.status !== 'In Progress') {
                 const toast = document.createElement('div');
                 toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                toast.textContent = '⚠️ Only confirmed events can sync tasks';
+                toast.textContent = '⚠️ Only in-progress events can sync tasks';
                 document.body.appendChild(toast);
                 setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
                 return;
@@ -2261,7 +2306,7 @@
                 const openTasks = [];
 
                 events.forEach(event => {
-                    if (event.status !== 'Confirmed') return;
+                    if (event.status !== 'In Progress') return;
 
                     Object.entries(TASK_DEADLINES).forEach(([phase, tasks]) => {
                         tasks.forEach(task => {
@@ -2443,43 +2488,43 @@
 
         function getSampleData() {
             const data = [
-                { id: 1, name: 'MulchFest', owner: 'Maddy', date: new Date(2026, 0, 10), time: '2:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
-                { id: 2, name: 'Tool Lending Library Info Session #1', owner: 'Maddy', date: new Date(2026, 1, 25), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: 'Education', category: 'Outreach, Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 1, name: 'MulchFest', owner: 'Maddy', date: new Date(2026, 0, 10), time: '2:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 2, name: 'Tool Lending Library Info Session #1', owner: 'Maddy', date: new Date(2026, 1, 25), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: 'Education', category: 'Outreach, Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
                 { id: 3, name: 'Tool Lending Library Info Session #2', owner: 'Maddy', date: new Date(2026, 2, 11), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: 'Education', category: 'Outreach, Education', type: 'PUBLIC PROGRAM', status: 'Planning', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 4, name: 'Tree Beds Spring Cleaning w/t Henry Street CRT', owner: 'Hadas', date: new Date(2026, 2, 12), time: '3:00 PM', endTime: '', location: 'Henry Street Settlement', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'N/A' },
-                { id: 5, name: 'CBLES Kick-Off Event', owner: 'Maddy', date: new Date(2026, 2, 17), time: '12:00 AM', endTime: '', location: 'Lower Eastside Girls Club', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 5, name: 'CBLES Kick-Off Event', owner: 'Maddy', date: new Date(2026, 2, 17), time: '12:00 AM', endTime: '', location: 'Lower Eastside Girls Club', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
                 { id: 6, name: 'STC w/t Whole Foods', owner: 'Hadas', date: new Date(2026, 2, 19), time: '2:00 PM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 7, name: 'Spring into Tree Care', owner: 'Maddy', date: new Date(2026, 2, 22), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
-                { id: 8, name: 'STC with PS/MS 188', owner: 'Hadas', date: new Date(2026, 2, 24), time: '2:00 PM', endTime: '', location: 'P.S. 188 The Island School', primaryCategory: 'Education', secondaryCategory: 'Stewardship', category: 'Education, Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 7, name: 'Spring into Tree Care', owner: 'Maddy', date: new Date(2026, 2, 22), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 8, name: 'STC with PS/MS 188', owner: 'Hadas', date: new Date(2026, 2, 24), time: '2:00 PM', endTime: '', location: 'P.S. 188 The Island School', primaryCategory: 'Education', secondaryCategory: 'Stewardship', category: 'Education, Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
                 { id: 9, name: 'Corlears Hook Park Spring Fest', owner: 'Hadas', date: new Date(2026, 2, 29), time: '11:00 AM', endTime: '', location: 'Corlears Hook Park', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'No', thankYou: 'No' },
-                { id: 10, name: 'Signs of Spring Virtual Walk', owner: 'Hadas', date: new Date(2026, 3, 1), time: '6:45 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 10, name: 'Signs of Spring Virtual Walk', owner: 'Hadas', date: new Date(2026, 3, 1), time: '6:45 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
                 { id: 11, name: 'STC w/t Girl Scouts', owner: 'Maddy', date: new Date(2026, 3, 8), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: 'Education', category: 'Stewardship, Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'Yes', reminder: 'No', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 12, name: 'Watercolor + Tree ID Workshop', owner: 'Maddy', date: new Date(2026, 3, 9), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
-                { id: 13, name: 'Tree Trivia - Earth Month Celebration', owner: 'Maddy', date: new Date(2026, 3, 13), time: '12:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'N/A', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'No', thankYou: 'N/A' },
-                { id: 14, name: 'CBLES Info Session', owner: 'Maddy', date: new Date(2026, 3, 13), time: '6:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
-                { id: 15, name: 'STC w/t Elena Brill and associates', owner: 'Hadas', date: new Date(2026, 3, 15), time: '9:30 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 16, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 16), time: '10:00 AM', endTime: '', location: 'Lower East Side Ecology Center', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
-                { id: 17, name: 'NYU Students Group Volunteering (Contact - Itzel)', owner: 'Hadas', date: new Date(2026, 3, 17), time: '10:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 18, name: 'STC w/t Columbia Alumni', owner: 'Maddy', date: new Date(2026, 3, 18), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 19, name: 'Spring Tree Walk', owner: 'Hadas', date: new Date(2026, 3, 19), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
-                { id: 20, name: 'Soil Testing - Earth Month Celebration', owner: 'Hadas', date: new Date(2026, 3, 22), time: '2:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'No', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 21, name: 'STC w/ Sixth Street Community Center', owner: 'Maddy', date: new Date(2026, 3, 23), time: '4:30 PM', endTime: '', location: 'Sixth Street Community Center', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 22, name: 'Tabling at Alfred E Smith Rec Center for Earth Day', owner: 'Hadas', date: new Date(2026, 3, 23), time: '3:00 PM', endTime: '', location: 'Alfred E. Smith Recreation Center', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'Confirmed', brief: 'N/A', eventbrite: 'No', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 12, name: 'Watercolor + Tree ID Workshop', owner: 'Maddy', date: new Date(2026, 3, 9), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 13, name: 'Tree Trivia - Earth Month Celebration', owner: 'Maddy', date: new Date(2026, 3, 13), time: '12:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'N/A', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'No', thankYou: 'N/A' },
+                { id: 14, name: 'CBLES Info Session', owner: 'Maddy', date: new Date(2026, 3, 13), time: '6:00 PM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'No' },
+                { id: 15, name: 'STC w/t Elena Brill and associates', owner: 'Hadas', date: new Date(2026, 3, 15), time: '9:30 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
+                { id: 16, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 16), time: '10:00 AM', endTime: '', location: 'Lower East Side Ecology Center', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'No' },
+                { id: 17, name: 'NYU Students Group Volunteering (Contact - Itzel)', owner: 'Hadas', date: new Date(2026, 3, 17), time: '10:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'Yes', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 18, name: 'STC w/t Columbia Alumni', owner: 'Maddy', date: new Date(2026, 3, 18), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 19, name: 'Spring Tree Walk', owner: 'Hadas', date: new Date(2026, 3, 19), time: '1:00 PM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' },
+                { id: 20, name: 'Soil Testing - Earth Month Celebration', owner: 'Hadas', date: new Date(2026, 3, 22), time: '2:00 AM', endTime: '', location: 'Union Square', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'No', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 21, name: 'STC w/ Sixth Street Community Center', owner: 'Maddy', date: new Date(2026, 3, 23), time: '4:30 PM', endTime: '', location: 'Sixth Street Community Center', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 22, name: 'Tabling at Alfred E Smith Rec Center for Earth Day', owner: 'Hadas', date: new Date(2026, 3, 23), time: '3:00 PM', endTime: '', location: 'Alfred E. Smith Recreation Center', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'TABLING', status: 'In Progress', brief: 'N/A', eventbrite: 'No', calendar: 'Yes', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 23, name: 'Arbor Day Volunteer Event w/ CM Harvey Epstein', owner: 'Hadas', date: new Date(2026, 3, 24), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC VOLUNTEER EVENT', status: 'Planning', brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 24, name: 'STC w/t ConEdison', owner: 'Gretel', date: new Date(2026, 3, 25), time: '10:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'N/A', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 25, name: 'CBLES Info Session', owner: 'Maddy', date: new Date(2026, 3, 27), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC PROGRAM', status: 'Planning', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 26, name: 'STC w/ LOMA', owner: 'Maddy', date: new Date(2026, 3, 28), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'Yes', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 27, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 30), time: '10:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 28, name: 'Jane\'s Walk: A History of the LES in 10 Trees', owner: 'Hadas', date: new Date(2026, 4, 1), time: '11:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'N/A', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 27, name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: new Date(2026, 3, 30), time: '10:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'No', comms: 'Yes', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
+                { id: 28, name: 'Jane\'s Walk: A History of the LES in 10 Trees', owner: 'Hadas', date: new Date(2026, 4, 1), time: '11:00 AM', endTime: '', location: 'Tompkins Square Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'N/A', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 29, name: 'PS 110 STC Workshop Pt 1', owner: 'Maddy', date: new Date(2026, 4, 6), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 30, name: 'STC w/ Henry St CRT', owner: 'Maddy', date: new Date(2026, 4, 7), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 31, name: 'Street Tree Care w/ Hort Training Program', owner: 'Maddy', date: new Date(2026, 4, 8), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Stewardship', secondaryCategory: 'Education', category: 'Stewardship, Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 32, name: 'Peck Slip Field Trip STC', owner: 'Maddy', date: new Date(2026, 4, 11), time: '12:00 AM', endTime: '', location: 'The Peck Slip School', primaryCategory: 'Stewardship', secondaryCategory: 'Education', category: 'Stewardship, Education', type: 'FIELD TRIP', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 33, name: 'PS 110 STC Workshop Pt 2', owner: 'Maddy', date: new Date(2026, 4, 12), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PRIVATE VOLUNTEER EVENT', status: 'Planning', brief: 'N/A', eventbrite: 'N/A', calendar: 'No', comms: 'N/A', compost: 'Yes', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
                 { id: 34, name: 'Mother\'s Day STC + Community Engagement Team', owner: 'Hadas', date: new Date(2026, 4, 10), time: '12:00 AM', endTime: '', location: '', primaryCategory: 'Outreach', secondaryCategory: '', category: 'Outreach', type: 'PUBLIC VOLUNTEER EVENT', status: 'Planning', brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No', compost: 'No', opsCheckin: 'No', reminder: 'No', report: 'No', treeMap: 'No', thankYou: 'No' },
-                { id: 35, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 7), time: '4:00 PM', endTime: '6:00 PM', location: 'Clyde Garden', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 36, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 21), time: '12:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
-                { id: 37, name: 'Tree Leaf ID Walk', owner: 'Gretel', date: new Date(2026, 4, 30), time: '11:00 AM', endTime: '12:30 PM', location: 'Seward Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'Confirmed', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' }
+                { id: 35, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 7), time: '4:00 PM', endTime: '6:00 PM', location: 'Clyde Garden', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 36, name: 'Canopy Care', owner: 'Gretel', date: new Date(2026, 4, 21), time: '12:00 AM', endTime: '', location: 'Seward Park', primaryCategory: 'Stewardship', secondaryCategory: '', category: 'Stewardship', type: 'PUBLIC VOLUNTEER EVENT', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'Yes', opsCheckin: 'Yes', reminder: 'Yes', report: 'Yes', treeMap: 'Yes', thankYou: 'Yes' },
+                { id: 37, name: 'Tree Leaf ID Walk', owner: 'Gretel', date: new Date(2026, 4, 30), time: '11:00 AM', endTime: '12:30 PM', location: 'Seward Park', primaryCategory: 'Education', secondaryCategory: '', category: 'Education', type: 'PUBLIC PROGRAM', status: 'In Progress', brief: 'Yes', eventbrite: 'Yes', calendar: 'Yes', comms: 'Yes', compost: 'No', opsCheckin: 'No', reminder: 'Yes', report: 'Yes', treeMap: 'No', thankYou: 'Yes' }
             ];
             return data;
         }
@@ -2693,7 +2738,7 @@
                         <td style="padding: 12px 20px; font-size: 0.9em;">${event.time || '—'}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${event.location || '—'}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;"><span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span></td>
-                        <td style="padding: 12px 20px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span></td>
+                        <td style="padding: 12px 20px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase().replace(/\s+/g, '-')}">${event.status || 'Planning'}</span></td>
                         <td style="padding: 12px 20px; text-align: center; font-size: 0.9em; font-weight: 500;">${progress}%</td>
                     </tr>
                     <tr style="border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
@@ -2821,7 +2866,7 @@
             // Basic counts
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
-            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
+            const byStatus = { Planning: 0, Hold: 0, 'In Progress': 0, Canceled: 0 };
             const byMonth = {};
             let confirmedCount = 0;
             let completedCount = 0;
@@ -2834,13 +2879,13 @@
                 const monthKey = e.date.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
                 byMonth[monthKey] = (byMonth[monthKey] || 0) + 1;
 
-                if (e.status === 'Confirmed') confirmedCount++;
+                if (e.status === 'In Progress') confirmedCount++;
                 if (e.report === 'Yes' && e.treeMap === 'Yes') completedCount++;
             });
             const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', 'In Progress': '#34d399', Canceled: '#9ca3af' };
 
             statsBar.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
@@ -2865,7 +2910,7 @@
                     </div>
                     <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${confirmedCount}</div>
-                        <div class="stat-label">Confirmed</div>
+                        <div class="stat-label">In Progress</div>
                     </div>
                     <div class="stat-card" style="transition: all 0.3s ease; cursor: default;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'">
                         <div class="stat-number">${completedCount}</div>
@@ -2963,7 +3008,7 @@
                                 <div style="margin-bottom: 8px;">
                                     <span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span>
                                     ${event.secondaryCategory ? `<span class="category-badge category-${event.secondaryCategory.toLowerCase()}">${event.secondaryCategory}</span>` : ''}
-                                    <span class="status-badge status-${(event.status || 'planning').toLowerCase()}">${event.status || 'Planning'}</span>
+                                    <span class="status-badge status-${(event.status || 'planning').toLowerCase().replace(/\s+/g, '-')}">${event.status || 'Planning'}</span>
                                 </div>
                                 <div class="event-meta">
                                     <span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span>
@@ -2978,6 +3023,7 @@
                                     <button onclick="deleteEvent(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🗑 Delete</button>
                                 </div>
                                 <div>
+                                    <button onclick="checkAllTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#10b981';this.style.color='#10b981'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">☑️ Check All</button>
                                     <button onclick="syncEventTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#4285f4';this.style.color='#4285f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🔗 Sync Tasks</button>
                                     <button onclick="toggleForceComplete()" id="forceBtn-${event.id}" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af; margin-left: 6px;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="updateForceBtnStyle(${event.id})">⚙️ Force OFF</button>
                                 </div>
@@ -3571,7 +3617,7 @@
             const openTasks = [];
 
             events.forEach(event => {
-                if (event.status !== 'Confirmed') return;
+                if (event.status !== 'In Progress') return;
 
                 Object.entries(TASK_DEADLINES).forEach(([phase, tasks]) => {
                     tasks.forEach(task => {
@@ -3681,6 +3727,186 @@
         function formatDate(date) {
             const options = { month: 'short', day: 'numeric', year: 'numeric' };
             return date.toLocaleDateString('en-US', options);
+        }
+
+        function checkAllTasks(eventId) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            const workflow = getEventWorkflow(event);
+            Object.values(workflow).forEach(phase => {
+                phase.forEach(task => {
+                    if (event[task.key] !== 'N/A') {
+                        event[task.key] = 'Yes';
+                    }
+                });
+            });
+
+            event.report = 'Yes';
+            event.treeMap = 'Yes';
+            event.status = 'In Progress';
+
+            saveEvents();
+            applyFilters();
+
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+            toast.textContent = `✓ All tasks checked and moved to In Progress`;
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+        }
+
+        function renderKanban() {
+            const columns = {
+                'Planning': document.querySelector('[data-status="Planning"].kanban-cards'),
+                'Hold': document.querySelector('[data-status="Hold"].kanban-cards'),
+                'In Progress': document.querySelector('[data-status="In Progress"].kanban-cards'),
+                'Complete': document.querySelector('[data-status="Complete"].kanban-cards'),
+                'Canceled': document.querySelector('[data-status="Canceled"].kanban-cards')
+            };
+
+            Object.values(columns).forEach(col => col.innerHTML = '');
+
+            filteredEvents.forEach(event => {
+                const status = event.status || 'Planning';
+                const column = columns[status];
+                if (!column) return;
+
+                const progress = getEventProgress(event);
+                const completionPercent = progress;
+
+                const card = document.createElement('div');
+                card.draggable = true;
+                card.style.cssText = `
+                    background: white;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    cursor: grab;
+                    border-left: 4px solid #1d5432;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    transition: all 0.2s ease;
+                `;
+                card.onmouseenter = () => { card.style.transform = 'translateY(-2px)'; card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)'; };
+                card.onmouseleave = () => { card.style.transform = 'translateY(0)'; card.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)'; };
+
+                const categoryBg = { 'Outreach': '#fef3c7', 'Education': '#e0f2fe', 'Stewardship': '#dcfce7' };
+                const categoryColor = { 'Outreach': '#92400e', 'Education': '#0c4a6e', 'Stewardship': '#166534' };
+
+                card.innerHTML = `
+                    <div style="font-weight: 600; color: #1d5432; margin-bottom: 6px; font-size: 0.95em;">${event.name}</div>
+                    <div style="font-size: 0.8em; color: #6a5a4a; margin-bottom: 4px;">👤 ${event.owner}</div>
+                    <div style="font-size: 0.8em; color: #6a5a4a; margin-bottom: 6px;">📅 ${formatDate(event.date)}</div>
+                    <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75em; color: #6a5a4a;">
+                        <div style="width: 100%; height: 4px; background: #e8ddd0; border-radius: 2px; overflow: hidden;">
+                            <div style="height: 100%; background: linear-gradient(90deg, #1d5432, #2d7a52); width: ${completionPercent}%; transition: width 0.3s ease;"></div>
+                        </div>
+                        <span style="white-space: nowrap;">${completionPercent}%</span>
+                    </div>
+                `;
+
+                card.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('eventId', event.id);
+                    card.style.opacity = '0.7';
+                });
+
+                card.addEventListener('dragend', () => {
+                    card.style.opacity = '1';
+                });
+
+                column.appendChild(card);
+            });
+
+            document.querySelectorAll('.kanban-cards').forEach(dropZone => {
+                dropZone.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    dropZone.style.backgroundColor = 'rgba(29, 84, 50, 0.1)';
+                });
+
+                dropZone.addEventListener('dragleave', () => {
+                    dropZone.style.backgroundColor = '';
+                });
+
+                dropZone.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    dropZone.style.backgroundColor = '';
+
+                    const eventId = parseInt(e.dataTransfer.getData('eventId'));
+                    const event = events.find(ev => ev.id === eventId);
+                    if (!event) return;
+
+                    const newStatus = dropZone.dataset.status;
+
+                    if (newStatus === 'Complete') {
+                        const workflow = getEventWorkflow(event);
+                        const openTasks = [];
+                        Object.values(workflow).forEach(phase => {
+                            phase.forEach(task => {
+                                const value = event[task.key];
+                                if (value !== 'N/A' && value !== 'Yes' && value !== true) {
+                                    openTasks.push(task.label);
+                                }
+                            });
+                        });
+
+                        if (openTasks.length > 0) {
+                            const modal = document.createElement('div');
+                            modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+
+                            const content = document.createElement('div');
+                            content.style.cssText = 'background: white; border-radius: 12px; padding: 30px; max-width: 500px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);';
+
+                            content.innerHTML = `
+                                <h3 style="font-size: 1.3em; color: #1d5432; margin-bottom: 15px;">⚠️ Open Tasks Remain</h3>
+                                <p style="color: #6a5a4a; margin-bottom: 20px;">The following tasks are still open:</p>
+                                <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
+                                    ${openTasks.map(task => `<li style="color: #6a5a4a; padding: 6px 0;">• ${task}</li>`).join('')}
+                                </ul>
+                                <p style="color: #6a5a4a; margin-bottom: 20px;">What would you like to do?</p>
+                                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                                    <button onclick="this.closest('div').parentElement.parentElement.remove();" style="padding: 10px 20px; border: 1px solid #d4cec0; border-radius: 6px; background: white; cursor: pointer; font-weight: 500;">Cancel</button>
+                                    <button id="completeTasksBtn" style="padding: 10px 20px; border: 1px solid #10b981; border-radius: 6px; background: #10b981; color: white; cursor: pointer; font-weight: 500;">Complete Open Tasks</button>
+                                    <button id="proceedAnyway" style="padding: 10px 20px; border: 1px solid #ef4444; border-radius: 6px; background: #ef4444; color: white; cursor: pointer; font-weight: 500;">Proceed Anyway</button>
+                                </div>
+                            `;
+
+                            modal.appendChild(content);
+                            document.body.appendChild(modal);
+
+                            document.getElementById('completeTasksBtn').addEventListener('click', () => {
+                                workflow && Object.values(workflow).forEach(phase => {
+                                    phase.forEach(task => {
+                                        if (event[task.key] !== 'N/A') {
+                                            event[task.key] = 'Yes';
+                                        }
+                                    });
+                                });
+                                event.status = newStatus;
+                                saveEvents();
+                                modal.remove();
+                                renderKanban();
+                            });
+
+                            document.getElementById('proceedAnyway').addEventListener('click', () => {
+                                event.status = newStatus;
+                                saveEvents();
+                                modal.remove();
+                                renderKanban();
+                            });
+                        } else {
+                            event.status = newStatus;
+                            saveEvents();
+                            renderKanban();
+                        }
+                    } else {
+                        event.status = newStatus;
+                        saveEvents();
+                        renderKanban();
+                    }
+                });
+            });
         }
 
         init();
