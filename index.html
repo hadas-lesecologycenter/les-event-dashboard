@@ -1848,20 +1848,13 @@
 
             const filtered = getEventsByMonthYear(selectedMonth, selectedYear);
 
-            // Count by owner, category, status
+            // Count by owner, category, status from dashboard events
             const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
             const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
             const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
             let confirmedCount = 0;
             let completedCount = 0;
             let openTasksCount = 0;
-
-            // Aggregate impact from per-event manual metrics stored in localStorage
-            let totalVolunteers = 0, totalParticipants = 0, totalTrees = 0, totalHours = 0, totalCompost = 0;
-            let eventsWithMetrics = 0;
-
-            const now = new Date();
-            now.setHours(0, 0, 0, 0);
 
             filtered.forEach(e => {
                 if (byOwner.hasOwnProperty(e.owner)) byOwner[e.owner]++;
@@ -1871,7 +1864,6 @@
                 if (status === 'Confirmed') confirmedCount++;
                 if (e.report === 'Yes') completedCount++;
 
-                // Count open tasks for confirmed events
                 if (status === 'Confirmed') {
                     Object.entries(TASK_DEADLINES).forEach(([, tasks]) => {
                         tasks.forEach(task => {
@@ -1879,18 +1871,15 @@
                         });
                     });
                 }
-
-                // Pull impact from localStorage metrics
-                const m = getManualMetrics(e.id);
-                if (m && !m.error) {
-                    eventsWithMetrics++;
-                    totalVolunteers += Number(m.volunteers) || 0;
-                    totalParticipants += Number(m.participants) || 0;
-                    totalTrees += Number(m.trees) || 0;
-                    totalHours += Number(m.hours) || 0;
-                    totalCompost += Number(m.compost) || 0;
-                }
             });
+
+            // Fetch impact metrics from reporting spreadsheet, filtered by month/year
+            const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
+            const totalVolunteers = impactMetrics.totalVolunteers || 0;
+            const totalParticipants = impactMetrics.totalParticipants || 0;
+            const totalTrees = impactMetrics.totalTrees || 0;
+            const totalHours = impactMetrics.totalHours || 0;
+            const hasImpactData = !impactMetrics.error && (totalVolunteers + totalParticipants + totalTrees + totalHours) > 0;
 
             const completionRate = confirmedCount > 0 ? Math.round((completedCount / confirmedCount) * 100) : 0;
 
@@ -1938,10 +1927,10 @@
                         </div>
                     </div>
 
-                    ${eventsWithMetrics > 0 ? `
+                    ${hasImpactData ? `
                     <div style="margin-bottom: 25px;">
-                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 1em;">Impact Metrics <span style="font-weight: 400; font-size: 0.85em; color: #6b7280;">(from ${eventsWithMetrics} event${eventsWithMetrics !== 1 ? 's' : ''} with recorded data)</span></div>
-                        <div style="display: grid; grid-template-columns: repeat(${totalCompost > 0 ? 5 : 4}, 1fr); gap: 12px;">
+                        <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 1em;">Impact <span style="font-weight: 400; font-size: 0.85em; color: #6b7280;">from reporting spreadsheet</span></div>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
                             ${totalVolunteers > 0 ? `<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
                                 <div style="font-size: 2em; font-weight: bold;">${totalVolunteers}</div>
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
@@ -1955,18 +1944,18 @@
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
                             </div>` : ''}
                             ${totalHours > 0 ? `<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
-                                <div style="font-size: 2em; font-weight: bold;">${Math.round(totalHours)}</div>
+                                <div style="font-size: 2em; font-weight: bold;">${totalHours}</div>
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
-                            </div>` : ''}
-                            ${totalCompost > 0 ? `<div style="background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); color: #1d5432; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                                <div style="font-size: 2em; font-weight: bold;">${totalCompost}</div>
-                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Compost (lbs)</div>
                             </div>` : ''}
                         </div>
                     </div>
+                    ` : impactMetrics.error ? `
+                    <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 16px; color: #991b1b; margin-bottom: 25px; font-size: 0.9em;">
+                        ⚠️ Could not load impact data from reporting spreadsheet. Check that the Apps Script is deployed and the sheet IDs are correct.
+                    </div>
                     ` : `
                     <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 20px; text-align: center; color: #6b7280; margin-bottom: 25px; font-size: 0.95em;">
-                        No impact metrics recorded for this period. Add metrics to individual events using the Edit button on each event card.
+                        No impact data found in the reporting spreadsheet for this period.
                     </div>
                     `}
 
@@ -2174,9 +2163,12 @@
             }
         }
 
-        async function fetchImpactMetrics() {
+        async function fetchImpactMetrics(month, year) {
             try {
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=getImpactMetrics`);
+                const params = new URLSearchParams({ action: 'getImpactMetrics' });
+                if (month && month !== 'All') params.set('month', month);
+                if (year && year !== 'All') params.set('year', year);
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const result = await response.json();
                 if (result.error) console.error('Apps Script error:', result.error);
                 return result;

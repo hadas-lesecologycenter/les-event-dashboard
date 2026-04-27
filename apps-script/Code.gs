@@ -9,12 +9,17 @@
 
 // Configuration
 const TRACKER_SHEET_ID = '1EKZHAAlNOPPQEgxDgR7IMBKXWY5aR3VEURl4crImsrY';
-const SHEET_NAME = 'Sheet1'; // Change if your sheet has a different name
+const SHEET_NAME = 'Sheet1';
+const REPORTING_SHEET_ID = '1RqQl5Wx-DUhMDQwTk2APz0VulodV3FaS51Y9WGuYwAs';
 
 /**
- * GET endpoint: Retrieve all events from the tracker sheet
+ * GET endpoint: Retrieve all events from the tracker sheet, or impact metrics
  */
 function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'getImpactMetrics') {
+    const metrics = getImpactMetrics(e.parameter.month, e.parameter.year);
+    return HtmlService.createHtmlOutput(JSON.stringify(metrics)).setMimeType(MimeType.JSON);
+  }
   try {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -160,6 +165,74 @@ function handleCreateTasks(tasks) {
       error: error.toString()
     })).setMimeType(MimeType.JSON);
   }
+}
+
+/**
+ * Get impact metrics from the reporting spreadsheet, filtered by month/year
+ */
+function getImpactMetrics(month, year) {
+  try {
+    const spreadsheet = SpreadsheetApp.openById(REPORTING_SHEET_ID);
+    let totalVolunteers = 0, totalParticipants = 0, totalTrees = 0, totalHours = 0;
+
+    const volSheet = spreadsheet.getSheetByName('Volunteer Activities');
+    if (volSheet) {
+      const volData = volSheet.getDataRange().getValues();
+      const volHeaders = volData[0];
+      const dateIdx = findColumnIndex(volHeaders, 'Date');
+      const volVolunteersIdx = findColumnIndex(volHeaders, 'Number of tree care volunteers');
+      const treesIdx = findColumnIndex(volHeaders, 'Number of trees cared for');
+      const volHoursIdx = findColumnIndex(volHeaders, 'Length of tree care event in hours');
+
+      for (let i = 1; i < volData.length; i++) {
+        const row = volData[i];
+        if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
+        totalVolunteers += Number(row[volVolunteersIdx]) || 0;
+        totalTrees += Number(row[treesIdx]) || 0;
+        totalHours += Number(row[volHoursIdx]) || 0;
+      }
+    }
+
+    const workSheet = spreadsheet.getSheetByName('Workshop/Outreach');
+    if (workSheet) {
+      const workData = workSheet.getDataRange().getValues();
+      const workHeaders = workData[0];
+      const dateIdx = findColumnIndex(workHeaders, 'Date');
+      const participantsIdx = workHeaders.indexOf('Number of Participants');
+      const workHoursIdx = workHeaders.indexOf('Length of Activity/Events (in hours)');
+
+      for (let i = 1; i < workData.length; i++) {
+        const row = workData[i];
+        if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
+        totalParticipants += Number(row[participantsIdx]) || 0;
+        totalHours += Number(row[workHoursIdx]) || 0;
+      }
+    }
+
+    return { totalVolunteers, totalParticipants, totalTrees, totalHours: Math.round(totalHours) };
+  } catch (error) {
+    Logger.log('Error in getImpactMetrics: ' + error);
+    return { error: error.toString() };
+  }
+}
+
+function rowMatchesMonthYear(dateVal, month, year) {
+  if (!dateVal) return false;
+  const d = new Date(dateVal);
+  if (isNaN(d)) return false;
+  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const rowMonth = monthNames[d.getMonth()];
+  const rowYear = String(d.getFullYear());
+  const monthMatch = !month || month === 'All' || rowMonth === month;
+  const yearMatch = !year || year === 'All' || rowYear === year;
+  return monthMatch && yearMatch;
+}
+
+function findColumnIndex(headers, searchTerm) {
+  for (let i = 0; i < headers.length; i++) {
+    if (String(headers[i]).toLowerCase().includes(searchTerm.toLowerCase())) return i;
+  }
+  return -1;
 }
 
 /**
