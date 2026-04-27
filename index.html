@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Cache bust: 2026-04-27-v11 -->
+<!-- Cache bust: 2026-04-27-v12 -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -2594,40 +2594,39 @@
         }
 
         function setupTableViewFilters() {
-            // Remove old listeners if they exist
-            const filterOwnerTable = document.getElementById('filterOwnerTable');
-            const filterCategoryTable = document.getElementById('filterCategoryTable');
-            const filterStatusTable = document.getElementById('filterStatusTable');
+            // Setup filter pills with "All" button logic
+            const filterElements = ['filterOwnerTable', 'filterCategoryTable', 'filterStatusTable'];
 
-            if (filterOwnerTable) {
-                filterOwnerTable.replaceWith(filterOwnerTable.cloneNode(true));
-                document.querySelectorAll('#filterOwnerTable .filter-pill').forEach(pill => {
-                    pill.addEventListener('click', () => {
-                        pill.classList.toggle('active');
-                        applyTableFilters();
-                    });
-                });
-            }
+            filterElements.forEach(id => {
+                const filterGroup = document.getElementById(id);
+                if (filterGroup) {
+                    filterGroup.replaceWith(filterGroup.cloneNode(true));
+                    document.querySelectorAll(`#${id} .filter-pill`).forEach(pill => {
+                        pill.addEventListener('click', () => {
+                            const group = pill.closest('.filter-pills');
 
-            if (filterCategoryTable) {
-                filterCategoryTable.replaceWith(filterCategoryTable.cloneNode(true));
-                document.querySelectorAll('#filterCategoryTable .filter-pill').forEach(pill => {
-                    pill.addEventListener('click', () => {
-                        pill.classList.toggle('active');
-                        applyTableFilters();
+                            // Handle "All" buttons
+                            if (pill.dataset.value === 'All') {
+                                const allActive = pill.classList.contains('active');
+                                group.querySelectorAll('.filter-pill').forEach(p => {
+                                    p.classList.remove('active');
+                                });
+                                if (!allActive) {
+                                    pill.classList.add('active');
+                                }
+                            } else {
+                                // When selecting a specific option, deselect "All"
+                                const allBtn = group.querySelector('[data-value="All"]');
+                                if (allBtn) {
+                                    allBtn.classList.remove('active');
+                                }
+                                pill.classList.toggle('active');
+                            }
+                            applyTableFilters();
+                        });
                     });
-                });
-            }
-
-            if (filterStatusTable) {
-                filterStatusTable.replaceWith(filterStatusTable.cloneNode(true));
-                document.querySelectorAll('#filterStatusTable .filter-pill').forEach(pill => {
-                    pill.addEventListener('click', () => {
-                        pill.classList.toggle('active');
-                        applyTableFilters();
-                    });
-                });
-            }
+                }
+            });
 
             const timingSelect = document.getElementById('filterTimingTable');
             const sortSelect = document.getElementById('sortOrderTable');
@@ -2639,9 +2638,14 @@
         }
 
         function applyTableFilters() {
-            const selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTable .filter-pill.active')).map(p => p.dataset.value);
-            const selectedCategories = Array.from(document.querySelectorAll('#filterCategoryTable .filter-pill.active')).map(p => p.dataset.value);
-            const selectedStatuses = Array.from(document.querySelectorAll('#filterStatusTable .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTable .filter-pill.active')).map(p => p.dataset.value);
+            let selectedCategories = Array.from(document.querySelectorAll('#filterCategoryTable .filter-pill.active')).map(p => p.dataset.value);
+            let selectedStatuses = Array.from(document.querySelectorAll('#filterStatusTable .filter-pill.active')).map(p => p.dataset.value);
+
+            // If "All" is selected, treat as no selection
+            if (selectedOwners.includes('All')) selectedOwners = [];
+            if (selectedCategories.includes('All')) selectedCategories = [];
+            if (selectedStatuses.includes('All')) selectedStatuses = [];
 
             const timing = document.getElementById('filterTimingTable').value;
             const sortOrder = document.getElementById('sortOrderTable').value;
