@@ -1104,6 +1104,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Owner</span>
                         <div class="filter-pills" id="filterOwner">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
                             <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
@@ -1113,6 +1114,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Category</span>
                         <div class="filter-pills" id="filterCategory">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
                             <button class="filter-pill" data-value="Education" data-color="education">Education</button>
                             <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
@@ -1122,6 +1124,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Status</span>
                         <div class="filter-pills" id="filterStatus">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                             <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
                             <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
@@ -1155,6 +1158,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Owner</span>
                         <div class="filter-pills" id="filterOwnerTasks">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
                             <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
@@ -1184,6 +1188,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Owner</span>
                         <div class="filter-pills" id="filterOwnerTable">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
                             <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
                             <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
@@ -1193,6 +1198,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Category</span>
                         <div class="filter-pills" id="filterCategoryTable">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
                             <button class="filter-pill" data-value="Education" data-color="education">Education</button>
                             <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
@@ -1202,6 +1208,7 @@
                     <div class="filter-group">
                         <span class="filter-group-label">Status</span>
                         <div class="filter-pills" id="filterStatusTable">
+                            <button class="filter-pill" data-value="All" data-color="all">All</button>
                             <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                             <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
                             <button class="filter-pill" data-value="Confirmed" data-color="confirmed">Confirmed</button>
@@ -2535,7 +2542,17 @@
         function setupEventListeners() {
             document.querySelectorAll('.filter-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
+                    const group = pill.closest('.filter-pills');
+                    const isAll = pill.dataset.value === 'All';
+
+                    if (isAll) {
+                        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                    } else {
+                        const allBtn = group.querySelector('[data-value="All"]');
+                        if (allBtn) allBtn.classList.remove('active');
+                        pill.classList.toggle('active');
+                    }
                     applyFilters();
                 });
             });
@@ -2545,9 +2562,13 @@
         }
 
         function applyFilters() {
-            const selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
-            const selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
-            const selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
+            let selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
+            let selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
+
+            selectedOwners = selectedOwners.filter(v => v !== 'All');
+            selectedCategories = selectedCategories.filter(v => v !== 'All');
+            selectedStatuses = selectedStatuses.filter(v => v !== 'All');
 
             const timing = document.getElementById('filterTiming').value;
             const sortOrder = document.getElementById('sortOrder').value;
@@ -3559,7 +3580,17 @@
         function setupTasksFilters() {
             document.querySelectorAll('#filterOwnerTasks .filter-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
+                    const group = pill.closest('.filter-pills');
+                    const isAll = pill.dataset.value === 'All';
+
+                    if (isAll) {
+                        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+                        pill.classList.add('active');
+                    } else {
+                        const allBtn = group.querySelector('[data-value="All"]');
+                        if (allBtn) allBtn.classList.remove('active');
+                        pill.classList.toggle('active');
+                    }
                     applyTasksFilters();
                 });
             });
@@ -3607,7 +3638,8 @@
             openTasks.sort((a, b) => a.deadline - b.deadline);
 
             // Apply filters
-            const selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            selectedOwners = selectedOwners.filter(v => v !== 'All');
             const selectedDueDates = Array.from(document.querySelectorAll('#filterDueDateTasks .filter-pill.active')).map(p => p.dataset.value);
 
             const filteredTasks = openTasks.filter(task => {
