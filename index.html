@@ -2825,7 +2825,7 @@
                 setTimeout(async () => {
                     const metrics = await fetchEventMetrics(event);
                     const metricsDiv = document.getElementById(`metrics-${event.id}`);
-                    if (metricsDiv && metrics && !metrics.error) {
+                    if (metricsDiv && metrics) {
                         metricsDiv.innerHTML = renderMetricsDisplay(metrics, event);
                     }
                 }, 100);
