@@ -3075,13 +3075,15 @@
                 checkbox.addEventListener('change', handleTaskToggle);
             });
 
-            // Load metrics asynchronously for each event
+            // Load metrics from localStorage for each event
             filteredEvents.forEach(event => {
-                setTimeout(async () => {
-                    const metrics = await fetchEventMetrics(event);
+                setTimeout(() => {
                     const metricsDiv = document.getElementById(`metrics-${event.id}`);
-                    if (metricsDiv && metrics) {
-                        metricsDiv.innerHTML = renderMetricsDisplay(metrics, event);
+                    if (metricsDiv) {
+                        const manualMetrics = getManualMetrics(event.id);
+                        if (manualMetrics) {
+                            metricsDiv.innerHTML = renderMetricsDisplay(manualMetrics, event);
+                        }
                     }
                     // Update Force Complete button style
                     updateForceBtnStyle(event.id);
