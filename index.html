@@ -1135,6 +1135,7 @@
                         <option value="next10">Next 10 days</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
+                        <option value="all">All events</option>
                     </select>
                     <select id="sortOrder" class="filter-select">
                         <option value="earliest">↑ Earliest first</option>
@@ -1214,6 +1215,7 @@
                         <option value="next10">Next 10 days</option>
                         <option value="upcoming">Upcoming</option>
                         <option value="past">Past</option>
+                        <option value="all">All events</option>
                     </select>
                     <select id="sortOrderTable" class="filter-select">
                         <option value="earliest">↑ Earliest first</option>
@@ -2037,27 +2039,41 @@
             }
         }
 
+        function getManualMetrics(eventId) {
+            const stored = localStorage.getItem(`metrics-${eventId}`);
+            return stored ? JSON.parse(stored) : null;
+        }
+
+        function saveManualMetrics(eventId, metricsData) {
+            localStorage.setItem(`metrics-${eventId}`, JSON.stringify(metricsData));
+        }
+
         function renderMetricsDisplay(metrics, event) {
             if (!metrics) return '';
-            if (metrics.error) {
-                return `<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #fef2f2; border-radius: 6px; border-left: 3px solid #ef4444; font-size: 0.9em; color: #991b1b;">❌ ${metrics.error}</div>`;
+
+            const manualMetrics = getManualMetrics(event.id);
+            const displayMetrics = manualMetrics || metrics;
+
+            if (displayMetrics.error && !manualMetrics) {
+                return `<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #fef2f2; border-radius: 6px; border-left: 3px solid #ef4444; font-size: 0.9em; color: #991b1b;">❌ ${displayMetrics.error}</div>`;
             }
 
             const normalizedType = normalizeEventType(event.type);
             let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
-            html += '<div style="font-weight: 600; color: #1d5432; margin-bottom: 6px;">📊 Metrics</div>';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><div style="font-weight: 600; color: #1d5432;">📊 Metrics' + (manualMetrics ? ' (Manual)' : '') + '</div>';
+            html += `<button onclick="openMetricsEditor(${event.id}, '${normalizedType}')" style="background: #1d5432; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button></div>`;
 
             if (normalizedType === 'PUBLIC_PROGRAM' || normalizedType === 'TABLING') {
-                const participants = metrics.participants || metrics.participants === 0 ? metrics.participants : '-';
-                const hours = metrics.hours || metrics.hours === 0 ? metrics.hours : '-';
+                const participants = displayMetrics.participants || displayMetrics.participants === 0 ? displayMetrics.participants : '-';
+                const hours = displayMetrics.hours || displayMetrics.hours === 0 ? displayMetrics.hours : '-';
                 html += `<div>👥 Participants: <strong>${participants}</strong></div>`;
                 html += `<div>⏱️ Hours: <strong>${hours}</strong></div>`;
             }
             if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
-                const volunteers = metrics.volunteers || metrics.volunteers === 0 ? metrics.volunteers : '-';
-                const trees = metrics.trees || metrics.trees === 0 ? metrics.trees : '-';
-                const compost = metrics.compost || metrics.compost === 0 ? metrics.compost : '-';
-                const hours = metrics.hours || metrics.hours === 0 ? metrics.hours : '-';
+                const volunteers = displayMetrics.volunteers || displayMetrics.volunteers === 0 ? displayMetrics.volunteers : '-';
+                const trees = displayMetrics.trees || displayMetrics.trees === 0 ? displayMetrics.trees : '-';
+                const compost = displayMetrics.compost || displayMetrics.compost === 0 ? displayMetrics.compost : '-';
+                const hours = displayMetrics.hours || displayMetrics.hours === 0 ? displayMetrics.hours : '-';
                 html += `<div>👥 Volunteers: <strong>${volunteers}</strong></div>`;
                 html += `<div>🌳 Trees: <strong>${trees}</strong></div>`;
                 html += `<div>♻️ Compost: <strong>${compost} lbs</strong></div>`;
@@ -2066,6 +2082,88 @@
 
             html += '</div>';
             return html;
+        }
+
+        function openMetricsEditor(eventId, eventType) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
+            const manualMetrics = getManualMetrics(eventId) || {};
+
+            let fields = '';
+            if (eventType === 'PUBLIC_PROGRAM' || eventType === 'TABLING') {
+                fields = `
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">👥 Participants</label>
+                        <input type="number" id="metric-participants" value="${manualMetrics.participants || ''}" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #d4cec0; border-radius: 4px;">
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">⏱️ Hours</label>
+                        <input type="number" id="metric-hours" value="${manualMetrics.hours || ''}" placeholder="0" step="0.5" style="width: 100%; padding: 8px; border: 1px solid #d4cec0; border-radius: 4px;">
+                    </div>
+                `;
+            } else {
+                fields = `
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">👥 Volunteers</label>
+                        <input type="number" id="metric-volunteers" value="${manualMetrics.volunteers || ''}" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #d4cec0; border-radius: 4px;">
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">🌳 Trees</label>
+                        <input type="number" id="metric-trees" value="${manualMetrics.trees || ''}" placeholder="0" style="width: 100%; padding: 8px; border: 1px solid #d4cec0; border-radius: 4px;">
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">♻️ Compost (lbs)</label>
+                        <input type="number" id="metric-compost" value="${manualMetrics.compost || ''}" placeholder="0" step="0.5" style="width: 100%; padding: 8px; border: 1px solid #d4cec0; border-radius: 4px;">
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-weight: 500;">⏱️ Hours</label>
+                        <input type="number" id="metric-hours" value="${manualMetrics.hours || ''}" placeholder="0" step="0.5" style="width: 100%; padding: 8px; border: 1px solid #d4cec0; border-radius: 4px;">
+                    </div>
+                `;
+            }
+
+            const modal = document.createElement('div');
+            modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 12px; width: 90%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                    <h2 style="margin: 0 0 20px 0; color: #1d5432;">Edit Metrics</h2>
+                    <p style="margin: 0 0 20px 0; color: #666; font-size: 0.9em;">${event.name}</p>
+                    ${fields}
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex: 1; padding: 10px; background: #d4cec0; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Cancel</button>
+                        <button onclick="saveMetricsEdit(${eventId}, '${eventType}'); this.parentElement.parentElement.parentElement.remove();" style="flex: 1; padding: 10px; background: #1d5432; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 500;">Save</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function saveMetricsEdit(eventId, eventType) {
+            const newMetrics = {};
+            if (eventType === 'PUBLIC_PROGRAM' || eventType === 'TABLING') {
+                const participants = document.getElementById('metric-participants')?.value;
+                const hours = document.getElementById('metric-hours')?.value;
+                if (participants !== '') newMetrics.participants = parseFloat(participants);
+                if (hours !== '') newMetrics.hours = parseFloat(hours);
+            } else {
+                const volunteers = document.getElementById('metric-volunteers')?.value;
+                const trees = document.getElementById('metric-trees')?.value;
+                const compost = document.getElementById('metric-compost')?.value;
+                const hours = document.getElementById('metric-hours')?.value;
+                if (volunteers !== '') newMetrics.volunteers = parseFloat(volunteers);
+                if (trees !== '') newMetrics.trees = parseFloat(trees);
+                if (compost !== '') newMetrics.compost = parseFloat(compost);
+                if (hours !== '') newMetrics.hours = parseFloat(hours);
+            }
+            newMetrics.type = eventType;
+            saveManualMetrics(eventId, newMetrics);
+
+            const metricsDiv = document.getElementById(`metrics-${eventId}`);
+            if (metricsDiv) {
+                const event = events.find(e => e.id === eventId);
+                metricsDiv.innerHTML = renderMetricsDisplay(newMetrics, event);
+            }
         }
 
         async function syncToGoogleTasks() {
@@ -2369,7 +2467,9 @@
 
                 if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
 
-                if (timing === 'next10') {
+                if (timing === 'all') {
+                    // Show all events
+                } else if (timing === 'next10') {
                     const tenDaysFromNow = new Date(now);
                     tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
                     if (eventDate < now || eventDate > tenDaysFromNow) return false;
@@ -2459,7 +2559,9 @@
 
                 if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
 
-                if (timing === 'next10') {
+                if (timing === 'all') {
+                    // Show all events
+                } else if (timing === 'next10') {
                     const tenDaysFromNow = new Date(now);
                     tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
                     if (eventDate < now || eventDate > tenDaysFromNow) return false;
