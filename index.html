@@ -1946,15 +1946,15 @@
                                 const count = byMonth[m] || 0;
                                 const barHeight = count > 0 ? Math.max((count / maxMonthCount) * 90, 8) : 0;
                                 const isSelected = selectedMonth === 'All' || selectedMonth === m;
-                                return \`
+                                return `
                                     <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                                        <div style="font-size: 0.72em; color: #666; height: 16px;">\${count > 0 ? count : ''}</div>
+                                        <div style="font-size: 0.72em; color: #666; height: 16px;">${count > 0 ? count : ''}</div>
                                         <div style="width: 100%; display: flex; align-items: flex-end; height: 90px;">
-                                            <div style="width: 100%; height: \${barHeight}px; background: \${isSelected && count > 0 ? '#1d5432' : count > 0 ? '#a3c4b5' : 'transparent'}; border-radius: 4px 4px 0 0;"></div>
+                                            <div style="width: 100%; height: ${barHeight}px; background: ${isSelected && count > 0 ? '#1d5432' : count > 0 ? '#a3c4b5' : 'transparent'}; border-radius: 4px 4px 0 0;"></div>
                                         </div>
-                                        <div style="font-size: 0.72em; color: #666;">\${m}</div>
+                                        <div style="font-size: 0.72em; color: #666;">${m}</div>
                                     </div>
-                                \`;
+                                `;
                             }).join('')}
                         </div>
                     </div>
