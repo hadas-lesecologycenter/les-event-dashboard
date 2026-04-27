@@ -2139,7 +2139,7 @@
 
 
 
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlquYJW1Uy-G_0UUkfEVBoQapGW0SAgSNXPVhaG-k75Xyl0h8D4z6hzZ0mAL-CqhRF/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxe3c75ot5eHaTDcMAiCCy4vznWf1M5S4XXAZqfwVUPEKt8wpwerD8Mt5AOPlGghi4_/exec';
 
         const metricsCache = {};
 
@@ -2149,25 +2149,29 @@
         }
 
         async function fetchEventMetrics(event) {
-            const cacheKey = `${event.name}-${event.date.toISOString()}`;
-            if (metricsCache[cacheKey]) {
-                return metricsCache[cacheKey];
-            }
+            // Manually entered metrics take priority over form responses
+            const manual = getManualMetrics(event.id);
+            if (manual) return manual;
+
+            const cacheKey = `${event.name}-${event.date}`;
+            if (metricsCache[cacheKey]) return metricsCache[cacheKey];
 
             try {
                 const params = new URLSearchParams({
                     action: 'getEventMetrics',
                     eventName: event.name,
-                    eventDate: event.date.toISOString().split('T')[0],
                     eventType: normalizeEventType(event.type)
                 });
                 const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
-                const metrics = await response.json();
-                metricsCache[cacheKey] = metrics;
-                return metrics;
+                const data = await response.json();
+                if (!data.notFound && !data.error) {
+                    metricsCache[cacheKey] = data;
+                    return data;
+                }
+                return null;
             } catch (error) {
                 console.error('Error fetching metrics for', event.name, ':', error);
-                return { error: error.message };
+                return null;
             }
         }
 
@@ -2198,16 +2202,10 @@
         function renderMetricsDisplay(metrics, event) {
             if (!metrics) return '';
 
-            const manualMetrics = getManualMetrics(event.id);
-            const displayMetrics = manualMetrics || metrics;
-
-            if (displayMetrics.error && !manualMetrics) {
-                return `<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #fef2f2; border-radius: 6px; border-left: 3px solid #ef4444; font-size: 0.9em; color: #991b1b;">❌ ${displayMetrics.error}</div>`;
-            }
-
             const normalizedType = normalizeEventType(event.type);
+            const isManual = !metrics.source;
             let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
-            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><div style="font-weight: 600; color: #1d5432;">📊 Metrics' + (manualMetrics ? ' (Manual)' : '') + '</div>';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><div style="font-weight: 600; color: #1d5432;">📊 Metrics' + (isManual ? ' (Manual)' : ' (Form)') + '</div>';
             html += `<button onclick="openMetricsEditor(${event.id}, '${normalizedType}')" style="background: #1d5432; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button></div>`;
 
             if (normalizedType === 'PUBLIC_PROGRAM' || normalizedType === 'TABLING') {
@@ -2281,6 +2279,9 @@
         }
 
         function saveMetricsEdit(eventId, eventType) {
+            const event = events.find(e => e.id === eventId);
+            if (!event) return;
+
             const newMetrics = {};
             if (eventType === 'PUBLIC_PROGRAM' || eventType === 'TABLING') {
                 const participants = document.getElementById('metric-participants')?.value;
@@ -2300,11 +2301,39 @@
             newMetrics.type = eventType;
             saveManualMetrics(eventId, newMetrics);
 
+            // Sync to Apps Script
+            syncMetricsToAppsScript(event, newMetrics, eventType);
+
             const metricsDiv = document.getElementById(`metrics-${eventId}`);
             if (metricsDiv) {
-                const event = events.find(e => e.id === eventId);
                 metricsDiv.innerHTML = renderMetricsDisplay(newMetrics, event);
             }
+        }
+
+        function syncMetricsToAppsScript(event, metrics, eventType) {
+            const payload = {
+                eventName: event.name,
+                eventDate: event.date instanceof Date ? event.date.toISOString().split('T')[0] : event.date,
+                eventType: eventType,
+                owner: event.owner,
+                metrics: metrics
+            };
+
+            fetch(`${APPS_SCRIPT_URL}?action=saveMetrics`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            }).then(response => response.json())
+              .then(data => {
+                  if (data.success) {
+                      console.log('Metrics synced to reporting sheet');
+                  } else {
+                      console.error('Failed to sync metrics:', data.error);
+                  }
+              })
+              .catch(error => console.error('Error syncing metrics:', error));
         }
 
         async function syncToGoogleTasks() {
