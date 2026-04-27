@@ -187,6 +187,7 @@ function getImpactMetrics(month, year) {
       for (let i = 1; i < volData.length; i++) {
         const row = volData[i];
         if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
+        if (!rowContainsTeamMember(row)) continue;
         totalVolunteers += Number(row[volVolunteersIdx]) || 0;
         totalTrees += Number(row[treesIdx]) || 0;
         totalHours += Number(row[volHoursIdx]) || 0;
@@ -205,7 +206,7 @@ function getImpactMetrics(month, year) {
       for (let i = 1; i < workData.length; i++) {
         const row = workData[i];
         if (!rowMatchesMonthYear(row[dateIdx], month, year)) continue;
-        // Only include tree-related workshops/programs
+        if (!rowContainsTeamMember(row)) continue;
         const title = String(row[titleIdx] || '').toLowerCase();
         const isTreeRelated = title.includes('tree') || title.includes('stc') || title.includes('stewardship');
         if (!isTreeRelated) continue;
@@ -219,6 +220,14 @@ function getImpactMetrics(month, year) {
     Logger.log('Error in getImpactMetrics: ' + error);
     return { error: error.toString() };
   }
+}
+
+function rowContainsTeamMember(row) {
+  const team = ['maddy', 'hadas', 'gretel'];
+  return row.some(cell => {
+    const val = String(cell || '').toLowerCase();
+    return team.some(name => val.includes(name));
+  });
 }
 
 function rowMatchesMonthYear(dateVal, month, year) {
