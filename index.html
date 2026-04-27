@@ -2077,15 +2077,13 @@
                     return {
                         title: `${task.taskLabel} - ${task.eventName}`,
                         due: dueDate,
-                        notes: `Owner: ${task.owner}\nEvent: ${task.eventName}\nStatus: ${daysStr}`
+                        notes: `Event: ${task.eventName}\nStatus: ${daysStr}`,
+                        owner: task.owner
                     };
                 });
 
-                // POST to Google Apps Script (text/plain to avoid CORS preflight)
-
-
-                const response = await fetch('https://script.google.com/macros/s/AKfycbwY86DWkKE8TbTY3VWHyWTvBjFiTMxInzgU9_cWzza_z3U4oXpAcxkI4S1XuaDz8GhH/exec', {
-
+                // POST to Google Apps Script
+                const response = await fetch('https://script.google.com/macros/s/AKfycbytndyCJmwlKuHNCwA--8UX3KJU_bjbm4aaHuf9jH_1E0qpdGzdjVm9N64oZnPic6LE/exec?action=createTasks', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'

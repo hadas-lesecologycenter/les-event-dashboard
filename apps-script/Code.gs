@@ -57,12 +57,18 @@ function doGet(e) {
 }
 
 /**
- * POST endpoint: Update a specific task for an event
- * Expects JSON body with: eventId, taskKey, completed
+ * POST endpoint: Handle task creation and updates
+ * Expects JSON body with task data
  */
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
+    const action = e.parameter.action;
+
+    if (action === 'createTasks') {
+      return handleCreateTasks(payload);
+    }
+
     const { eventName, taskField, value } = payload;
 
     if (!eventName || !taskField) {
@@ -107,6 +113,45 @@ function doPost(e) {
       success: true,
       message: `Updated ${taskField} for ${eventName}`,
       timestamp: new Date().toISOString()
+    })).setMimeType(MimeType.JSON);
+
+  } catch (error) {
+    return HtmlService.createHtmlOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(MimeType.JSON);
+  }
+}
+
+/**
+ * Create tasks in Google Chat space via webhook
+ */
+function handleCreateTasks(tasks) {
+  try {
+    const webhookUrl = 'https://chat.googleapis.com/v1/spaces/AAQA3PJhlEI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=mfmdhcbvCzpDA2kXs6oAS2rVM98x4HpdaT0wBxLXU5M';
+    let createdCount = 0;
+
+    for (const task of tasks) {
+      const message = {
+        text: `📋 Task: ${task.title}\nDue: ${task.due}\n${task.notes}\n\nAssigned to: ${task.owner}`
+      };
+
+      const options = {
+        method: 'post',
+        payload: JSON.stringify(message),
+        contentType: 'application/json',
+        muteHttpExceptions: true
+      };
+
+      const response = UrlFetchApp.fetch(webhookUrl, options);
+      if (response.getResponseCode() === 200) {
+        createdCount++;
+      }
+    }
+
+    return HtmlService.createHtmlOutput(JSON.stringify({
+      success: true,
+      message: `Created ${createdCount} tasks in Chat space`
     })).setMimeType(MimeType.JSON);
 
   } catch (error) {
