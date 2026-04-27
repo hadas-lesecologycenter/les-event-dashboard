@@ -1093,8 +1093,6 @@
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
             <button class="view-btn" data-view="impact">📊 Impact & Stats</button>
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
-            <button id="syncGoogleTasksBtn" style="padding: 12px 30px; background: #4285f4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3); transition: all 0.3s ease;">🔗 Sync to Google Tasks</button>
-            <button id="forceCompleteBtn" style="padding: 12px 30px; background: #e5e7eb; color: #6b7280; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s ease;">⚙️ Force Complete OFF</button>
         </div>
 
         <div id="listView" class="list-view-container">
@@ -2003,6 +2001,27 @@
             }
         }
 
+        function toggleForceComplete() {
+            forceCompleteMode = !forceCompleteMode;
+            document.querySelectorAll('[id^="forceBtn-"]').forEach(btn => {
+                updateForceBtnStyle(btn.id.split('-')[1]);
+            });
+        }
+
+        function updateForceBtnStyle(eventId) {
+            const btn = document.getElementById(`forceBtn-${eventId}`);
+            if (!btn) return;
+            if (forceCompleteMode) {
+                btn.style.borderColor = '#ef4444';
+                btn.style.color = '#ef4444';
+                btn.textContent = '⚙️ Force ON';
+            } else {
+                btn.style.borderColor = '#e5e7eb';
+                btn.style.color = '#9ca3af';
+                btn.textContent = '⚙️ Force OFF';
+            }
+        }
+
         async function syncEventTasks(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
@@ -2371,26 +2390,6 @@
             setupEventListeners();
             setupCalendarListeners();
             applyFilters();
-
-            // Google Tasks button listener
-            document.getElementById('syncGoogleTasksBtn').addEventListener('click', syncToGoogleTasks);
-
-            // Force Complete toggle listener
-            document.getElementById('forceCompleteBtn').addEventListener('click', () => {
-                forceCompleteMode = !forceCompleteMode;
-                const btn = document.getElementById('forceCompleteBtn');
-                if (forceCompleteMode) {
-                    btn.style.background = '#ef4444';
-                    btn.style.color = 'white';
-                    btn.style.boxShadow = '0 2px 8px rgba(239, 68, 68, 0.3)';
-                    btn.textContent = '⚙️ Force Complete ON';
-                } else {
-                    btn.style.background = '#e5e7eb';
-                    btn.style.color = '#6b7280';
-                    btn.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
-                    btn.textContent = '⚙️ Force Complete OFF';
-                }
-            });
         }
 
         function setupCalendarListeners() {
@@ -2999,6 +2998,7 @@
                                 </div>
                                 <div>
                                     <button onclick="syncEventTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#4285f4';this.style.color='#4285f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🔗 Sync Tasks</button>
+                                    <button onclick="toggleForceComplete()" id="forceBtn-${event.id}" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af; margin-left: 6px;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="updateForceBtnStyle(${event.id})">⚙️ Force OFF</button>
                                 </div>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${progress}%"></div>
@@ -3043,6 +3043,8 @@
                     if (metricsDiv && metrics) {
                         metricsDiv.innerHTML = renderMetricsDisplay(metrics, event);
                     }
+                    // Update Force Complete button style
+                    updateForceBtnStyle(event.id);
                 }, 100);
             });
         }
