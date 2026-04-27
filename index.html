@@ -1825,49 +1825,16 @@
 
         async function displayImpactReport() {
             const impactView = document.getElementById('impactView');
-            const statsView = document.getElementById('statsView');
 
-            // Build month/year options from tree care events only
-            const monthSet = new Set();
-            const yearSet = new Set();
-            events.forEach(e => {
-                if (!e.date) return;
-                const isTreeEvent = e.name.toLowerCase().includes('tree') ||
-                                   e.name.toLowerCase().includes('stc') ||
-                                   e.primaryCategory === 'Stewardship';
-                if (!isTreeEvent) return;
-                monthSet.add(e.date.toLocaleDateString('en-US', { month: 'short' }));
-                yearSet.add(e.date.getFullYear().toString());
-            });
-            const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
-            const yearOptions = ['All', ...Array.from(yearSet).sort()];
-
-            let selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All';
-            let selectedYear = localStorage.getItem('selectedStatsYear') || 'All';
-            if (!monthOptions.includes(selectedMonth)) selectedMonth = 'All';
-            if (!yearOptions.includes(selectedYear)) selectedYear = 'All';
-            localStorage.setItem('selectedStatsMonth', selectedMonth);
-            localStorage.setItem('selectedStatsYear', selectedYear);
-
+            const selectedMonth = localStorage.getItem('selectedStatsMonth') || 'All';
+            const selectedYear = localStorage.getItem('selectedStatsYear') || 'All';
             const filtered = getEventsByMonthYear(selectedMonth, selectedYear);
 
-            // Count by owner, category, status from dashboard events
-            const byOwner = { Maddy: 0, Hadas: 0, Gretel: 0 };
-            const byCategory = { Outreach: 0, Education: 0, Stewardship: 0 };
-            const byStatus = { Planning: 0, Hold: 0, Confirmed: 0 };
-            let confirmedCount = 0;
-            let completedCount = 0;
-            let openTasksCount = 0;
-
+            let confirmedCount = 0, completedCount = 0, openTasksCount = 0;
             filtered.forEach(e => {
-                if (byOwner.hasOwnProperty(e.owner)) byOwner[e.owner]++;
-                if (byCategory.hasOwnProperty(e.primaryCategory)) byCategory[e.primaryCategory]++;
                 const status = e.status || 'Planning';
-                if (byStatus.hasOwnProperty(status)) byStatus[status]++;
                 if (status === 'Confirmed') confirmedCount++;
                 if (e.report === 'Yes') completedCount++;
-
                 if (status === 'Confirmed') {
                     Object.entries(TASK_DEADLINES).forEach(([, tasks]) => {
                         tasks.forEach(task => {
@@ -1877,36 +1844,13 @@
                 }
             });
 
-            // Fetch impact metrics from reporting spreadsheet, filtered by month/year
-            const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
-            const totalVolunteers = impactMetrics.totalVolunteers || 0;
-            const totalParticipants = impactMetrics.totalParticipants || 0;
-            const totalTrees = impactMetrics.totalTrees || 0;
-            const totalHours = impactMetrics.totalHours || 0;
-            const hasImpactData = !impactMetrics.error && (totalVolunteers + totalParticipants + totalTrees + totalHours) > 0;
-
             const completionRate = confirmedCount > 0 ? Math.round((completedCount / confirmedCount) * 100) : 0;
 
-            const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
-            const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', Confirmed: '#34d399' };
-
-            statsView.innerHTML = `
-                <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
-                    <div>
-                        <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Month:</label>
-                        <select id="statsMonthFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                            ${monthOptions.map(m => `<option value="${m}" ${m === selectedMonth ? 'selected' : ''}>${m}</option>`).join('')}
-                        </select>
-                    </div>
-                    <div>
-                        <label style="font-weight: 600; color: #1d5432; display: block; margin-bottom: 8px; font-size: 0.95em;">Year:</label>
-                        <select id="statsYearFilter" style="padding: 8px 12px; border: 2px solid #d4cec0; border-radius: 8px; font-family: 'DM Sans', sans-serif; cursor: pointer; font-size: 0.9em;">
-                            ${yearOptions.map(y => `<option value="${y}" ${y === selectedYear ? 'selected' : ''}>${y}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
-            `;
+            const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
+            const totalVolunteers = impactMetrics.totalVolunteers || 0;
+            const totalTrees = impactMetrics.totalTrees || 0;
+            const totalHours = impactMetrics.totalHours || 0;
+            const hasImpactData = !impactMetrics.error && (totalVolunteers + totalTrees + totalHours) > 0;
 
             impactView.innerHTML = `
                 <div style="padding: 20px;">
@@ -1915,7 +1859,7 @@
                     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 25px;">
                         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
                             <div style="font-size: 2.2em; font-weight: bold;">${filtered.length}</div>
-                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Total Events</div>
+                            <div style="font-size: 0.9em; margin-top: 4px; opacity: 0.9;">Tree Events</div>
                         </div>
                         <div style="background: linear-gradient(135deg, #34d399 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);">
                             <div style="font-size: 2.2em; font-weight: bold;">${confirmedCount}</div>
@@ -1934,60 +1878,32 @@
                     ${hasImpactData ? `
                     <div style="margin-bottom: 25px;">
                         <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 1em;">Impact <span style="font-weight: 400; font-size: 0.85em; color: #6b7280;">from reporting spreadsheet</span></div>
-                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                            ${totalVolunteers > 0 ? `<div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;">
+                            <div style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(79,172,254,0.3);">
                                 <div style="font-size: 2em; font-weight: bold;">${totalVolunteers}</div>
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Volunteers</div>
-                            </div>` : ''}
-                            ${totalParticipants > 0 ? `<div style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(250,112,154,0.3);">
-                                <div style="font-size: 2em; font-weight: bold;">${totalParticipants}</div>
-                                <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Participants</div>
-                            </div>` : ''}
-                            ${totalTrees > 0 ? `<div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
+                            </div>
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(16,185,129,0.3);">
                                 <div style="font-size: 2em; font-weight: bold;">${totalTrees}</div>
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Trees Cared</div>
-                            </div>` : ''}
-                            ${totalHours > 0 ? `<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
+                            </div>
+                            <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 16px; border-radius: 12px; text-align: center; box-shadow: 0 4px 12px rgba(245,87,108,0.3);">
                                 <div style="font-size: 2em; font-weight: bold;">${totalHours}</div>
                                 <div style="font-size: 0.85em; margin-top: 4px; opacity: 0.9;">Total Hours</div>
-                            </div>` : ''}
+                            </div>
                         </div>
                     </div>
                     ` : impactMetrics.error ? `
                     <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 16px; color: #991b1b; margin-bottom: 25px; font-size: 0.9em;">
-                        ⚠️ Could not load impact data from reporting spreadsheet. Check that the Apps Script is deployed and the sheet IDs are correct.
+                        ⚠️ Could not load impact data from reporting spreadsheet.
                     </div>
                     ` : `
                     <div style="background: #f9fafb; border: 1px dashed #d1d5db; border-radius: 12px; padding: 20px; text-align: center; color: #6b7280; margin-bottom: 25px; font-size: 0.95em;">
                         No impact data found in the reporting spreadsheet for this period.
                     </div>
                     `}
-
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
-                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Owner</div>
-                            ${createPieChart(byOwner, ownerColors)}
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Category</div>
-                            ${createPieChart(byCategory, categoryColors)}
-                        </div>
-                        <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <div style="font-weight: 600; color: #1d5432; margin-bottom: 12px; font-size: 0.95em;">By Status</div>
-                            ${createPieChart(byStatus, statusColors)}
-                        </div>
-                    </div>
                 </div>
             `;
-
-            document.getElementById('statsMonthFilter').addEventListener('change', (e) => {
-                localStorage.setItem('selectedStatsMonth', e.target.value);
-                displayImpactReport();
-            });
-            document.getElementById('statsYearFilter').addEventListener('change', (e) => {
-                localStorage.setItem('selectedStatsYear', e.target.value);
-                displayImpactReport();
-            });
         }
 
         function switchView(view) {
@@ -2858,7 +2774,7 @@
                 }
             });
             const monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            const monthOptions = ['All', ...monthOrder.filter(m => monthSet.has(m))];
+            const monthOptions = ['All', ...monthOrder]; // always show all 12 months
             const yearOptions = ['All', ...Array.from(yearSet).sort()];
 
             // Get selected month and year from localStorage
@@ -2970,10 +2886,12 @@
             document.getElementById('statsMonthFilter').addEventListener('change', (e) => {
                 localStorage.setItem('selectedStatsMonth', e.target.value);
                 updateStats();
+                displayImpactReport();
             });
             document.getElementById('statsYearFilter').addEventListener('change', (e) => {
                 localStorage.setItem('selectedStatsYear', e.target.value);
                 updateStats();
+                displayImpactReport();
             });
         }
 
