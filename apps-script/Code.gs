@@ -272,30 +272,26 @@ function handleSaveMetrics(metricsData) {
 }
 
 /**
- * Send task notifications to Google Chat via webhook
+ * Create tasks in Google Tasks
  */
 function handleCreateTasks(tasks) {
   try {
-    const webhookUrl = 'https://chat.googleapis.com/v1/spaces/AAQA3PJhlEI/messages?key=AIzaSyDdI0hCZtE6vySjMm-WEfRq3CPzqKqqsHI&token=mfmdhcbvCzpDA2kXs6oAS2rVM98x4HpdaT0wBxLXU5M';
+    const taskList = TasksApp.getDefaultTaskList();
     let createdCount = 0;
 
     for (const task of tasks) {
-      const message = {
-        text: `📋 Task: ${task.title}\nDue: ${task.due}\n${task.notes}\n\nAssigned to: ${task.owner}`
-      };
-
-      const response = UrlFetchApp.fetch(webhookUrl, {
-        method: 'post',
-        payload: JSON.stringify(message),
-        contentType: 'application/json',
-        muteHttpExceptions: true
-      });
-      if (response.getResponseCode() === 200) createdCount++;
+      const dueDate = new Date(task.due);
+      const newTask = taskList.addTask(task.title)
+        .setNotes(`${task.notes}\n\nAssigned to: ${task.owner}`);
+      if (!isNaN(dueDate)) {
+        newTask.setDueDate(dueDate);
+      }
+      createdCount++;
     }
 
     return HtmlService.createHtmlOutput(JSON.stringify({
       success: true,
-      message: `Created ${createdCount} tasks in Chat space`
+      message: `Created ${createdCount} tasks in Google Tasks`
     })).setMimeType(MimeType.JSON);
 
   } catch (error) {
