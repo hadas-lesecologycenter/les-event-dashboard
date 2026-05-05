@@ -2226,7 +2226,6 @@
         async function syncEventToSheet(event) {
             try {
                 const payload = {
-                    action: 'syncEvent',
                     event: {
                         name: event.name,
                         owner: event.owner,
@@ -2239,7 +2238,7 @@
                     }
                 };
 
-                const response = await fetch(APPS_SCRIPT_URL, {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=syncEvent`, {
                     method: 'POST',
                     body: JSON.stringify(payload)
                 });
