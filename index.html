@@ -1103,7 +1103,6 @@
             <button class="view-btn" data-view="table">📊 Table View</button>
             <button class="view-btn" data-view="kanban">🎯 Kanban</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
-            <button class="view-btn" data-view="impact">📊 Impact & Stats</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
         </div>
@@ -1998,8 +1997,6 @@
             document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
             document.getElementById('calendarView').classList.toggle('active', view === 'calendar');
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
-            document.getElementById('statsView').style.display = view === 'impact' ? 'flex' : 'none';
-            document.getElementById('impactView').style.display = view === 'impact' ? 'block' : 'none';
             document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
 
             if (view === 'calendar') renderCalendar();
@@ -2010,10 +2007,6 @@
             if (view === 'tasks') {
                 setupTasksFilters();
                 renderOpenTasks();
-            }
-            if (view === 'impact') {
-                updateStats();
-                displayImpactReport();
             }
             if (view === 'kanban') {
                 renderKanban();
