@@ -2214,10 +2214,101 @@
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgkB3ceP4ChpC49wS3k0STG06IAcwb6Wr-VfkFOx3_n-Z11QC9KsmPvFN4vn__AAJF/exec';
 
         const metricsCache = {};
+        let lastSheetSync = 0;
+        const SYNC_INTERVAL = 30000; // Sync every 30 seconds
 
         function normalizeEventType(type) {
             if (!type) return '';
             return String(type).toUpperCase().replace(/\s+/g, '_');
+        }
+
+        // Two-way sync functions
+        async function syncEventToSheet(event) {
+            try {
+                const payload = {
+                    action: 'syncEvent',
+                    event: {
+                        name: event.name,
+                        owner: event.owner,
+                        date: event.date.toLocaleDateString('en-US'),
+                        time: event.time || '',
+                        location: event.location || '',
+                        category: event.primaryCategory || event.category || '',
+                        type: event.type || 'FIELD TRIP',
+                        status: event.status || 'Planning'
+                    }
+                };
+
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                console.log('Sync to sheet:', result);
+                return result.success;
+            } catch (error) {
+                console.warn('Sheet sync failed (offline):', error);
+                return false;
+            }
+        }
+
+        async function syncEventsFromSheet() {
+            const now = Date.now();
+            if (now - lastSheetSync < SYNC_INTERVAL) return; // Throttle syncs
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+
+                if (data.success && data.events) {
+                    // Merge sheet events with local events, preferring local changes
+                    const sheetEventMap = {};
+                    data.events.forEach(e => {
+                        sheetEventMap[e.name] = e;
+                    });
+
+                    // Update existing events and add new ones from sheet
+                    const existingNames = new Set(events.map(e => e.name));
+
+                    // Update existing events with sheet data
+                    events.forEach(localEvent => {
+                        const sheetEvent = sheetEventMap[localEvent.name];
+                        if (sheetEvent && sheetEvent.status) {
+                            localEvent.status = sheetEvent.status;
+                        }
+                    });
+
+                    // Add new events from sheet (that don't exist locally)
+                    data.events.forEach(sheetEvent => {
+                        if (!existingNames.has(sheetEvent.name)) {
+                            events.push({
+                                id: Math.max(...events.map(e => e.id), 0) + 1,
+                                name: sheetEvent.name,
+                                owner: sheetEvent.owner || '',
+                                date: new Date(sheetEvent.date),
+                                time: sheetEvent.time || '12:00 PM',
+                                location: sheetEvent.location || '',
+                                category: sheetEvent.category || '',
+                                primaryCategory: sheetEvent.category || '',
+                                type: sheetEvent.type || 'FIELD TRIP',
+                                status: sheetEvent.status || 'Planning'
+                            });
+                        }
+                    });
+
+                    lastSheetSync = now;
+                    console.log('Synced from sheet:', data.events.length, 'events');
+                }
+            } catch (error) {
+                console.warn('Failed to sync from sheet:', error);
+            }
+        }
+
+        // Start auto-sync on page load
+        function startAutoSync() {
+            setInterval(syncEventsFromSheet, SYNC_INTERVAL);
+            syncEventsFromSheet(); // Initial sync
         }
 
         async function fetchEventMetrics(event) {
@@ -2511,6 +2602,7 @@
             setupEventListeners();
             setupCalendarListeners();
             applyFilters();
+            startAutoSync();
         }
 
         function setupCalendarListeners() {
@@ -2574,6 +2666,7 @@
                     const eventIndex = events.findIndex(e => e.id == editingId);
                     if (eventIndex !== -1) {
                         events[eventIndex] = { ...events[eventIndex], ...updatedEvent };
+                        syncEventToSheet(events[eventIndex]);
                         delete document.getElementById('eventForm').dataset.editingId;
                     }
                 } else {
@@ -2587,6 +2680,7 @@
                         coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No'
                     };
                     events.push(newEvent);
+                    syncEventToSheet(newEvent);
                 }
 
                 saveEvents();
