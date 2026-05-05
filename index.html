@@ -2238,8 +2238,9 @@
                     }
                 };
 
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=syncEvent`, {
+                const response = await fetch('/api/sync-event', {
                     method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
@@ -2257,7 +2258,7 @@
             if (now - lastSheetSync < SYNC_INTERVAL) return; // Throttle syncs
 
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
+                const response = await fetch('/api/sheet-events');
                 const data = await response.json();
 
                 if (data.success && data.events) {

@@ -97,6 +97,33 @@ app.post('/api/create-eventbrite-event', async (req, res) => {
   }
 });
 
+const APPS_SCRIPT_URL = process.env.APPS_SCRIPT_URL || 'https://script.google.com/macros/s/AKfycbxaTIouIjMZryG3QX10pU-cR2H1_rqJvCTMYBLwBkK-b3wSgT6tG3z_hUVB5T9tUNydMg/exec';
+
+// Proxy: push event from dashboard → Google Sheet
+app.post('/api/sync-event', async (req, res) => {
+  try {
+    const response = await axios.post(`${APPS_SCRIPT_URL}?action=syncEvent`, req.body, {
+      headers: { 'Content-Type': 'application/json' },
+      maxRedirects: 5
+    });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Sync event error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Proxy: pull events from Google Sheet → dashboard
+app.get('/api/sheet-events', async (req, res) => {
+  try {
+    const response = await axios.get(APPS_SCRIPT_URL, { maxRedirects: 5 });
+    res.json(response.data);
+  } catch (error) {
+    console.error('Fetch sheet events error:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
