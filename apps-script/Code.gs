@@ -73,6 +73,10 @@ function doPost(e) {
       return handleSaveMetrics(payload);
     }
 
+    if (action === 'syncEvent') {
+      return handleSyncEvent(payload);
+    }
+
     const { eventName, taskField, value } = payload;
 
     if (!eventName || !taskField) {
@@ -262,6 +266,84 @@ function handleSaveMetrics(metricsData) {
       message: `Metrics saved for ${eventName}`,
       timestamp: new Date().toISOString()
     })).setMimeType(MimeType.JSON);
+
+  } catch (error) {
+    return HtmlService.createHtmlOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(MimeType.JSON);
+  }
+}
+
+/**
+ * Sync event from dashboard to spreadsheet
+ */
+function handleSyncEvent(eventData) {
+  try {
+    const { event } = eventData;
+
+    if (!event || !event.name) {
+      throw new Error('Missing event name');
+    }
+
+    const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
+    const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+
+    // Find event row or create new one
+    let eventRow = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === event.name) {
+        eventRow = i;
+        break;
+      }
+    }
+
+    // If event doesn't exist, append it
+    if (eventRow === -1) {
+      const newRow = [
+        event.name,
+        event.owner || '',
+        event.date || '',
+        event.time || '',
+        event.location || '',
+        event.category || '',
+        event.type || '',
+        '' // Collaboration
+      ];
+
+      // Pad with empty cells to match header count
+      while (newRow.length < headers.length) {
+        newRow.push('');
+      }
+
+      sheet.appendRow(newRow);
+      return HtmlService.createHtmlOutput(JSON.stringify({
+        success: true,
+        message: `Event "${event.name}" created in sheet`,
+        timestamp: new Date().toISOString()
+      })).setMimeType(MimeType.JSON);
+    } else {
+      // Update existing event
+      const eventRange = sheet.getRange(eventRow + 1, 1, 1, 8);
+      eventRange.setValues([[
+        event.name,
+        event.owner || '',
+        event.date || '',
+        event.time || '',
+        event.location || '',
+        event.category || '',
+        event.type || '',
+        '' // Collaboration
+      ]]);
+
+      return HtmlService.createHtmlOutput(JSON.stringify({
+        success: true,
+        message: `Event "${event.name}" updated in sheet`,
+        timestamp: new Date().toISOString()
+      })).setMimeType(MimeType.JSON);
+    }
 
   } catch (error) {
     return HtmlService.createHtmlOutput(JSON.stringify({
