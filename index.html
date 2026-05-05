@@ -1646,6 +1646,85 @@
         let currentBriefEvent = null;
         let forceCompleteMode = false;
 
+        // Spreadsheet event data
+        const spreadsheetEvents = [
+            { name: 'MulchFest', owner: 'Maddy', date: '1/10/2026', time: '2:00 PM', location: 'Tompkins Square Park', category: 'Outreach', type: 'TABLING' },
+            { name: 'Tool Lending Library Info Session #1', owner: 'Maddy', date: '2/25/2026', time: '1:00 PM', location: '', category: 'Outreach, Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Tool Lending Library Info Session #2', owner: 'Maddy', date: '3/11/2026', time: '12:00 PM', location: '', category: 'Outreach, Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Tree Beds Spring Cleaning w/t Henry Street CRT', owner: 'Hadas', date: '3/12/2026', time: '3:00 PM', location: 'Henry Street Settlement', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'CBLES Kick-Off Event', owner: 'Maddy', date: '3/17/2026', time: '12:00 PM', location: 'Lower Eastside Girls Club', category: 'Outreach', type: 'TABLING' },
+            { name: 'STC w/t Whole Foods', owner: 'Hadas', date: '3/19/2026', time: '2:00 PM', location: '', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Spring into Tree Care', owner: 'Maddy', date: '3/22/2026', time: '12:00 PM', location: '', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'STC with PS/MS 188', owner: 'Hadas', date: '3/24/2026', time: '2:00 PM', location: 'P.S. 188 The Island School', category: 'Education, Stewardship', type: 'FIELD_TRIP' },
+            { name: 'Corlears Hook Park Spring Fest', owner: 'Hadas', date: '3/29/2026', time: '11:00 AM', location: 'Corlears Hook Park', category: 'Outreach', type: 'TABLING' },
+            { name: 'Signs of Spring Virtual Walk', owner: 'Hadas', date: '3/31/2026', time: '6:45 PM', location: '', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/t Girl Scouts', owner: 'Maddy', date: '4/8/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' },
+            { name: 'Watercolor + Tree ID Workshop', owner: 'Maddy', date: '4/9/2026', time: '12:00 PM', location: '', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Tree Trivia - Earth Month Celebration', owner: 'Maddy', date: '4/13/2026', time: '12:00 PM', location: 'Union Square', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'CBLES Info Session', owner: 'Maddy', date: '4/13/2026', time: '6:00 PM', location: '', category: 'Outreach', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/t Elena Brill and associates', owner: 'Hadas', date: '4/15/2026', time: '9:30 AM', location: 'Seward Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: '4/16/2026', time: '10:00 AM', location: 'Lower East Side Ecology Center', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'NYU Students Group Volunteering', owner: 'Hadas', date: '4/17/2026', time: '10:00 AM', location: 'Tompkins Square Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC w/t Columbia Alumni', owner: 'Maddy', date: '4/18/2026', time: '10:00 AM', location: '', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Spring Tree Walk', owner: 'Hadas', date: '4/19/2026', time: '1:00 PM', location: '', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Soil Testing - Earth Month Celebration', owner: 'Hadas', date: '4/22/2026', time: '2:00 AM', location: 'Union Square', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/ Sixth Street Community Center', owner: 'Maddy', date: '4/23/2026', time: '4:30 PM', location: 'Sixth Street Community Center', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'Tabling at Alfred E Smith Rec Center for Earth Day', owner: 'Hadas', date: '4/23/2026', time: '3:00 PM', location: 'Alfred E. Smith Recreation Center', category: 'Outreach', type: 'TABLING' },
+            { name: 'STC w/t ConEdison', owner: 'Gretel', date: '4/25/2026', time: '10:00 AM', location: '', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'CBLES Info Session', owner: 'Maddy', date: '4/27/2026', time: '12:00 PM', location: '', category: 'Outreach', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/ LOMA', owner: 'Maddy', date: '4/28/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: '4/30/2026', time: '10:00 AM', location: 'Seward Park', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'Jane\'s Walk: A History of the LES in 10 Trees', owner: 'Hadas', date: '5/1/2026', time: '11:00 AM', location: 'Tompkins Square Park', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'PS 110 STC Workshop Pt 1', owner: 'Maddy', date: '5/6/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'STC w/ Henry St CRT', owner: 'Maddy', date: '5/7/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'Canopy Care', owner: 'Gretel', date: '5/7/2026', time: '4:00 PM', location: 'Clyde Garden', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'Street Tree Care w/ Hort Training Program', owner: 'Maddy', date: '5/8/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' },
+            { name: 'Mother\'s Day STC + Community Engagement Team', owner: 'Hadas', date: '5/10/2026', time: '12:00 PM', location: '', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'Peck Slip Field Trip STC', owner: 'Maddy', date: '5/11/2026', time: '12:00 PM', location: 'The Peck Slip School', category: 'Stewardship, Education', type: 'FIELD_TRIP' },
+            { name: 'PS 110 STC Workshop Pt 2', owner: 'Maddy', date: '5/12/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'STC w/t Celons CL', owner: 'Hadas', date: '5/14/2026', time: '1:00 PM', location: 'Seward Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Canopy Care', owner: 'Gretel', date: '5/21/2026', time: '4:00 PM', location: 'Seward Park', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'STC w/t Pace Gallery', owner: 'Hadas', date: '5/29/2026', time: '9:30 AM', location: 'Clyde Romero Garden', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Tree Leaf ID Walk', owner: 'Gretel', date: '5/30/2026', time: '11:00 AM', location: 'Seward Park', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/t PVH', owner: 'Hadas', date: '6/29/2026', time: '1:30 PM', location: 'Seward Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC w/t Equativ', owner: 'Hadas', date: '6/8/2026', time: '10:00 AM', location: 'Clyde Romero Garden', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC w. NYU Class', owner: 'Maddy', date: '9/10/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' }
+        ];
+
+        function initializeEventsFromSpreadsheet() {
+            spreadsheetEvents.forEach((e, idx) => {
+                const [month, day, year] = e.date.split('/');
+                const eventDate = new Date(year, month - 1, day);
+                const primaryCategory = e.category.split(',')[0].trim();
+                events.push({
+                    id: idx + 1,
+                    name: e.name,
+                    owner: e.owner,
+                    date: eventDate,
+                    time: e.time,
+                    location: e.location || 'TBD',
+                    category: e.category,
+                    primaryCategory: primaryCategory,
+                    type: normalizeEventType(e.type),
+                    status: new Date(eventDate) < new Date() ? 'Complete' : 'Planning'
+                });
+            });
+        }
+
+        function normalizeEventType(type) {
+            const typeMap = {
+                'TABLING': 'TABLING',
+                'PUBLIC_PROGRAM': 'PUBLIC PROGRAM',
+                'PRIVATE_VOLUNTEER_EVENT': 'PRIVATE VOLUNTEER EVENT',
+                'PUBLIC_VOLUNTEER_EVENT': 'PUBLIC VOLUNTEER EVENT',
+                'FIELD_TRIP': 'FIELD TRIP'
+            };
+            return typeMap[type] || 'FIELD TRIP';
+        }
+
+        // Initialize events from spreadsheet on load
+        initializeEventsFromSpreadsheet();
+
         const CATEGORY_COLORS = {
             'Outreach': '#f59e0b',
             'Education': '#3b82f6',
