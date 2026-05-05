@@ -14,12 +14,12 @@ const REPORTING_SHEET_ID = '1RqQl5Wx-DUhMDQwTk2APz0VulodV3FaS51Y9WGuYwAs';
 function doGet(e) {
   if (e && e.parameter && e.parameter.action === 'getImpactMetrics') {
     const metrics = getImpactMetrics(e.parameter.month, e.parameter.year);
-    return HtmlService.createHtmlOutput(JSON.stringify(metrics)).setMimeType(MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify(metrics)).setMimeType(ContentService.MimeType.JSON);
   }
 
   if (e && e.parameter && e.parameter.action === 'getEventMetrics') {
     const metrics = getEventMetrics(e.parameter.eventName, e.parameter.eventType);
-    return HtmlService.createHtmlOutput(JSON.stringify(metrics)).setMimeType(MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify(metrics)).setMimeType(ContentService.MimeType.JSON);
   }
 
   try {
@@ -27,9 +27,9 @@ function doGet(e) {
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
 
     if (!sheet) {
-      return HtmlService.createHtmlOutput(JSON.stringify({
+      return ContentService.createTextOutput(JSON.stringify({
         error: `Sheet "${SHEET_NAME}" not found`
-      })).setMimeType(MimeType.JSON);
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
     const data = sheet.getDataRange().getValues();
@@ -43,17 +43,17 @@ function doGet(e) {
       if (event) events.push(event);
     }
 
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: true,
       count: events.length,
       events: events,
       lastSync: new Date().toISOString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       error: error.toString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -110,17 +110,17 @@ function doPost(e) {
 
     sheet.getRange(eventRow + 1, taskCol + 1).setValue(value);
 
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: `Updated ${taskField} for ${eventName}`,
       timestamp: new Date().toISOString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -261,17 +261,17 @@ function handleSaveMetrics(metricsData) {
       }
     }
 
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: `Metrics saved for ${eventName}`,
       timestamp: new Date().toISOString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -319,11 +319,11 @@ function handleSyncEvent(eventData) {
       }
 
       sheet.appendRow(newRow);
-      return HtmlService.createHtmlOutput(JSON.stringify({
+      return ContentService.createTextOutput(JSON.stringify({
         success: true,
         message: `Event "${event.name}" created in sheet`,
         timestamp: new Date().toISOString()
-      })).setMimeType(MimeType.JSON);
+      })).setMimeType(ContentService.MimeType.JSON);
     } else {
       // Update existing event
       const eventRange = sheet.getRange(eventRow + 1, 1, 1, 8);
@@ -338,18 +338,18 @@ function handleSyncEvent(eventData) {
         '' // Collaboration
       ]]);
 
-      return HtmlService.createHtmlOutput(JSON.stringify({
+      return ContentService.createTextOutput(JSON.stringify({
         success: true,
         message: `Event "${event.name}" updated in sheet`,
         timestamp: new Date().toISOString()
-      })).setMimeType(MimeType.JSON);
+      })).setMimeType(ContentService.MimeType.JSON);
     }
 
   } catch (error) {
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
@@ -371,16 +371,16 @@ function handleCreateTasks(tasks) {
       createdCount++;
     }
 
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: true,
       message: `Created ${createdCount} tasks in Google Tasks`
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
-    return HtmlService.createHtmlOutput(JSON.stringify({
+    return ContentService.createTextOutput(JSON.stringify({
       success: false,
       error: error.toString()
-    })).setMimeType(MimeType.JSON);
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 

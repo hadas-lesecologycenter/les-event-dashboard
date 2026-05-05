@@ -2238,15 +2238,15 @@
                     }
                 };
 
-                const response = await fetch('/api/sync-event', {
+                // no-cors: Apps Script POST doesn't support CORS response headers,
+                // so we fire-and-forget (write still succeeds on the server side)
+                await fetch(`${APPS_SCRIPT_URL}?action=syncEvent`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'no-cors',
                     body: JSON.stringify(payload)
                 });
-
-                const result = await response.json();
-                console.log('Sync to sheet:', result);
-                return result.success;
+                console.log('Sync to sheet sent:', payload.event.name);
+                return true;
             } catch (error) {
                 console.warn('Sheet sync failed (offline):', error);
                 return false;
@@ -2258,7 +2258,7 @@
             if (now - lastSheetSync < SYNC_INTERVAL) return; // Throttle syncs
 
             try {
-                const response = await fetch('/api/sheet-events');
+                const response = await fetch(APPS_SCRIPT_URL);
                 const data = await response.json();
 
                 if (data.success && data.events) {
