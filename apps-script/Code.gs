@@ -22,6 +22,11 @@ function doGet(e) {
     return ContentService.createTextOutput(JSON.stringify(metrics)).setMimeType(ContentService.MimeType.JSON);
   }
 
+  if (e && e.parameter && e.parameter.action === 'syncEvent') {
+    const event = JSON.parse(e.parameter.data || '{}');
+    return handleSyncEvent({ event });
+  }
+
   try {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);

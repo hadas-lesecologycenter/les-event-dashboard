@@ -2238,13 +2238,12 @@
                     }
                 };
 
-                // no-cors: Apps Script POST doesn't support CORS response headers,
-                // so we fire-and-forget (write still succeeds on the server side)
-                await fetch(`${APPS_SCRIPT_URL}?action=syncEvent`, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(payload)
+                // Use GET with encoded params — Apps Script redirects break no-cors POST bodies
+                const params = new URLSearchParams({
+                    action: 'syncEvent',
+                    data: JSON.stringify(payload.event)
                 });
+                await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 console.log('Sync to sheet sent:', payload.event.name);
                 return true;
             } catch (error) {
