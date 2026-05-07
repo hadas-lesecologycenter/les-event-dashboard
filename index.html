@@ -2177,6 +2177,7 @@
                         owner: event.owner,
                         date: event.date instanceof Date ? event.date.toLocaleDateString('en-US') : event.date,
                         time: event.time || '',
+                        endTime: event.endTime || '',
                         location: event.location || '',
                         category: event.primaryCategory || event.category || '',
                         type: event.type || 'FIELD TRIP',
@@ -2254,16 +2255,17 @@
                     events.forEach(localEvent => {
                         const s = sheetEventMap[localEvent.name];
                         if (!s) return;
-                        if (s.status)   localEvent.status   = s.status;
+                        if (s.status !== undefined && s.status)   localEvent.status   = s.status;
                         if (s.owner)    localEvent.owner    = s.owner;
                         if (s.date)     localEvent.date     = parseLocalDate(s.date);
                         if (s.time)     localEvent.time     = s.time;
+                        if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
                         if (s.location !== undefined) localEvent.location = s.location;
                         if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category; }
                         if (s.type)     localEvent.type     = s.type;
-                        // Sync all task fields
+                        // Sync all task fields - check if key exists in sheet data
                         const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
-                        taskKeys.forEach(key => { if (s[key]) localEvent[key] = s[key]; });
+                        taskKeys.forEach(key => { if (key in s && s[key]) localEvent[key] = s[key]; });
                     });
 
                     // Add new events from sheet that don't exist locally
@@ -4054,6 +4056,7 @@
             const workflow = getEventWorkflow(event);
             const progress = getEventProgress(event);
 
+            const timeRange = event.endTime ? `${event.time}${event.endTime ? ' - ' + event.endTime : ''}` : event.time;
             content.innerHTML = `
                 <div style="margin-bottom: 20px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
@@ -4062,8 +4065,8 @@
                             <div style="color: #1d5432; font-weight: 500;">${event.owner}</div>
                         </div>
                         <div>
-                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Date</label>
-                            <div style="color: #1d5432; font-weight: 500;">${formatDate(event.date)}</div>
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Date & Time</label>
+                            <div style="color: #1d5432; font-weight: 500;">${formatDate(event.date)} at ${timeRange}</div>
                         </div>
                         <div>
                             <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Category</label>

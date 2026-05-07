@@ -318,9 +318,11 @@ function handleSyncEvent(eventData) {
         'Owner': event.owner || '',
         'Date': event.date || '',
         'Time': event.time || '',
+        'End Time': event.endTime || '',
         'Location': event.location || '',
         'Event Category': event.category || '',
-        'Event Type': event.type || ''
+        'Event Type': event.type || '',
+        'Status': event.status || 'Planning'
       };
       const taskMap = {
         'Event Brief Created': event.brief || 'No',
@@ -349,17 +351,21 @@ function handleSyncEvent(eventData) {
       })).setMimeType(ContentService.MimeType.JSON);
     } else {
       // Update basic event fields
-      const eventRange = sheet.getRange(eventRow + 1, 1, 1, 8);
-      eventRange.setValues([[
-        event.name,
-        event.owner || '',
-        event.date || '',
-        event.time || '',
-        event.location || '',
-        event.category || '',
-        event.type || '',
-        '' // Collaboration
-      ]]);
+      const basicMap = {
+        'Column 1': event.name,
+        'Owner': event.owner || '',
+        'Date': event.date || '',
+        'Time': event.time || '',
+        'End Time': event.endTime || '',
+        'Location': event.location || '',
+        'Event Category': event.category || '',
+        'Event Type': event.type || '',
+        'Status': event.status || 'Planning'
+      };
+      Object.entries(basicMap).forEach(([colName, value]) => {
+        const colIdx = headers.indexOf(colName);
+        if (colIdx !== -1) sheet.getRange(eventRow + 1, colIdx + 1).setValue(value);
+      });
 
       // Update task fields by column name
       const taskMap = {
@@ -613,9 +619,11 @@ function parseEventRow(row, headers) {
     owner: getColumn('Owner') || 'Unassigned',
     date: date ? date.toISOString().split('T')[0] : null,
     time: getColumn('Time') || '',
+    endTime: getColumn('End Time') || '',
     location: getColumn('Location') || '',
     category: getColumn('Event Category') || '',
     type: getColumn('Event Type') || '',
+    status: getColumn('Status') || '',
     collaboration: getColumn('Collaboration') || '',
     collaborationNotes: getColumn('Collaboration Notes/ General Notes') || '',
 
