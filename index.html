@@ -2256,7 +2256,7 @@
                         if (!s) return;
                         if (s.status)   localEvent.status   = s.status;
                         if (s.owner)    localEvent.owner    = s.owner;
-                        if (s.date)     localEvent.date     = new Date(s.date);
+                        if (s.date)     localEvent.date     = parseLocalDate(s.date);
                         if (s.time)     localEvent.time     = s.time;
                         if (s.location !== undefined) localEvent.location = s.location;
                         if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category; }
@@ -2273,7 +2273,7 @@
                             id: Math.max(...events.map(e => e.id), 0) + 1,
                             name: s.name,
                             owner: s.owner || '',
-                            date: new Date(s.date),
+                            date: parseLocalDate(s.date),
                             time: s.time || '12:00 PM',
                             location: s.location || '',
                             category: s.category || '',
@@ -2747,22 +2747,23 @@
             return data;
         }
 
+        function parseLocalDate(d) {
+            if (!d) return new Date();
+            if (d instanceof Date) return d;
+            // Parse ISO date string as local time to avoid UTC offset shifting the day
+            const str = typeof d === 'string' ? d.split('T')[0] : String(d);
+            const parts = str.split('-');
+            if (parts.length === 3) return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+            return new Date(d);
+        }
+
         function loadEvents() {
-            const parseDate = (d) => {
-                if (!d) return new Date();
-                if (d instanceof Date) return d;
-                // Parse ISO date string as local time to avoid UTC offset shifting the day
-                const str = typeof d === 'string' ? d.split('T')[0] : String(d);
-                const parts = str.split('-');
-                if (parts.length === 3) return new Date(+parts[0], +parts[1] - 1, +parts[2]);
-                return new Date(d);
-            };
 
             const applyDefaults = (e) => {
                 const isPrivateStewardship = e.type === 'PRIVATE VOLUNTEER EVENT' && e.primaryCategory === 'Stewardship';
                 return {
                     ...e,
-                    date: parseDate(e.date),
+                    date: parseLocalDate(e.date),
                     volunteer: e.volunteer !== undefined ? e.volunteer : (isPrivateStewardship ? 'No' : 'N/A')
                 };
             };
