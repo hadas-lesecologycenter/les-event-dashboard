@@ -618,8 +618,8 @@ function parseEventRow(row, headers) {
     name: name,
     owner: getColumn('Owner') || 'Unassigned',
     date: date ? date.toISOString().split('T')[0] : null,
-    time: getColumn('Time') || '',
-    endTime: getColumn('End Time') || '',
+    time: formatSheetTime(getColumn('Time')),
+    endTime: formatSheetTime(getColumn('End Time')),
     location: getColumn('Location') || '',
     category: getColumn('Event Category') || '',
     type: getColumn('Event Type') || '',
@@ -651,6 +651,30 @@ function normalizeValue(value) {
   if (str === 'NO' || str === 'FALSE' || str === 'N') return 'No';
   if (str === 'N/A') return 'N/A';
   return 'No';
+}
+
+function formatSheetTime(val) {
+  if (!val) return '';
+  // Google Sheets returns time cells as Date objects
+  if (val instanceof Date) {
+    let h = val.getHours(), m = val.getMinutes();
+    const period = h >= 12 ? 'PM' : 'AM';
+    if (h === 0) h = 12;
+    else if (h > 12) h -= 12;
+    return `${h}:${String(m).padStart(2, '0')} ${period}`;
+  }
+  // Plain string like "14:00" — convert to 12-hour
+  const str = String(val).trim();
+  if (/AM|PM/i.test(str)) return str; // already formatted
+  const match = str.match(/^(\d{1,2}):(\d{2})/);
+  if (match) {
+    let h = parseInt(match[1], 10), m = match[2];
+    const period = h >= 12 ? 'PM' : 'AM';
+    if (h === 0) h = 12;
+    else if (h > 12) h -= 12;
+    return `${h}:${m} ${period}`;
+  }
+  return str;
 }
 
 function hashCode(str) {

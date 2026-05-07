@@ -1850,7 +1850,7 @@
                     </div>
                     <div style="margin-bottom: 15px;">
                         <p style="margin: 5px 0;"><strong>Owner:</strong> ${event.owner}</p>
-                        <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(event.date)} at ${event.time}${event.endTime ? ' - ' + event.endTime : ''}</p>
+                        <p style="margin: 5px 0;"><strong>Date:</strong> ${formatDate(event.date)} at ${to12HourTime(event.time)}${event.endTime ? ' - ' + to12HourTime(event.endTime) : ''}</p>
                         ${event.location ? `<p style="margin: 5px 0;"><strong>Location:</strong> ${event.location}</p>` : ''}
                         <p style="margin: 5px 0;"><strong>Type:</strong> ${event.type || 'N/A'}</p>
                     </div>
@@ -2906,7 +2906,7 @@
                         <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${formatDate(event.date)}</td>
-                        <td style="padding: 12px 20px; font-size: 0.9em;">${event.time || '—'}</td>
+                        <td style="padding: 12px 20px; font-size: 0.9em;">${event.time ? to12HourTime(event.time) + (event.endTime ? ' - ' + to12HourTime(event.endTime) : '') : '—'}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${event.location || '—'}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;"><span class="category-badge category-${event.primaryCategory.toLowerCase()}">${event.primaryCategory}</span></td>
                         <td style="padding: 12px 20px;"><span class="status-badge status-${(event.status || 'planning').toLowerCase().replace(/\s+/g, '-')}">${event.status || 'Planning'}</span></td>
@@ -3183,7 +3183,7 @@
                                 </div>
                                 <div class="event-meta">
                                     <span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span>
-                                    <span class="meta-item">📅 ${formatDate(event.date)} ${event.time}${event.endTime ? ' - ' + event.endTime : ''}</span>
+                                    <span class="meta-item">📅 ${formatDate(event.date)} ${to12HourTime(event.time)}${event.endTime ? ' - ' + to12HourTime(event.endTime) : ''}</span>
                                     ${event.location ? `<span class="meta-item">📍 ${event.location}</span>` : ''}
                                 </div>
                                 <div id="metrics-${event.id}" class="metrics-placeholder"></div>
@@ -4062,7 +4062,9 @@
             const workflow = getEventWorkflow(event);
             const progress = getEventProgress(event);
 
-            const timeRange = event.endTime ? `${event.time}${event.endTime ? ' - ' + event.endTime : ''}` : event.time;
+            const fmtStart = to12HourTime(event.time);
+            const fmtEnd   = to12HourTime(event.endTime);
+            const timeRange = fmtStart && fmtEnd ? `${fmtStart} - ${fmtEnd}` : (fmtStart || '');
             content.innerHTML = `
                 <div style="margin-bottom: 20px;">
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
