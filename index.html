@@ -3212,12 +3212,19 @@
             const eventType = event.type || 'FIELD TRIP';
             const base = TASK_WORKFLOWS[eventType] || TASK_WORKFLOWS['FIELD TRIP'];
             const catTasks = CATEGORY_TASKS[event.primaryCategory];
-            if (!catTasks) return base;
-            return {
+
+            const merged = catTasks ? {
                 setup:      [...base.setup,      ...catTasks.setup],
                 execution:  [...base.execution,  ...catTasks.execution],
                 completion: [...base.completion, ...catTasks.completion]
-            };
+            } : { ...base };
+
+            // 'volunteer' task only applies to Private Volunteer Events with Stewardship as primary category
+            if (event.primaryCategory !== 'Stewardship' || eventType !== 'PRIVATE VOLUNTEER EVENT') {
+                merged.setup = merged.setup.filter(t => t.key !== 'volunteer');
+            }
+
+            return merged;
         }
 
         function renderTasks(event, phase) {
