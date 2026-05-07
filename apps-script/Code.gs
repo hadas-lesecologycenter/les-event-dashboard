@@ -337,7 +337,7 @@ function handleSyncEvent(eventData) {
         'Thank You Email Sent': event.thankYou || 'No'
       };
       Object.entries({ ...basicMap, ...taskMap }).forEach(([col, val]) => {
-        const idx = headers.indexOf(col);
+        const idx = findColumnIndex(headers, col);
         if (idx !== -1) newRow[idx] = val;
       });
 
@@ -363,7 +363,7 @@ function handleSyncEvent(eventData) {
         'Status': event.status || 'Planning'
       };
       Object.entries(basicMap).forEach(([colName, value]) => {
-        const colIdx = headers.indexOf(colName);
+        const colIdx = findColumnIndex(headers, colName);
         if (colIdx !== -1) sheet.getRange(eventRow + 1, colIdx + 1).setValue(value);
       });
 
@@ -382,7 +382,7 @@ function handleSyncEvent(eventData) {
       };
       Object.entries(taskMap).forEach(([colName, value]) => {
         if (value === undefined) return;
-        const colIdx = headers.indexOf(colName);
+        const colIdx = findColumnIndex(headers, colName);
         if (colIdx !== -1) sheet.getRange(eventRow + 1, colIdx + 1).setValue(value);
       });
 
@@ -600,7 +600,7 @@ function findColumnIndex(headers, searchTerm) {
  */
 function parseEventRow(row, headers) {
   const getColumn = (name) => {
-    const index = headers.indexOf(name);
+    const index = findColumnIndex(headers, name);
     return index >= 0 ? row[index] : null;
   };
 
