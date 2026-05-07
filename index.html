@@ -3266,6 +3266,18 @@
             applyFilters();
         }
 
+        function autoCompleteEvent(event) {
+            if (!event || event.status === 'Complete' || event.status === 'Canceled') return;
+
+            const workflow = getEventWorkflow(event);
+            const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
+            const allComplete = allTasks.every(task => event[task.key] === 'Yes' || event[task.key] === 'N/A');
+
+            if (allComplete) {
+                event.status = 'Complete';
+            }
+        }
+
         function handleTaskToggle(e) {
             const eventId = parseInt(e.target.dataset.eventId);
             const taskKey = e.target.dataset.taskKey;
@@ -3303,6 +3315,7 @@
 
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
+                autoCompleteEvent(event);
 
                 if (isChecked) {
                     // Open Google Calendar for calendar task
@@ -3726,6 +3739,7 @@
                     if (event) {
                         event[taskKey] = e.target.checked ? 'Yes' : 'No';
                         saveEvents();
+                        autoCompleteEvent(event);
 
                         if (e.target.checked) {
                             // Show completion feedback
@@ -3742,10 +3756,10 @@
 
                             setTimeout(() => {
                                 if (toast.parentNode) toast.remove();
-                                renderOpenTasks();
+                                applyFilters();
                             }, 1500);
                         } else {
-                            renderOpenTasks();
+                            applyFilters();
                         }
                     }
                 });
@@ -4044,6 +4058,8 @@
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
+                autoCompleteEvent(event);
+                applyFilters();
                 openEventDetailsModal(eventId);
             }
         }
