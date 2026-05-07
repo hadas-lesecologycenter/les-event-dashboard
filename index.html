@@ -2243,8 +2243,9 @@
                     action: 'syncEvent',
                     data: JSON.stringify(payload.event)
                 });
-                await fetch(`${APPS_SCRIPT_URL}?${params}`);
-                console.log('Sync to sheet sent:', payload.event.name);
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
+                const result = await response.json();
+                console.log('Sync to sheet result:', result);
                 return true;
             } catch (error) {
                 console.warn('Sheet sync failed (offline):', error);
