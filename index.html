@@ -1107,56 +1107,56 @@
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
         </div>
 
-        <div id="listView" class="list-view-container">
-            <div class="filter-bar">
-                <div class="filter-search">
-                    <input type="text" id="searchEvents" placeholder="Search events by name or location...">
-                </div>
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <span class="filter-group-label">Owner</span>
-                        <div class="filter-pills" id="filterOwner">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
-                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
-                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Category</span>
-                        <div class="filter-pills" id="filterCategory">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
-                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
-                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Status</span>
-                        <div class="filter-pills" id="filterStatus">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
-                            <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
-                            <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
-                        </div>
-                    </div>
-                    <div style="flex: 1"></div>
-                    <select id="filterTiming" class="filter-select">
-                        <option value="next10">Next 10 days</option>
-                        <option value="upcoming">Upcoming</option>
-                        <option value="past">Past</option>
-                        <option value="all">All events</option>
-                    </select>
-                    <select id="sortOrder" class="filter-select">
-                        <option value="earliest">↑ Earliest first</option>
-                        <option value="latest">↓ Latest first</option>
-                    </select>
-                </div>
+        <div class="filter-bar" id="sharedFilterBar">
+            <div class="filter-search">
+                <input type="text" id="searchEvents" placeholder="Search events by name or location...">
             </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-group-label">OWNER</span>
+                    <div class="filter-pills" id="filterOwner">
+                        <button class="filter-pill" data-value="All" data-color="all">All</button>
+                        <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
+                        <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
+                        <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
+                    </div>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <span class="filter-group-label">CATEGORY</span>
+                    <div class="filter-pills" id="filterCategory">
+                        <button class="filter-pill" data-value="All" data-color="all">All</button>
+                        <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
+                        <button class="filter-pill" data-value="Education" data-color="education">Education</button>
+                        <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
+                    </div>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <span class="filter-group-label">STATUS</span>
+                    <div class="filter-pills" id="filterStatus">
+                        <button class="filter-pill" data-value="All" data-color="all">All</button>
+                        <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
+                        <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
+                        <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
+                        <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
+                    </div>
+                </div>
+                <div style="flex: 1"></div>
+                <select id="filterTiming" class="filter-select">
+                    <option value="next10">Next 10 days</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                    <option value="all">All events</option>
+                </select>
+                <select id="sortOrder" class="filter-select">
+                    <option value="earliest">↑ Earliest first</option>
+                    <option value="latest">↓ Latest first</option>
+                </select>
+            </div>
+        </div>
 
+        <div id="listView" class="list-view-container">
             <div class="events-view" id="eventsContainer">
                 <div class="empty-state">
                     <p>No events loaded yet.</p>
@@ -1165,21 +1165,10 @@
         </div>
 
         <div id="tasksView" class="list-view-container" style="display: none;">
-            <div class="filter-bar">
-                <div style="margin-bottom: 0;"></div>
+            <div class="filter-bar" style="padding-top: 8px; padding-bottom: 8px;">
                 <div class="filter-row">
                     <div class="filter-group">
-                        <span class="filter-group-label">Owner</span>
-                        <div class="filter-pills" id="filterOwnerTasks">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
-                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
-                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Due Date</span>
+                        <span class="filter-group-label">DUE DATE</span>
                         <div class="filter-pills" id="filterDueDateTasks">
                             <button class="filter-pill" data-value="overdue" data-color="hold">Overdue</button>
                             <button class="filter-pill" data-value="today" data-color="confirmed">Today</button>
@@ -1193,55 +1182,6 @@
         </div>
 
         <div id="tableView" class="list-view-container" style="display: none;">
-            <div class="filter-bar">
-                <div class="filter-search">
-                    <input type="text" id="searchEventsTable" placeholder="Search events by name or location...">
-                </div>
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <span class="filter-group-label">Owner</span>
-                        <div class="filter-pills" id="filterOwnerTable">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
-                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
-                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Category</span>
-                        <div class="filter-pills" id="filterCategoryTable">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
-                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
-                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Status</span>
-                        <div class="filter-pills" id="filterStatusTable">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
-                            <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
-                            <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
-                        </div>
-                    </div>
-                    <div style="flex: 1"></div>
-                    <select id="filterTimingTable" class="filter-select">
-                        <option value="next10">Next 10 days</option>
-                        <option value="upcoming">Upcoming</option>
-                        <option value="past">Past</option>
-                        <option value="all">All events</option>
-                    </select>
-                    <select id="sortOrderTable" class="filter-select">
-                        <option value="earliest">↑ Earliest first</option>
-                        <option value="latest">↓ Latest first</option>
-                    </select>
-                </div>
-            </div>
-
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; margin: 0 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <thead>
@@ -1641,6 +1581,7 @@
     <script>
         let events = [];
         let filteredEvents = [];
+        let currentView = 'list';
         let currentMonth = new Date();
         let selectedDate = null;
         let currentBriefEvent = null;
@@ -2069,6 +2010,7 @@
         }
 
                 function switchView(view) {
+            currentView = view;
             document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
@@ -2078,18 +2020,7 @@
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
             document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
 
-            if (view === 'calendar') renderCalendar();
-            if (view === 'table') {
-                setupTableViewFilters();
-                applyTableFilters();
-            }
-            if (view === 'tasks') {
-                setupTasksFilters();
-                renderOpenTasks();
-            }
-            if (view === 'kanban') {
-                renderKanban();
-            }
+            applyFilters();
         }
 
         function toggleForceComplete() {
@@ -2750,11 +2681,10 @@
         }
 
         function setupEventListeners() {
-            document.querySelectorAll('.filter-pill').forEach(pill => {
+            document.querySelectorAll('#sharedFilterBar .filter-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
                     const group = pill.closest('.filter-pills');
                     const isAll = pill.dataset.value === 'All';
-
                     if (isAll) {
                         group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
                         pill.classList.add('active');
@@ -2763,6 +2693,12 @@
                         if (allBtn) allBtn.classList.remove('active');
                         pill.classList.toggle('active');
                     }
+                    applyFilters();
+                });
+            });
+            document.querySelectorAll('#filterDueDateTasks .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
                     applyFilters();
                 });
             });
@@ -2819,104 +2755,13 @@
 
             filteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
 
-            renderEvents();
+            if (currentView === 'list') renderEvents();
+            else if (currentView === 'table') renderTableView(filteredEvents);
+            else if (currentView === 'calendar') renderCalendar();
+            else if (currentView === 'kanban') renderKanban();
+            else if (currentView === 'tasks') renderOpenTasks();
         }
 
-        function setupTableViewFilters() {
-            // Setup filter pills with "All" button logic
-            const filterElements = ['filterOwnerTable', 'filterCategoryTable', 'filterStatusTable'];
-
-            filterElements.forEach(id => {
-                const filterGroup = document.getElementById(id);
-                if (filterGroup) {
-                    filterGroup.replaceWith(filterGroup.cloneNode(true));
-                    document.querySelectorAll(`#${id} .filter-pill`).forEach(pill => {
-                        pill.addEventListener('click', () => {
-                            const group = pill.closest('.filter-pills');
-
-                            // Handle "All" buttons
-                            if (pill.dataset.value === 'All') {
-                                const allActive = pill.classList.contains('active');
-                                group.querySelectorAll('.filter-pill').forEach(p => {
-                                    p.classList.remove('active');
-                                });
-                                if (!allActive) {
-                                    pill.classList.add('active');
-                                }
-                            } else {
-                                // When selecting a specific option, deselect "All"
-                                const allBtn = group.querySelector('[data-value="All"]');
-                                if (allBtn) {
-                                    allBtn.classList.remove('active');
-                                }
-                                pill.classList.toggle('active');
-                            }
-                            applyTableFilters();
-                        });
-                    });
-                }
-            });
-
-            const timingSelect = document.getElementById('filterTimingTable');
-            const sortSelect = document.getElementById('sortOrderTable');
-            const searchInput = document.getElementById('searchEventsTable');
-
-            if (timingSelect) timingSelect.addEventListener('change', applyTableFilters);
-            if (sortSelect) sortSelect.addEventListener('change', applyTableFilters);
-            if (searchInput) searchInput.addEventListener('input', applyTableFilters);
-        }
-
-        function applyTableFilters() {
-            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTable .filter-pill.active')).map(p => p.dataset.value);
-            let selectedCategories = Array.from(document.querySelectorAll('#filterCategoryTable .filter-pill.active')).map(p => p.dataset.value);
-            let selectedStatuses = Array.from(document.querySelectorAll('#filterStatusTable .filter-pill.active')).map(p => p.dataset.value);
-
-            // If "All" is selected, treat as no selection
-            if (selectedOwners.includes('All')) selectedOwners = [];
-            if (selectedCategories.includes('All')) selectedCategories = [];
-            if (selectedStatuses.includes('All')) selectedStatuses = [];
-
-            const timing = document.getElementById('filterTimingTable').value;
-            const sortOrder = document.getElementById('sortOrderTable').value;
-            const search = document.getElementById('searchEventsTable').value.toLowerCase().trim();
-
-            const now = new Date();
-            now.setHours(0, 0, 0, 0);
-
-            let tableFilteredEvents = events.filter(event => {
-                const eventDate = new Date(event.date);
-                eventDate.setHours(0, 0, 0, 0);
-
-                if (selectedOwners.length > 0 && !selectedOwners.includes(event.owner)) return false;
-
-                if (selectedCategories.length > 0) {
-                    const cats = [event.primaryCategory, event.secondaryCategory].filter(Boolean);
-                    if (!selectedCategories.some(c => cats.includes(c))) return false;
-                }
-
-                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
-
-                if (timing === 'all') {
-                    // Show all events
-                } else if (timing === 'next10') {
-                    const tenDaysFromNow = new Date(now);
-                    tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
-                    if (eventDate < now || eventDate > tenDaysFromNow) return false;
-                } else if (timing === 'upcoming' && eventDate < now) return false;
-                else if (timing === 'past' && eventDate >= now) return false;
-
-                if (search) {
-                    const haystack = `${event.name} ${event.location || ''}`.toLowerCase();
-                    if (!haystack.includes(search)) return false;
-                }
-
-                return true;
-            });
-
-            tableFilteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
-
-            renderTableView(tableFilteredEvents);
-        }
 
         function renderTableView(eventsToRender = filteredEvents) {
             const tbody = document.getElementById('tableViewBody');
@@ -3791,34 +3636,6 @@
             applyFilters();
         }
 
-        function setupTasksFilters() {
-            document.querySelectorAll('#filterOwnerTasks .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    const group = pill.closest('.filter-pills');
-                    const isAll = pill.dataset.value === 'All';
-
-                    if (isAll) {
-                        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-                        pill.classList.add('active');
-                    } else {
-                        const allBtn = group.querySelector('[data-value="All"]');
-                        if (allBtn) allBtn.classList.remove('active');
-                        pill.classList.toggle('active');
-                    }
-                    applyTasksFilters();
-                });
-            });
-            document.querySelectorAll('#filterDueDateTasks .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
-                    applyTasksFilters();
-                });
-            });
-        }
-
-        function applyTasksFilters() {
-            renderOpenTasks();
-        }
 
         function renderOpenTasks() {
             const container = document.getElementById('openTasksContainer');
@@ -3852,7 +3669,7 @@
             openTasks.sort((a, b) => a.deadline - b.deadline);
 
             // Apply filters
-            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
             selectedOwners = selectedOwners.filter(v => v !== 'All');
             const selectedDueDates = Array.from(document.querySelectorAll('#filterDueDateTasks .filter-pill.active')).map(p => p.dataset.value);
 
