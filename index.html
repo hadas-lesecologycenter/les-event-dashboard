@@ -3285,70 +3285,18 @@
 
             const event = events.find(e => e.id === eventId);
             if (event) {
-                // Special handling for brief task - open brief modal instead (unless force complete is on)
-                if (taskKey === 'brief' && isChecked && !forceCompleteMode) {
-                    e.target.checked = false; // Revert checkbox since we're handling it specially
-                    openBriefModal(event);
-                    return;
-                }
-
-                // Special handling for comms task - open comms form (requires brief AND eventbrite to be completed, unless force complete is on)
-                if (taskKey === 'comms' && isChecked && !forceCompleteMode) {
-                    if (event.brief !== 'Yes' || event.eventbrite !== 'Yes') {
-                        e.target.checked = false;
-                        const missing = [];
-                        if (event.brief !== 'Yes') missing.push('Create event brief');
-                        if (event.eventbrite !== 'Yes') missing.push('Create Eventbrite page');
-                        const toast = document.createElement('div');
-                        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                        toast.textContent = `❌ Complete: ${missing.join(', ')}`;
-                        document.body.appendChild(toast);
-                        setTimeout(() => {
-                            if (toast.parentNode) toast.remove();
-                        }, 3000);
-                        return;
-                    }
-                    if (!forceCompleteMode) {
-                        openCommsForm(event);
-                    }
-                }
-
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
-                autoCompleteEvent(event);
 
                 if (isChecked) {
-                    // Open Google Calendar for calendar task
-                    if (taskKey === 'calendar') {
-                        openGoogleCalendar(event);
-                    }
-                    // Open Eventbrite for eventbrite task
-                    if (taskKey === 'eventbrite') {
-                        openEventbriteForm(event);
-                    }
-                    // Open Compost Sheet for compost task
-                    if (taskKey === 'compost') {
-                        openCompostSheet(event);
-                    }
-                    // Open Event Reporting Form for report task
-                    if (taskKey === 'report') {
-                        openEventReportingForm(event);
-                    }
-
-                    // Show completion feedback
-                    const taskLabel = e.target.nextElementSibling.textContent;
-                    const toast = document.createElement('div');
-                    toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                    toast.textContent = `✓ ${taskLabel} completed`;
-                    document.body.appendChild(toast);
-
-                    // Remove toast after delay (don't re-render list view)
-                    setTimeout(() => {
-                        if (toast.parentNode) toast.remove();
-                    }, 1200);
-                } else {
-                    // Task unchecked - just update, don't re-render
+                    if (taskKey === 'calendar') openGoogleCalendar(event);
+                    if (taskKey === 'eventbrite') openEventbriteForm(event);
+                    if (taskKey === 'compost') openCompostSheet(event);
+                    if (taskKey === 'report') openEventReportingForm(event);
                 }
+
+                autoCompleteEvent(event);
+                applyFilters();
             }
         }
 
