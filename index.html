@@ -2732,14 +2732,20 @@
         }
 
         function loadEvents() {
+            const applyDefaults = (e) => {
+                const isPrivateStewardship = e.type === 'PRIVATE VOLUNTEER EVENT' && e.primaryCategory === 'Stewardship';
+                return {
+                    ...e,
+                    date: e.date ? new Date(e.date) : new Date(),
+                    volunteer: e.volunteer !== undefined ? e.volunteer : (isPrivateStewardship ? 'No' : 'N/A')
+                };
+            };
+
             // Try to load from localStorage first
             const saved = localStorage.getItem('lesEvents');
             if (saved) {
                 try {
-                    events = JSON.parse(saved).map(e => ({
-                        ...e,
-                        date: e.date ? new Date(e.date) : new Date()
-                    }));
+                    events = JSON.parse(saved).map(applyDefaults);
                     return;
                 } catch (e) {
                     console.warn('Failed to load from localStorage:', e);
@@ -2747,7 +2753,7 @@
             }
 
             // Fall back to sample data if no saved events
-            events = getSampleData().map(e => ({
+            events = getSampleData().map(e => applyDefaults({
                 coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No',
                 ...e
             }));
