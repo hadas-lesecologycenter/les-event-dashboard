@@ -3275,6 +3275,7 @@
 
             if (allComplete) {
                 event.status = 'Complete';
+                syncEventToSheet(event);
             }
         }
 
@@ -3287,6 +3288,7 @@
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
+                syncEventToSheet(event);
 
                 if (isChecked) {
                     if (taskKey === 'calendar') openGoogleCalendar(event);
@@ -3686,6 +3688,7 @@
                     if (event) {
                         event[taskKey] = e.target.checked ? 'Yes' : 'No';
                         saveEvents();
+                        syncEventToSheet(event);
                         autoCompleteEvent(event);
 
                         if (e.target.checked) {
@@ -3736,6 +3739,7 @@
             event.status = 'In Progress';
 
             saveEvents();
+            syncEventToSheet(event);
             applyFilters();
 
             const toast = document.createElement('div');
@@ -3879,6 +3883,7 @@
                                 });
                                 event.status = newStatus;
                                 saveEvents();
+                                syncEventToSheet(event);
                                 modal.remove();
                                 renderKanban();
                             });
@@ -3886,11 +3891,13 @@
                         } else {
                             event.status = newStatus;
                             saveEvents();
+                            syncEventToSheet(event);
                             renderKanban();
                         }
                     } else {
                         event.status = newStatus;
                         saveEvents();
+                        syncEventToSheet(event);
                         renderKanban();
                     }
                 });
@@ -3997,6 +4004,7 @@
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
+                syncEventToSheet(event);
                 autoCompleteEvent(event);
                 applyFilters();
                 openEventDetailsModal(eventId);
