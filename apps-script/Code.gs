@@ -27,6 +27,11 @@ function doGet(e) {
     return handleSyncEvent({ event });
   }
 
+  if (e && e.parameter && e.parameter.action === 'syncBrief') {
+    const brief = JSON.parse(e.parameter.data || '{}');
+    return handleSyncBrief({ brief });
+  }
+
   try {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -351,6 +356,86 @@ function handleSyncEvent(eventData) {
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
     }
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Sync event brief to dedicated Briefs sheet
+ */
+function handleSyncBrief(briefData) {
+  try {
+    const { brief } = briefData;
+
+    if (!brief || !brief.eventName) {
+      throw new Error('Missing event name in brief');
+    }
+
+    const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
+    let sheet = spreadsheet.getSheetByName('Briefs');
+
+    // Create Briefs sheet if it doesn't exist
+    if (!sheet) {
+      sheet = spreadsheet.insertSheet('Briefs');
+      const headers = [
+        'Event Name',
+        'Event Lead',
+        'Status',
+        'Date Saved',
+        'Brief Data',
+        'Raw Brief'
+      ];
+      sheet.appendRow(headers);
+    }
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0];
+
+    // Find existing brief or create new one
+    let briefRow = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (data[i][0] === brief.eventName) {
+        briefRow = i;
+        break;
+      }
+    }
+
+    const briefStatus = brief.eventbriefCompleted ? 'Completed' : 'Draft';
+    const dateSaved = new Date().toISOString();
+    const briefDataStr = JSON.stringify(brief.eventbriefDraft || {});
+
+    if (briefRow === -1) {
+      // Create new brief entry
+      sheet.appendRow([
+        brief.eventName,
+        brief.eventLead || '',
+        briefStatus,
+        dateSaved,
+        briefDataStr,
+        briefDataStr
+      ]);
+    } else {
+      // Update existing brief entry
+      sheet.getRange(briefRow + 1, 1, 1, 6).setValues([[
+        brief.eventName,
+        brief.eventLead || '',
+        briefStatus,
+        dateSaved,
+        briefDataStr,
+        briefDataStr
+      ]]);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      message: `Brief for "${brief.eventName}" saved to Briefs sheet`,
+      timestamp: dateSaved
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({

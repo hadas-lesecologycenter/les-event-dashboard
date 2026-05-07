@@ -2183,6 +2183,33 @@
             }
         }
 
+        async function syncBriefToSheet(event) {
+            if (!event.eventbriefDraft) return;
+
+            try {
+                const payload = {
+                    brief: {
+                        eventName: event.name,
+                        eventLead: event.owner,
+                        eventbriefDraft: event.eventbriefDraft,
+                        eventbriefCompleted: event.eventbriefCompleted || false
+                    }
+                };
+
+                const params = new URLSearchParams({
+                    action: 'syncBrief',
+                    data: JSON.stringify(payload.brief)
+                });
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
+                const result = await response.json();
+                console.log('Brief synced to sheet:', result);
+                return true;
+            } catch (error) {
+                console.warn('Brief sync failed:', error);
+                return false;
+            }
+        }
+
         async function syncEventsFromSheet() {
             const now = Date.now();
             if (now - lastSheetSync < SYNC_INTERVAL) return; // Throttle syncs
@@ -3548,6 +3575,9 @@
             currentBriefEvent.eventbriefDraftDate = new Date().toISOString();
             saveEvents();
 
+            // Sync brief to sheet
+            syncBriefToSheet(currentBriefEvent);
+
             // Show confirmation
             const toast = document.createElement('div');
             toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #3b82f6; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
@@ -3591,6 +3621,9 @@
             currentBriefEvent.eventbriefCompletedDate = new Date().toISOString();
             currentBriefEvent.brief = 'Yes'; // Mark task as complete
             saveEvents();
+
+            // Sync brief to sheet
+            syncBriefToSheet(currentBriefEvent);
 
             // Show confirmation
             const toast = document.createElement('div');
