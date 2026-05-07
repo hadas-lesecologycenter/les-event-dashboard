@@ -3342,13 +3342,12 @@
                     toast.textContent = `✓ ${taskLabel} completed`;
                     document.body.appendChild(toast);
 
-                    // Remove toast and rerender after delay
+                    // Remove toast after delay (don't re-render list view)
                     setTimeout(() => {
                         if (toast.parentNode) toast.remove();
-                        applyFilters();
                     }, 1200);
                 } else {
-                    applyFilters();
+                    // Task unchecked - just update, don't re-render
                 }
             }
         }
