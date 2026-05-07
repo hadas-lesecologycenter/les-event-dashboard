@@ -323,8 +323,9 @@ function handleSyncEvent(eventData) {
         newRow.push('');
       }
 
-      const lastRow = sheet.getLastRow();
-      sheet.getRange(lastRow + 1, 1, 1, newRow.length).setValues([newRow]);
+      // Insert right after the last data row (not at sheet end)
+      const nextRow = data.length + 1;
+      sheet.getRange(nextRow, 1, 1, newRow.length).setValues([newRow]);
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
         message: `Event "${event.name}" created in sheet`,
