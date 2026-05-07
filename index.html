@@ -1802,7 +1802,7 @@
                 let dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
                 const eventsList = dayEvents.map(e => {
                     const color = CATEGORY_COLORS[e.primaryCategory] || '#1d5432';
-                    return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); viewEventDetail(${e.id})">${e.name}</div>`;
+                    return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">${e.name}</div>`;
                 }).join('');
 
                 const todayClass = isToday ? 'today' : '';
@@ -3712,6 +3712,7 @@
                                 <div class="task-description">${task.taskLabel}</div>
                                 <div class="task-deadline">📅 ${deadlineStr} (${daysStr})</div>
                             </div>
+                            <button onclick="openEventDetailsModal(${task.eventId})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#3b82f4';this.style.color='#3b82f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">✏️ Edit</button>
                         </div>
                     </div>
                 `;
