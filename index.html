@@ -2704,7 +2704,18 @@
         }
 
         function loadEvents() {
-            localStorage.removeItem('lesEvents');
+            // Try to load from localStorage first
+            const saved = localStorage.getItem('lesEvents');
+            if (saved) {
+                try {
+                    events = JSON.parse(saved);
+                    return;
+                } catch (e) {
+                    console.warn('Failed to load from localStorage:', e);
+                }
+            }
+
+            // Fall back to sample data if no saved events
             events = getSampleData().map(e => ({
                 coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No',
                 ...e
