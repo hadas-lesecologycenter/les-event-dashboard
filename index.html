@@ -2612,6 +2612,15 @@
                     };
                     events.push(newEvent);
                     syncEventToSheet(newEvent);
+
+                    saveEvents();
+                    closeEventModal();
+                    renderCalendar();
+                    applyFilters();
+
+                    // Immediately show the newly created event
+                    openEventDetailsModal(newEvent.id);
+                    return;
                 }
 
                 saveEvents();
