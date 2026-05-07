@@ -2263,9 +2263,15 @@
                         if (s.location !== undefined) localEvent.location = s.location;
                         if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category; }
                         if (s.type)     localEvent.type     = s.type;
-                        // Sync all task fields - check if key exists in sheet data
+                        // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
+                        // a race condition where a 30-second poll overwrites a locally-checked task
+                        // back to 'No' before the sheet write has been confirmed.
                         const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
-                        taskKeys.forEach(key => { if (key in s && s[key]) localEvent[key] = s[key]; });
+                        taskKeys.forEach(key => {
+                            if (!(key in s)) return;
+                            if (s[key] === 'Yes') localEvent[key] = 'Yes';
+                            if (s[key] === 'N/A') localEvent[key] = 'N/A';
+                        });
                     });
 
                     // Add new events from sheet that don't exist locally
