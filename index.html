@@ -3860,11 +3860,9 @@
                                 <ul style="list-style: none; padding: 0; margin-bottom: 20px;">
                                     ${openTasks.map(task => `<li style="color: #6a5a4a; padding: 6px 0;">• ${task}</li>`).join('')}
                                 </ul>
-                                <p style="color: #6a5a4a; margin-bottom: 20px;">What would you like to do?</p>
                                 <div style="display: flex; gap: 10px; justify-content: flex-end;">
                                     <button onclick="this.closest('div').parentElement.parentElement.remove();" style="padding: 10px 20px; border: 1px solid #d4cec0; border-radius: 6px; background: white; cursor: pointer; font-weight: 500;">Cancel</button>
-                                    <button id="completeTasksBtn" style="padding: 10px 20px; border: 1px solid #10b981; border-radius: 6px; background: #10b981; color: white; cursor: pointer; font-weight: 500;">Complete Open Tasks</button>
-                                    <button id="proceedAnyway" style="padding: 10px 20px; border: 1px solid #ef4444; border-radius: 6px; background: #ef4444; color: white; cursor: pointer; font-weight: 500;">Proceed Anyway</button>
+                                    <button id="completeTasksBtn" style="padding: 10px 20px; border: 1px solid #10b981; border-radius: 6px; background: #10b981; color: white; cursor: pointer; font-weight: 500;">Mark All Tasks Done</button>
                                 </div>
                             `;
 
@@ -3885,12 +3883,6 @@
                                 renderKanban();
                             });
 
-                            document.getElementById('proceedAnyway').addEventListener('click', () => {
-                                event.status = newStatus;
-                                saveEvents();
-                                modal.remove();
-                                renderKanban();
-                            });
                         } else {
                             event.status = newStatus;
                             saveEvents();
