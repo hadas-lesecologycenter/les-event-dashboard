@@ -1103,61 +1103,60 @@
             <button class="view-btn" data-view="table">📊 Table View</button>
             <button class="view-btn" data-view="kanban">🎯 Kanban</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
-            <button class="view-btn" data-view="impact">📊 Impact & Stats</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
         </div>
 
-        <div id="listView" class="list-view-container">
-            <div class="filter-bar">
-                <div class="filter-search">
-                    <input type="text" id="searchEvents" placeholder="Search events by name or location...">
-                </div>
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <span class="filter-group-label">Owner</span>
-                        <div class="filter-pills" id="filterOwner">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
-                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
-                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Category</span>
-                        <div class="filter-pills" id="filterCategory">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
-                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
-                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Status</span>
-                        <div class="filter-pills" id="filterStatus">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
-                            <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
-                            <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
-                        </div>
-                    </div>
-                    <div style="flex: 1"></div>
-                    <select id="filterTiming" class="filter-select">
-                        <option value="next10">Next 10 days</option>
-                        <option value="upcoming">Upcoming</option>
-                        <option value="past">Past</option>
-                        <option value="all">All events</option>
-                    </select>
-                    <select id="sortOrder" class="filter-select">
-                        <option value="earliest">↑ Earliest first</option>
-                        <option value="latest">↓ Latest first</option>
-                    </select>
-                </div>
+        <div class="filter-bar" id="sharedFilterBar">
+            <div class="filter-search">
+                <input type="text" id="searchEvents" placeholder="Search events by name or location...">
             </div>
+            <div class="filter-row">
+                <div class="filter-group">
+                    <span class="filter-group-label">OWNER</span>
+                    <div class="filter-pills" id="filterOwner">
+                        <button class="filter-pill" data-value="All" data-color="all">All</button>
+                        <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
+                        <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
+                        <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
+                    </div>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <span class="filter-group-label">CATEGORY</span>
+                    <div class="filter-pills" id="filterCategory">
+                        <button class="filter-pill" data-value="All" data-color="all">All</button>
+                        <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
+                        <button class="filter-pill" data-value="Education" data-color="education">Education</button>
+                        <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
+                    </div>
+                </div>
+                <div class="filter-divider"></div>
+                <div class="filter-group">
+                    <span class="filter-group-label">STATUS</span>
+                    <div class="filter-pills" id="filterStatus">
+                        <button class="filter-pill" data-value="All" data-color="all">All</button>
+                        <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
+                        <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
+                        <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
+                        <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
+                    </div>
+                </div>
+                <div style="flex: 1"></div>
+                <select id="filterTiming" class="filter-select">
+                    <option value="next10">Next 10 days</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                    <option value="all">All events</option>
+                </select>
+                <select id="sortOrder" class="filter-select">
+                    <option value="earliest">↑ Earliest first</option>
+                    <option value="latest">↓ Latest first</option>
+                </select>
+            </div>
+        </div>
 
+        <div id="listView" class="list-view-container">
             <div class="events-view" id="eventsContainer">
                 <div class="empty-state">
                     <p>No events loaded yet.</p>
@@ -1166,21 +1165,10 @@
         </div>
 
         <div id="tasksView" class="list-view-container" style="display: none;">
-            <div class="filter-bar">
-                <div style="margin-bottom: 0;"></div>
+            <div class="filter-bar" style="padding-top: 8px; padding-bottom: 8px;">
                 <div class="filter-row">
                     <div class="filter-group">
-                        <span class="filter-group-label">Owner</span>
-                        <div class="filter-pills" id="filterOwnerTasks">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
-                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
-                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Due Date</span>
+                        <span class="filter-group-label">DUE DATE</span>
                         <div class="filter-pills" id="filterDueDateTasks">
                             <button class="filter-pill" data-value="overdue" data-color="hold">Overdue</button>
                             <button class="filter-pill" data-value="today" data-color="confirmed">Today</button>
@@ -1194,55 +1182,6 @@
         </div>
 
         <div id="tableView" class="list-view-container" style="display: none;">
-            <div class="filter-bar">
-                <div class="filter-search">
-                    <input type="text" id="searchEventsTable" placeholder="Search events by name or location...">
-                </div>
-                <div class="filter-row">
-                    <div class="filter-group">
-                        <span class="filter-group-label">Owner</span>
-                        <div class="filter-pills" id="filterOwnerTable">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Maddy" data-color="maddy">Maddy</button>
-                            <button class="filter-pill" data-value="Hadas" data-color="hadas">Hadas</button>
-                            <button class="filter-pill" data-value="Gretel" data-color="gretel">Gretel</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Category</span>
-                        <div class="filter-pills" id="filterCategoryTable">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Outreach" data-color="outreach">Outreach</button>
-                            <button class="filter-pill" data-value="Education" data-color="education">Education</button>
-                            <button class="filter-pill" data-value="Stewardship" data-color="stewardship">Stewardship</button>
-                        </div>
-                    </div>
-                    <div class="filter-divider"></div>
-                    <div class="filter-group">
-                        <span class="filter-group-label">Status</span>
-                        <div class="filter-pills" id="filterStatusTable">
-                            <button class="filter-pill" data-value="All" data-color="all">All</button>
-                            <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
-                            <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
-                            <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
-                            <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
-                        </div>
-                    </div>
-                    <div style="flex: 1"></div>
-                    <select id="filterTimingTable" class="filter-select">
-                        <option value="next10">Next 10 days</option>
-                        <option value="upcoming">Upcoming</option>
-                        <option value="past">Past</option>
-                        <option value="all">All events</option>
-                    </select>
-                    <select id="sortOrderTable" class="filter-select">
-                        <option value="earliest">↑ Earliest first</option>
-                        <option value="latest">↓ Latest first</option>
-                    </select>
-                </div>
-            </div>
-
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 8px; margin: 0 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                     <thead>
@@ -1642,10 +1581,90 @@
     <script>
         let events = [];
         let filteredEvents = [];
+        let currentView = 'list';
         let currentMonth = new Date();
         let selectedDate = null;
         let currentBriefEvent = null;
         let forceCompleteMode = false;
+
+        // Spreadsheet event data
+        const spreadsheetEvents = [
+            { name: 'MulchFest', owner: 'Maddy', date: '1/10/2026', time: '2:00 PM', location: 'Tompkins Square Park', category: 'Outreach', type: 'TABLING' },
+            { name: 'Tool Lending Library Info Session #1', owner: 'Maddy', date: '2/25/2026', time: '1:00 PM', location: '', category: 'Outreach, Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Tool Lending Library Info Session #2', owner: 'Maddy', date: '3/11/2026', time: '12:00 PM', location: '', category: 'Outreach, Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Tree Beds Spring Cleaning w/t Henry Street CRT', owner: 'Hadas', date: '3/12/2026', time: '3:00 PM', location: 'Henry Street Settlement', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'CBLES Kick-Off Event', owner: 'Maddy', date: '3/17/2026', time: '12:00 PM', location: 'Lower Eastside Girls Club', category: 'Outreach', type: 'TABLING' },
+            { name: 'STC w/t Whole Foods', owner: 'Hadas', date: '3/19/2026', time: '2:00 PM', location: '', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Spring into Tree Care', owner: 'Maddy', date: '3/22/2026', time: '12:00 PM', location: '', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'STC with PS/MS 188', owner: 'Hadas', date: '3/24/2026', time: '2:00 PM', location: 'P.S. 188 The Island School', category: 'Education, Stewardship', type: 'FIELD_TRIP' },
+            { name: 'Corlears Hook Park Spring Fest', owner: 'Hadas', date: '3/29/2026', time: '11:00 AM', location: 'Corlears Hook Park', category: 'Outreach', type: 'TABLING' },
+            { name: 'Signs of Spring Virtual Walk', owner: 'Hadas', date: '3/31/2026', time: '6:45 PM', location: '', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/t Girl Scouts', owner: 'Maddy', date: '4/8/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' },
+            { name: 'Watercolor + Tree ID Workshop', owner: 'Maddy', date: '4/9/2026', time: '12:00 PM', location: '', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Tree Trivia - Earth Month Celebration', owner: 'Maddy', date: '4/13/2026', time: '12:00 PM', location: 'Union Square', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'CBLES Info Session', owner: 'Maddy', date: '4/13/2026', time: '6:00 PM', location: '', category: 'Outreach', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/t Elena Brill and associates', owner: 'Hadas', date: '4/15/2026', time: '9:30 AM', location: 'Seward Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: '4/16/2026', time: '10:00 AM', location: 'Lower East Side Ecology Center', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'NYU Students Group Volunteering', owner: 'Hadas', date: '4/17/2026', time: '10:00 AM', location: 'Tompkins Square Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC w/t Columbia Alumni', owner: 'Maddy', date: '4/18/2026', time: '10:00 AM', location: '', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Spring Tree Walk', owner: 'Hadas', date: '4/19/2026', time: '1:00 PM', location: '', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'Soil Testing - Earth Month Celebration', owner: 'Hadas', date: '4/22/2026', time: '2:00 AM', location: 'Union Square', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/ Sixth Street Community Center', owner: 'Maddy', date: '4/23/2026', time: '4:30 PM', location: 'Sixth Street Community Center', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'Tabling at Alfred E Smith Rec Center for Earth Day', owner: 'Hadas', date: '4/23/2026', time: '3:00 PM', location: 'Alfred E. Smith Recreation Center', category: 'Outreach', type: 'TABLING' },
+            { name: 'STC w/t ConEdison', owner: 'Gretel', date: '4/25/2026', time: '10:00 AM', location: '', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'CBLES Info Session', owner: 'Maddy', date: '4/27/2026', time: '12:00 PM', location: '', category: 'Outreach', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/ LOMA', owner: 'Maddy', date: '4/28/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'STC + CE: Street Tree Canopy Care Day', owner: 'Gretel', date: '4/30/2026', time: '10:00 AM', location: 'Seward Park', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'Jane\'s Walk: A History of the LES in 10 Trees', owner: 'Hadas', date: '5/1/2026', time: '11:00 AM', location: 'Tompkins Square Park', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'PS 110 STC Workshop Pt 1', owner: 'Maddy', date: '5/6/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'STC w/ Henry St CRT', owner: 'Maddy', date: '5/7/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'Canopy Care', owner: 'Gretel', date: '5/7/2026', time: '4:00 PM', location: 'Clyde Garden', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'Street Tree Care w/ Hort Training Program', owner: 'Maddy', date: '5/8/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' },
+            { name: 'Mother\'s Day STC + Community Engagement Team', owner: 'Hadas', date: '5/10/2026', time: '12:00 PM', location: '', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'Peck Slip Field Trip STC', owner: 'Maddy', date: '5/11/2026', time: '12:00 PM', location: 'The Peck Slip School', category: 'Stewardship, Education', type: 'FIELD_TRIP' },
+            { name: 'PS 110 STC Workshop Pt 2', owner: 'Maddy', date: '5/12/2026', time: '12:00 PM', location: '', category: 'Education', type: 'FIELD_TRIP' },
+            { name: 'STC w/t Celons CL', owner: 'Hadas', date: '5/14/2026', time: '1:00 PM', location: 'Seward Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Canopy Care', owner: 'Gretel', date: '5/21/2026', time: '4:00 PM', location: 'Seward Park', category: 'Stewardship', type: 'PUBLIC_VOLUNTEER_EVENT' },
+            { name: 'STC w/t Pace Gallery', owner: 'Hadas', date: '5/29/2026', time: '9:30 AM', location: 'Clyde Romero Garden', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'Tree Leaf ID Walk', owner: 'Gretel', date: '5/30/2026', time: '11:00 AM', location: 'Seward Park', category: 'Education', type: 'PUBLIC_PROGRAM' },
+            { name: 'STC w/t PVH', owner: 'Hadas', date: '6/29/2026', time: '1:30 PM', location: 'Seward Park', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC w/t Equativ', owner: 'Hadas', date: '6/8/2026', time: '10:00 AM', location: 'Clyde Romero Garden', category: 'Stewardship', type: 'PRIVATE_VOLUNTEER_EVENT' },
+            { name: 'STC w. NYU Class', owner: 'Maddy', date: '9/10/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' }
+        ];
+
+        function initializeEventsFromSpreadsheet() {
+            spreadsheetEvents.forEach((e, idx) => {
+                const [month, day, year] = e.date.split('/');
+                const eventDate = new Date(year, month - 1, day);
+                const primaryCategory = e.category.split(',')[0].trim();
+                events.push({
+                    id: idx + 1,
+                    name: e.name,
+                    owner: e.owner,
+                    date: eventDate,
+                    time: e.time,
+                    location: e.location || 'TBD',
+                    category: e.category,
+                    primaryCategory: primaryCategory,
+                    type: normalizeEventType(e.type),
+                    status: new Date(eventDate) < new Date() ? 'Complete' : 'Planning'
+                });
+            });
+        }
+
+        function normalizeEventType(type) {
+            const typeMap = {
+                'TABLING': 'TABLING',
+                'PUBLIC_PROGRAM': 'PUBLIC PROGRAM',
+                'PRIVATE_VOLUNTEER_EVENT': 'PRIVATE VOLUNTEER EVENT',
+                'PUBLIC_VOLUNTEER_EVENT': 'PUBLIC VOLUNTEER EVENT',
+                'FIELD_TRIP': 'FIELD TRIP'
+            };
+            return typeMap[type] || 'FIELD TRIP';
+        }
+
+        // Initialize events from spreadsheet on load
+        initializeEventsFromSpreadsheet();
 
         const CATEGORY_COLORS = {
             'Outreach': '#f59e0b',
@@ -1783,7 +1802,7 @@
                 let dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
                 const eventsList = dayEvents.map(e => {
                     const color = CATEGORY_COLORS[e.primaryCategory] || '#1d5432';
-                    return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); viewEventDetail(${e.id})">${e.name}</div>`;
+                    return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">${e.name}</div>`;
                 }).join('');
 
                 const todayClass = isToday ? 'today' : '';
@@ -1991,6 +2010,7 @@
         }
 
                 function switchView(view) {
+            currentView = view;
             document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelector(`[data-view="${view}"]`).classList.add('active');
 
@@ -1998,26 +2018,9 @@
             document.getElementById('tableView').style.display = view === 'table' ? 'block' : 'none';
             document.getElementById('calendarView').classList.toggle('active', view === 'calendar');
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
-            document.getElementById('statsView').style.display = view === 'impact' ? 'flex' : 'none';
-            document.getElementById('impactView').style.display = view === 'impact' ? 'block' : 'none';
             document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
 
-            if (view === 'calendar') renderCalendar();
-            if (view === 'table') {
-                setupTableViewFilters();
-                applyTableFilters();
-            }
-            if (view === 'tasks') {
-                setupTasksFilters();
-                renderOpenTasks();
-            }
-            if (view === 'impact') {
-                updateStats();
-                displayImpactReport();
-            }
-            if (view === 'kanban') {
-                renderKanban();
-            }
+            applyFilters();
         }
 
         function toggleForceComplete() {
@@ -2139,13 +2142,104 @@
 
 
 
-        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwgkB3ceP4ChpC49wS3k0STG06IAcwb6Wr-VfkFOx3_n-Z11QC9KsmPvFN4vn__AAJF/exec';
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyr0KaJpy6y0Ka1T3NpH6sq2OfIw1Z-rWjx7-pG7kBvjqbjMCDd8CaAP3-uqXEetr2eQg/exec';
 
         const metricsCache = {};
+        let lastSheetSync = 0;
+        const SYNC_INTERVAL = 30000; // Sync every 30 seconds
 
         function normalizeEventType(type) {
             if (!type) return '';
             return String(type).toUpperCase().replace(/\s+/g, '_');
+        }
+
+        // Two-way sync functions
+        async function syncEventToSheet(event) {
+            try {
+                const payload = {
+                    event: {
+                        name: event.name,
+                        owner: event.owner,
+                        date: event.date.toLocaleDateString('en-US'),
+                        time: event.time || '',
+                        location: event.location || '',
+                        category: event.primaryCategory || event.category || '',
+                        type: event.type || 'FIELD TRIP',
+                        status: event.status || 'Planning'
+                    }
+                };
+
+                // Use GET with encoded params — Apps Script redirects break no-cors POST bodies
+                const params = new URLSearchParams({
+                    action: 'syncEvent',
+                    data: JSON.stringify(payload.event)
+                });
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
+                const result = await response.json();
+                console.log('Sync to sheet result:', result);
+                return true;
+            } catch (error) {
+                console.warn('Sheet sync failed (offline):', error);
+                return false;
+            }
+        }
+
+        async function syncEventsFromSheet() {
+            const now = Date.now();
+            if (now - lastSheetSync < SYNC_INTERVAL) return; // Throttle syncs
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL);
+                const data = await response.json();
+
+                if (data.success && data.events) {
+                    // Merge sheet events with local events, preferring local changes
+                    const sheetEventMap = {};
+                    data.events.forEach(e => {
+                        sheetEventMap[e.name] = e;
+                    });
+
+                    // Update existing events and add new ones from sheet
+                    const existingNames = new Set(events.map(e => e.name));
+
+                    // Update existing events with sheet data
+                    events.forEach(localEvent => {
+                        const sheetEvent = sheetEventMap[localEvent.name];
+                        if (sheetEvent && sheetEvent.status) {
+                            localEvent.status = sheetEvent.status;
+                        }
+                    });
+
+                    // Add new events from sheet (that don't exist locally)
+                    data.events.forEach(sheetEvent => {
+                        if (!existingNames.has(sheetEvent.name)) {
+                            events.push({
+                                id: Math.max(...events.map(e => e.id), 0) + 1,
+                                name: sheetEvent.name,
+                                owner: sheetEvent.owner || '',
+                                date: new Date(sheetEvent.date),
+                                time: sheetEvent.time || '12:00 PM',
+                                location: sheetEvent.location || '',
+                                category: sheetEvent.category || '',
+                                primaryCategory: sheetEvent.category || '',
+                                type: sheetEvent.type || 'FIELD TRIP',
+                                status: sheetEvent.status || 'Planning'
+                            });
+                        }
+                    });
+
+                    lastSheetSync = now;
+                    console.log('Synced from sheet:', data.events.length, 'events');
+                }
+            } catch (error) {
+                console.warn('Failed to sync from sheet:', error);
+            }
+        }
+
+        // Start auto-sync on page load
+        function startAutoSync() {
+            setInterval(syncEventsFromSheet, SYNC_INTERVAL);
+            syncEventsFromSheet(); // Initial sync
         }
 
         async function fetchEventMetrics(event) {
@@ -2439,6 +2533,7 @@
             setupEventListeners();
             setupCalendarListeners();
             applyFilters();
+            startAutoSync();
         }
 
         function setupCalendarListeners() {
@@ -2502,6 +2597,7 @@
                     const eventIndex = events.findIndex(e => e.id == editingId);
                     if (eventIndex !== -1) {
                         events[eventIndex] = { ...events[eventIndex], ...updatedEvent };
+                        syncEventToSheet(events[eventIndex]);
                         delete document.getElementById('eventForm').dataset.editingId;
                     }
                 } else {
@@ -2515,6 +2611,7 @@
                         coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No'
                     };
                     events.push(newEvent);
+                    syncEventToSheet(newEvent);
                 }
 
                 saveEvents();
@@ -2584,11 +2681,10 @@
         }
 
         function setupEventListeners() {
-            document.querySelectorAll('.filter-pill').forEach(pill => {
+            document.querySelectorAll('#sharedFilterBar .filter-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
                     const group = pill.closest('.filter-pills');
                     const isAll = pill.dataset.value === 'All';
-
                     if (isAll) {
                         group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
                         pill.classList.add('active');
@@ -2597,6 +2693,12 @@
                         if (allBtn) allBtn.classList.remove('active');
                         pill.classList.toggle('active');
                     }
+                    applyFilters();
+                });
+            });
+            document.querySelectorAll('#filterDueDateTasks .filter-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pill.classList.toggle('active');
                     applyFilters();
                 });
             });
@@ -2653,104 +2755,13 @@
 
             filteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
 
-            renderEvents();
+            if (currentView === 'list') renderEvents();
+            else if (currentView === 'table') renderTableView(filteredEvents);
+            else if (currentView === 'calendar') renderCalendar();
+            else if (currentView === 'kanban') renderKanban();
+            else if (currentView === 'tasks') renderOpenTasks();
         }
 
-        function setupTableViewFilters() {
-            // Setup filter pills with "All" button logic
-            const filterElements = ['filterOwnerTable', 'filterCategoryTable', 'filterStatusTable'];
-
-            filterElements.forEach(id => {
-                const filterGroup = document.getElementById(id);
-                if (filterGroup) {
-                    filterGroup.replaceWith(filterGroup.cloneNode(true));
-                    document.querySelectorAll(`#${id} .filter-pill`).forEach(pill => {
-                        pill.addEventListener('click', () => {
-                            const group = pill.closest('.filter-pills');
-
-                            // Handle "All" buttons
-                            if (pill.dataset.value === 'All') {
-                                const allActive = pill.classList.contains('active');
-                                group.querySelectorAll('.filter-pill').forEach(p => {
-                                    p.classList.remove('active');
-                                });
-                                if (!allActive) {
-                                    pill.classList.add('active');
-                                }
-                            } else {
-                                // When selecting a specific option, deselect "All"
-                                const allBtn = group.querySelector('[data-value="All"]');
-                                if (allBtn) {
-                                    allBtn.classList.remove('active');
-                                }
-                                pill.classList.toggle('active');
-                            }
-                            applyTableFilters();
-                        });
-                    });
-                }
-            });
-
-            const timingSelect = document.getElementById('filterTimingTable');
-            const sortSelect = document.getElementById('sortOrderTable');
-            const searchInput = document.getElementById('searchEventsTable');
-
-            if (timingSelect) timingSelect.addEventListener('change', applyTableFilters);
-            if (sortSelect) sortSelect.addEventListener('change', applyTableFilters);
-            if (searchInput) searchInput.addEventListener('input', applyTableFilters);
-        }
-
-        function applyTableFilters() {
-            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTable .filter-pill.active')).map(p => p.dataset.value);
-            let selectedCategories = Array.from(document.querySelectorAll('#filterCategoryTable .filter-pill.active')).map(p => p.dataset.value);
-            let selectedStatuses = Array.from(document.querySelectorAll('#filterStatusTable .filter-pill.active')).map(p => p.dataset.value);
-
-            // If "All" is selected, treat as no selection
-            if (selectedOwners.includes('All')) selectedOwners = [];
-            if (selectedCategories.includes('All')) selectedCategories = [];
-            if (selectedStatuses.includes('All')) selectedStatuses = [];
-
-            const timing = document.getElementById('filterTimingTable').value;
-            const sortOrder = document.getElementById('sortOrderTable').value;
-            const search = document.getElementById('searchEventsTable').value.toLowerCase().trim();
-
-            const now = new Date();
-            now.setHours(0, 0, 0, 0);
-
-            let tableFilteredEvents = events.filter(event => {
-                const eventDate = new Date(event.date);
-                eventDate.setHours(0, 0, 0, 0);
-
-                if (selectedOwners.length > 0 && !selectedOwners.includes(event.owner)) return false;
-
-                if (selectedCategories.length > 0) {
-                    const cats = [event.primaryCategory, event.secondaryCategory].filter(Boolean);
-                    if (!selectedCategories.some(c => cats.includes(c))) return false;
-                }
-
-                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
-
-                if (timing === 'all') {
-                    // Show all events
-                } else if (timing === 'next10') {
-                    const tenDaysFromNow = new Date(now);
-                    tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
-                    if (eventDate < now || eventDate > tenDaysFromNow) return false;
-                } else if (timing === 'upcoming' && eventDate < now) return false;
-                else if (timing === 'past' && eventDate >= now) return false;
-
-                if (search) {
-                    const haystack = `${event.name} ${event.location || ''}`.toLowerCase();
-                    if (!haystack.includes(search)) return false;
-                }
-
-                return true;
-            });
-
-            tableFilteredEvents.sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
-
-            renderTableView(tableFilteredEvents);
-        }
 
         function renderTableView(eventsToRender = filteredEvents) {
             const tbody = document.getElementById('tableViewBody');
@@ -3255,6 +3266,18 @@
             applyFilters();
         }
 
+        function autoCompleteEvent(event) {
+            if (!event || event.status === 'Complete' || event.status === 'Canceled') return;
+
+            const workflow = getEventWorkflow(event);
+            const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
+            const allComplete = allTasks.every(task => event[task.key] === 'Yes' || event[task.key] === 'N/A');
+
+            if (allComplete) {
+                event.status = 'Complete';
+            }
+        }
+
         function handleTaskToggle(e) {
             const eventId = parseInt(e.target.dataset.eventId);
             const taskKey = e.target.dataset.taskKey;
@@ -3262,70 +3285,9 @@
 
             const event = events.find(e => e.id === eventId);
             if (event) {
-                // Special handling for brief task - open brief modal instead (unless force complete is on)
-                if (taskKey === 'brief' && isChecked && !forceCompleteMode) {
-                    e.target.checked = false; // Revert checkbox since we're handling it specially
-                    openBriefModal(event);
-                    return;
-                }
-
-                // Special handling for comms task - open comms form (requires brief AND eventbrite to be completed, unless force complete is on)
-                if (taskKey === 'comms' && isChecked && !forceCompleteMode) {
-                    if (event.brief !== 'Yes' || event.eventbrite !== 'Yes') {
-                        e.target.checked = false;
-                        const missing = [];
-                        if (event.brief !== 'Yes') missing.push('Create event brief');
-                        if (event.eventbrite !== 'Yes') missing.push('Create Eventbrite page');
-                        const toast = document.createElement('div');
-                        toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #ef4444; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                        toast.textContent = `❌ Complete: ${missing.join(', ')}`;
-                        document.body.appendChild(toast);
-                        setTimeout(() => {
-                            if (toast.parentNode) toast.remove();
-                        }, 3000);
-                        return;
-                    }
-                    if (!forceCompleteMode) {
-                        openCommsForm(event);
-                    }
-                }
-
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
-
-                if (isChecked) {
-                    // Open Google Calendar for calendar task
-                    if (taskKey === 'calendar') {
-                        openGoogleCalendar(event);
-                    }
-                    // Open Eventbrite for eventbrite task
-                    if (taskKey === 'eventbrite') {
-                        openEventbriteForm(event);
-                    }
-                    // Open Compost Sheet for compost task
-                    if (taskKey === 'compost') {
-                        openCompostSheet(event);
-                    }
-                    // Open Event Reporting Form for report task
-                    if (taskKey === 'report') {
-                        openEventReportingForm(event);
-                    }
-
-                    // Show completion feedback
-                    const taskLabel = e.target.nextElementSibling.textContent;
-                    const toast = document.createElement('div');
-                    toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-                    toast.textContent = `✓ ${taskLabel} completed`;
-                    document.body.appendChild(toast);
-
-                    // Remove toast and rerender after delay
-                    setTimeout(() => {
-                        if (toast.parentNode) toast.remove();
-                        applyFilters();
-                    }, 1200);
-                } else {
-                    applyFilters();
-                }
+                autoCompleteEvent(event);
             }
         }
 
@@ -3625,34 +3587,6 @@
             applyFilters();
         }
 
-        function setupTasksFilters() {
-            document.querySelectorAll('#filterOwnerTasks .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    const group = pill.closest('.filter-pills');
-                    const isAll = pill.dataset.value === 'All';
-
-                    if (isAll) {
-                        group.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
-                        pill.classList.add('active');
-                    } else {
-                        const allBtn = group.querySelector('[data-value="All"]');
-                        if (allBtn) allBtn.classList.remove('active');
-                        pill.classList.toggle('active');
-                    }
-                    applyTasksFilters();
-                });
-            });
-            document.querySelectorAll('#filterDueDateTasks .filter-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    pill.classList.toggle('active');
-                    applyTasksFilters();
-                });
-            });
-        }
-
-        function applyTasksFilters() {
-            renderOpenTasks();
-        }
 
         function renderOpenTasks() {
             const container = document.getElementById('openTasksContainer');
@@ -3686,7 +3620,7 @@
             openTasks.sort((a, b) => a.deadline - b.deadline);
 
             // Apply filters
-            let selectedOwners = Array.from(document.querySelectorAll('#filterOwnerTasks .filter-pill.active')).map(p => p.dataset.value);
+            let selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
             selectedOwners = selectedOwners.filter(v => v !== 'All');
             const selectedDueDates = Array.from(document.querySelectorAll('#filterDueDateTasks .filter-pill.active')).map(p => p.dataset.value);
 
@@ -3729,6 +3663,7 @@
                                 <div class="task-description">${task.taskLabel}</div>
                                 <div class="task-deadline">📅 ${deadlineStr} (${daysStr})</div>
                             </div>
+                            <button onclick="openEventDetailsModal(${task.eventId})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#3b82f4';this.style.color='#3b82f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">✏️ Edit</button>
                         </div>
                     </div>
                 `;
@@ -3742,6 +3677,7 @@
                     if (event) {
                         event[taskKey] = e.target.checked ? 'Yes' : 'No';
                         saveEvents();
+                        autoCompleteEvent(event);
 
                         if (e.target.checked) {
                             // Show completion feedback
@@ -3758,10 +3694,10 @@
 
                             setTimeout(() => {
                                 if (toast.parentNode) toast.remove();
-                                renderOpenTasks();
+                                applyFilters();
                             }, 1500);
                         } else {
-                            renderOpenTasks();
+                            applyFilters();
                         }
                     }
                 });
@@ -4060,6 +3996,8 @@
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
+                autoCompleteEvent(event);
+                applyFilters();
                 openEventDetailsModal(eventId);
             }
         }
