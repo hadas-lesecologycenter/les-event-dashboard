@@ -2559,9 +2559,7 @@
             setupEventListeners();
             setupCalendarListeners();
             applyFilters();
-            // Sync from sheet in background without blocking page load
-            syncEventsFromSheet().then(() => applyFilters());
-            startAutoSync();
+            startAutoSync(); // This will sync from sheet every 30 seconds
         }
 
         function setupCalendarListeners() {
