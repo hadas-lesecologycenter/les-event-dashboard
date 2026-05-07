@@ -1795,10 +1795,21 @@
                 html += `<div class="calendar-day other-month">${daysInPrevMonth - i}</div>`;
             }
 
+            // Read active filters
+            let calOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value).filter(v => v !== 'All');
+            let calCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value).filter(v => v !== 'All');
+            let calStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value).filter(v => v !== 'All');
+
             for (let day = 1; day <= daysInMonth; day++) {
                 const dateObj = new Date(year, month, day);
                 const isToday = dateObj.toDateString() === today.toDateString();
-                let dayEvents = events.filter(e => e.date.toDateString() === dateObj.toDateString());
+                let dayEvents = events.filter(e => {
+                    if (e.date.toDateString() !== dateObj.toDateString()) return false;
+                    if (calOwners.length && !calOwners.includes(e.owner)) return false;
+                    if (calCategories.length && !calCategories.includes(e.primaryCategory)) return false;
+                    if (calStatuses.length && !calStatuses.includes(e.status)) return false;
+                    return true;
+                });
                 const eventsList = dayEvents.map(e => {
                     const color = CATEGORY_COLORS[e.primaryCategory] || '#1d5432';
                     return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">${e.name}</div>`;
@@ -2732,11 +2743,21 @@
         }
 
         function loadEvents() {
+            const parseDate = (d) => {
+                if (!d) return new Date();
+                if (d instanceof Date) return d;
+                // Parse ISO date string as local time to avoid UTC offset shifting the day
+                const str = typeof d === 'string' ? d.split('T')[0] : String(d);
+                const parts = str.split('-');
+                if (parts.length === 3) return new Date(+parts[0], +parts[1] - 1, +parts[2]);
+                return new Date(d);
+            };
+
             const applyDefaults = (e) => {
                 const isPrivateStewardship = e.type === 'PRIVATE VOLUNTEER EVENT' && e.primaryCategory === 'Stewardship';
                 return {
                     ...e,
-                    date: e.date ? new Date(e.date) : new Date(),
+                    date: parseDate(e.date),
                     volunteer: e.volunteer !== undefined ? e.volunteer : (isPrivateStewardship ? 'No' : 'N/A')
                 };
             };
