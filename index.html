@@ -2554,8 +2554,9 @@
             }
         }
 
-        function init() {
+        async function init() {
             loadEvents();
+            await syncEventsFromSheet(); // Load latest from sheet immediately
             setupEventListeners();
             setupCalendarListeners();
             applyFilters();
