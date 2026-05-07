@@ -3287,7 +3287,16 @@
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
+
+                if (isChecked) {
+                    if (taskKey === 'calendar') openGoogleCalendar(event);
+                    if (taskKey === 'eventbrite') openEventbriteForm(event);
+                    if (taskKey === 'compost') openCompostSheet(event);
+                    if (taskKey === 'report') openEventReportingForm(event);
+                }
+
                 autoCompleteEvent(event);
+                applyFilters();
             }
         }
 
