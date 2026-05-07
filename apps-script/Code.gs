@@ -312,21 +312,32 @@ function handleSyncEvent(eventData) {
 
     // If event doesn't exist, append it
     if (eventRow === -1) {
-      const newRow = [
-        event.name,
-        event.owner || '',
-        event.date || '',
-        event.time || '',
-        event.location || '',
-        event.category || '',
-        event.type || '',
-        '' // Collaboration
-      ];
-
-      // Pad with empty cells to match header count
-      while (newRow.length < headers.length) {
-        newRow.push('');
-      }
+      const newRow = new Array(headers.length).fill('');
+      const basicMap = {
+        'Column 1': event.name,
+        'Owner': event.owner || '',
+        'Date': event.date || '',
+        'Time': event.time || '',
+        'Location': event.location || '',
+        'Event Category': event.category || '',
+        'Event Type': event.type || ''
+      };
+      const taskMap = {
+        'Event Brief Created': event.brief || 'No',
+        'EventBrite Created': event.eventbrite || 'No',
+        'LES Calendar Event Created': event.calendar || 'No',
+        'Comms Form Submitted': event.comms || 'No',
+        'Order Placed on Compost Tracker': event.compost || 'No',
+        'Compost Ops Check-In': event.opsCheckin || 'No',
+        'Reminder Email Sent': event.reminder || 'No',
+        'Activity Report Completed': event.report || 'No',
+        'Tree Map Data Completed': event.treeMap || 'No',
+        'Thank You Email Sent': event.thankYou || 'No'
+      };
+      Object.entries({ ...basicMap, ...taskMap }).forEach(([col, val]) => {
+        const idx = headers.indexOf(col);
+        if (idx !== -1) newRow[idx] = val;
+      });
 
       // Insert right after the last data row (not at sheet end)
       const nextRow = data.length + 1;
@@ -337,7 +348,7 @@ function handleSyncEvent(eventData) {
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
     } else {
-      // Update existing event
+      // Update basic event fields
       const eventRange = sheet.getRange(eventRow + 1, 1, 1, 8);
       eventRange.setValues([[
         event.name,
@@ -349,6 +360,25 @@ function handleSyncEvent(eventData) {
         event.type || '',
         '' // Collaboration
       ]]);
+
+      // Update task fields by column name
+      const taskMap = {
+        'Event Brief Created': event.brief,
+        'EventBrite Created': event.eventbrite,
+        'LES Calendar Event Created': event.calendar,
+        'Comms Form Submitted': event.comms,
+        'Order Placed on Compost Tracker': event.compost,
+        'Compost Ops Check-In': event.opsCheckin,
+        'Reminder Email Sent': event.reminder,
+        'Activity Report Completed': event.report,
+        'Tree Map Data Completed': event.treeMap,
+        'Thank You Email Sent': event.thankYou
+      };
+      Object.entries(taskMap).forEach(([colName, value]) => {
+        if (value === undefined) return;
+        const colIdx = headers.indexOf(colName);
+        if (colIdx !== -1) sheet.getRange(eventRow + 1, colIdx + 1).setValue(value);
+      });
 
       return ContentService.createTextOutput(JSON.stringify({
         success: true,

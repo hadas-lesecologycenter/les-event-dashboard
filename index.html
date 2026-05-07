@@ -2159,12 +2159,22 @@
                     event: {
                         name: event.name,
                         owner: event.owner,
-                        date: event.date.toLocaleDateString('en-US'),
+                        date: event.date instanceof Date ? event.date.toLocaleDateString('en-US') : event.date,
                         time: event.time || '',
                         location: event.location || '',
                         category: event.primaryCategory || event.category || '',
                         type: event.type || 'FIELD TRIP',
-                        status: event.status || 'Planning'
+                        status: event.status || 'Planning',
+                        brief: event.brief || 'No',
+                        eventbrite: event.eventbrite || 'No',
+                        calendar: event.calendar || 'No',
+                        comms: event.comms || 'No',
+                        compost: event.compost || 'No',
+                        opsCheckin: event.opsCheckin || 'No',
+                        reminder: event.reminder || 'No',
+                        report: event.report || 'No',
+                        treeMap: event.treeMap || 'No',
+                        thankYou: event.thankYou || 'No'
                     }
                 };
 
@@ -2212,49 +2222,67 @@
 
         async function syncEventsFromSheet() {
             const now = Date.now();
-            if (now - lastSheetSync < SYNC_INTERVAL) return; // Throttle syncs
+            if (now - lastSheetSync < SYNC_INTERVAL) return;
 
             try {
                 const response = await fetch(APPS_SCRIPT_URL);
                 const data = await response.json();
 
                 if (data.success && data.events) {
-                    // Merge sheet events with local events, preferring local changes
                     const sheetEventMap = {};
-                    data.events.forEach(e => {
-                        sheetEventMap[e.name] = e;
-                    });
+                    data.events.forEach(e => { sheetEventMap[e.name] = e; });
 
-                    // Update existing events and add new ones from sheet
                     const existingNames = new Set(events.map(e => e.name));
 
-                    // Update existing events with sheet data
+                    // Full mirror: update all fields from sheet for existing events
                     events.forEach(localEvent => {
-                        const sheetEvent = sheetEventMap[localEvent.name];
-                        if (sheetEvent && sheetEvent.status) {
-                            localEvent.status = sheetEvent.status;
-                        }
+                        const s = sheetEventMap[localEvent.name];
+                        if (!s) return;
+                        if (s.status)   localEvent.status   = s.status;
+                        if (s.owner)    localEvent.owner    = s.owner;
+                        if (s.date)     localEvent.date     = new Date(s.date);
+                        if (s.time)     localEvent.time     = s.time;
+                        if (s.location !== undefined) localEvent.location = s.location;
+                        if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category; }
+                        if (s.type)     localEvent.type     = s.type;
+                        // Sync all task fields
+                        const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
+                        taskKeys.forEach(key => { if (s[key]) localEvent[key] = s[key]; });
                     });
 
-                    // Add new events from sheet (that don't exist locally)
-                    data.events.forEach(sheetEvent => {
-                        if (!existingNames.has(sheetEvent.name)) {
-                            events.push({
-                                id: Math.max(...events.map(e => e.id), 0) + 1,
-                                name: sheetEvent.name,
-                                owner: sheetEvent.owner || '',
-                                date: new Date(sheetEvent.date),
-                                time: sheetEvent.time || '12:00 PM',
-                                location: sheetEvent.location || '',
-                                category: sheetEvent.category || '',
-                                primaryCategory: sheetEvent.category || '',
-                                type: sheetEvent.type || 'FIELD TRIP',
-                                status: sheetEvent.status || 'Planning'
-                            });
-                        }
+                    // Add new events from sheet that don't exist locally
+                    data.events.forEach(s => {
+                        if (existingNames.has(s.name)) return;
+                        events.push({
+                            id: Math.max(...events.map(e => e.id), 0) + 1,
+                            name: s.name,
+                            owner: s.owner || '',
+                            date: new Date(s.date),
+                            time: s.time || '12:00 PM',
+                            location: s.location || '',
+                            category: s.category || '',
+                            primaryCategory: s.category || '',
+                            type: s.type || 'FIELD TRIP',
+                            status: s.status || 'Planning',
+                            brief: s.brief || 'No',
+                            eventbrite: s.eventbrite || 'No',
+                            calendar: s.calendar || 'No',
+                            comms: s.comms || 'No',
+                            compost: s.compost || 'No',
+                            opsCheckin: s.opsCheckin || 'No',
+                            reminder: s.reminder || 'No',
+                            report: s.report || 'No',
+                            treeMap: s.treeMap || 'No',
+                            thankYou: s.thankYou || 'No',
+                            coordConfirm: s.coordConfirm || 'No',
+                            coordEmail: s.coordEmail || 'No',
+                            outreachReport: s.outreachReport || 'No'
+                        });
                     });
 
+                    saveEvents();
                     lastSheetSync = now;
+                    applyFilters();
                     console.log('Synced from sheet:', data.events.length, 'events');
                 }
             } catch (error) {
