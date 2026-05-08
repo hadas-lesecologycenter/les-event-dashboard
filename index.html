@@ -3840,8 +3840,13 @@
 
             const briefData = collectBriefData();
 
+            const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiUrl = isDev
+                ? 'http://localhost:3000/api/prepare-eventbrite-event'
+                : `${window.location.origin}/api/prepare-eventbrite-event`;
+
             try {
-                const response = await fetch('/api/prepare-eventbrite-event', {
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
