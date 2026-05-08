@@ -663,9 +663,11 @@ function formatSheetTime(val) {
     else if (h > 12) h -= 12;
     return `${h}:${String(m).padStart(2, '0')} ${period}`;
   }
-  // Plain string like "14:00" — convert to 12-hour
+  // Plain string like "14:00" or "2:00:00 AM" — convert to 12-hour without seconds
   const str = String(val).trim();
-  if (/AM|PM/i.test(str)) return str; // already formatted
+  // Remove seconds if present (e.g., "2:00:00 AM" -> "2:00 AM")
+  const withoutSeconds = str.replace(/:\d{2}(\s*(?:AM|PM))/i, '$1');
+  if (/AM|PM/i.test(withoutSeconds)) return withoutSeconds;
   const match = str.match(/^(\d{1,2}):(\d{2})/);
   if (match) {
     let h = parseInt(match[1], 10), m = match[2];
