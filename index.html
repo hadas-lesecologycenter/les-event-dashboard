@@ -1077,6 +1077,16 @@
             background: #059669;
         }
 
+        .brief-btn.eventbrite {
+            background: #1d5432;
+            color: white;
+            margin-left: auto;
+        }
+
+        .brief-btn.eventbrite:hover {
+            background: #2d7a52;
+        }
+
         .draft-link {
             display: inline-block;
             color: #3b82f6;
@@ -1564,6 +1574,7 @@
                 <div class="brief-buttons">
                     <button type="button" class="brief-btn draft" id="saveDraftBtn">Save as Draft</button>
                     <button type="button" class="brief-btn complete" id="completeBriefBtn">Complete Brief</button>
+                    <button type="button" class="brief-btn eventbrite" id="createEventbriteBtn">Create Eventbrite Event</button>
                 </div>
             </form>
         </div>
@@ -1578,6 +1589,48 @@
             </div>
             <div id="eventDetailsContent" style="padding: 20px;">
                 <!-- Content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Eventbrite Preview Modal -->
+    <div id="eventbritePreviewModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>Eventbrite Event Preview</h3>
+                <button class="modal-close" onclick="closeEventbritePreview()">&times;</button>
+            </div>
+            <div style="padding: 20px;">
+                <div style="background: #f9f7f2; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Event Title</label>
+                        <p id="ebPreviewTitle" style="margin: 5px 0 0 0; color: #2c2416;"></p>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Description</label>
+                        <p id="ebPreviewDescription" style="margin: 5px 0 0 0; color: #2c2416; white-space: pre-wrap; font-size: 0.95em; line-height: 1.5;"></p>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Date & Time</label>
+                            <p id="ebPreviewDateTime" style="margin: 5px 0 0 0; color: #2c2416;"></p>
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Location</label>
+                            <p id="ebPreviewLocation" style="margin: 5px 0 0 0; color: #2c2416;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="border-top: 1px solid #e8ddd0; padding-top: 20px;">
+                    <p style="color: #6a5a4a; font-size: 0.95em; margin-bottom: 15px;">
+                        ✓ This preview shows how your event will appear on Eventbrite. You'll be able to edit all details after creation.
+                    </p>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="cancel-btn" onclick="closeEventbritePreview()">Cancel</button>
+                        <button type="button" class="save-btn" id="confirmEventbriteBtn">Create Event on Eventbrite</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -2658,6 +2711,8 @@
             });
             document.getElementById('saveDraftBtn').addEventListener('click', saveBriefDraft);
             document.getElementById('completeBriefBtn').addEventListener('click', completeBrief);
+            document.getElementById('createEventbriteBtn').addEventListener('click', showEventbritePreview);
+            document.getElementById('confirmEventbriteBtn').addEventListener('click', createEventbriteEvent);
 
             document.getElementById('eventForm').addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -3754,6 +3809,114 @@
 
             closeBriefModal();
             applyFilters();
+        }
+
+        function collectBriefData() {
+            const briefForm = document.getElementById('briefForm');
+            const brief = {};
+
+            for (let elem of briefForm.elements) {
+                if (elem.name) {
+                    if (elem.type === 'checkbox') {
+                        if (elem.checked) {
+                            if (!brief[elem.name]) brief[elem.name] = [];
+                            brief[elem.name].push(elem.value);
+                        }
+                    } else if (elem.type === 'radio') {
+                        if (elem.checked) {
+                            brief[elem.name] = elem.value;
+                        }
+                    } else if (elem.value) {
+                        brief[elem.name] = elem.value;
+                    }
+                }
+            }
+
+            return brief;
+        }
+
+        async function createEventbriteEvent() {
+            if (!currentBriefEvent) return;
+
+            const briefData = collectBriefData();
+
+            try {
+                const response = await fetch('/api/prepare-eventbrite-event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event: currentBriefEvent,
+                        brief: briefData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.details || result.error || 'Failed to create Eventbrite event');
+                }
+
+                // Store Eventbrite event info
+                currentBriefEvent.eventbriteId = result.eventId;
+                currentBriefEvent.eventbriteUrl = result.eventUrl;
+                currentBriefEvent.eventbrite = 'Yes';
+                saveEvents();
+
+                // Show success message and open Eventbrite link
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15); cursor: pointer;';
+                toast.innerHTML = '✓ Event created on Eventbrite! <a href="' + result.eventUrl + '" target="_blank" style="color: white; text-decoration: underline;">View Event</a>';
+                document.body.appendChild(toast);
+
+                setTimeout(() => {
+                    if (toast.parentNode) toast.remove();
+                }, 4000);
+
+                closeEventbritePreview();
+                closeBriefModal();
+                applyFilters();
+
+            } catch (error) {
+                console.error('Error creating Eventbrite event:', error);
+                alert('Error creating Eventbrite event: ' + error.message);
+            }
+        }
+
+        function showEventbritePreview() {
+            if (!currentBriefEvent) return;
+
+            const briefData = collectBriefData();
+
+            // Format the preview data
+            const eventName = briefData.eventNameExternal || currentBriefEvent.name;
+            const description = briefData.description || currentBriefEvent.notes || '';
+
+            let fullDescription = description;
+            if (briefData.goals) fullDescription += '\n\nEvent Goals:\n' + briefData.goals;
+            if (briefData.runOfShow) fullDescription += '\n\nSchedule:\n' + briefData.runOfShow;
+            if (briefData.audience && briefData.audience.length > 0) {
+                fullDescription += '\n\nTarget Audience:\n' + briefData.audience.join(', ');
+            }
+            if (briefData.expectedAttendance) fullDescription += '\n\nExpected Attendance:\n' + briefData.expectedAttendance;
+            if (briefData.accessNotes) fullDescription += '\n\nAccess Information:\n' + briefData.accessNotes;
+
+            const location = briefData.location || currentBriefEvent.location || 'TBD';
+            const eventDate = new Date(currentBriefEvent.date);
+            const dateStr = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = currentBriefEvent.time || '9:00 AM';
+
+            // Update preview modal
+            document.getElementById('ebPreviewTitle').textContent = eventName;
+            document.getElementById('ebPreviewDescription').textContent = fullDescription || '(No description provided)';
+            document.getElementById('ebPreviewDateTime').textContent = dateStr + ' at ' + timeStr;
+            document.getElementById('ebPreviewLocation').textContent = location;
+
+            // Show preview modal
+            document.getElementById('eventbritePreviewModal').style.display = 'block';
+        }
+
+        function closeEventbritePreview() {
+            document.getElementById('eventbritePreviewModal').style.display = 'none';
         }
 
 
