@@ -1104,7 +1104,6 @@
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
-            <button id="syncAllBtn" onclick="syncAllToSheet()" style="padding: 10px 18px; background: #f0f9f4; color: #1d5432; border: 1px solid #1d5432; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9em; margin-left: 8px;">↑ Sync All to Sheet</button>
         </div>
 
         <div class="filter-bar" id="sharedFilterBar">
@@ -2317,13 +2316,11 @@
 
         // Bulk sync all local events to sheet (staggered to avoid rate limits)
         async function syncAllToSheet() {
-            const btn = document.getElementById('syncAllBtn');
-            if (btn) { btn.disabled = true; btn.textContent = 'Syncing…'; }
             for (let i = 0; i < events.length; i++) {
                 await syncEventToSheet(events[i]);
                 if (i < events.length - 1) await new Promise(r => setTimeout(r, 300));
             }
-            if (btn) { btn.disabled = false; btn.textContent = 'Sync All to Sheet'; }
+            localStorage.setItem('bulkSyncDone', '1');
             console.log('Bulk sync complete:', events.length, 'events');
         }
 
@@ -2331,6 +2328,10 @@
         function startAutoSync() {
             setInterval(syncEventsFromSheet, SYNC_INTERVAL);
             syncEventsFromSheet(); // Initial sync
+            // One-time bulk push so the sheet gets Status and all fields populated
+            if (!localStorage.getItem('bulkSyncDone')) {
+                setTimeout(syncAllToSheet, 3000);
+            }
         }
 
         async function fetchEventMetrics(event) {
