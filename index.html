@@ -2942,8 +2942,10 @@
 
         function renderTableView(eventsToRender = filteredEvents) {
             const tbody = document.getElementById('tableViewBody');
+            const sortOrder = document.getElementById('sortOrder')?.value || 'earliest';
+            const sorted = [...eventsToRender].sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
 
-            const rows = eventsToRender.map(event => {
+            const rows = sorted.map(event => {
                 const workflow = getEventWorkflow(event);
                 const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
                 const completedCount = allTasks.filter(task => event[task.key] === 'Yes').length;
@@ -3225,8 +3227,11 @@
 
             renderTableView();
 
+            const sortOrder = document.getElementById('sortOrder')?.value || 'earliest';
+            const sortedEvents = [...filteredEvents].sort((a, b) => sortOrder === 'latest' ? b.date - a.date : a.date - b.date);
+
             const now = new Date();
-            container.innerHTML = filteredEvents.map(event => {
+            container.innerHTML = sortedEvents.map(event => {
                 const isPast = event.date < now;
                 const progress = getEventProgress(event);
 
