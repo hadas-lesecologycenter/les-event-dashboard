@@ -1932,6 +1932,7 @@
             document.getElementById('eventDate').value = formatDateForInput(date);
             document.getElementById('eventForm').reset();
             document.querySelector('.modal-header h3').textContent = 'Create New Event';
+            document.querySelector('button[type="submit"]').textContent = 'Create Event';
             document.getElementById('eventForm').style.display = 'block';
             document.getElementById('eventModal').classList.add('active');
         }
@@ -3427,7 +3428,8 @@
             document.getElementById('eventPrimaryCategory').value = event.primaryCategory;
             document.getElementById('eventSecondaryCategory').value = event.secondaryCategory || '';
 
-            document.querySelector('.modal-header h3').textContent = `Edit: ${event.name}`;
+            document.querySelector('.modal-header h3').textContent = `Update Event`;
+            document.querySelector('button[type="submit"]').textContent = 'Update Event';
             document.getElementById('eventForm').style.display = 'block';
             document.getElementById('eventModal').classList.add('active');
             document.getElementById('eventForm').dataset.editingId = eventId;
