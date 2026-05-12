@@ -3351,7 +3351,7 @@
                 }
 
                 return `
-                    <div class="task ${isNA ? 'na' : ''}">
+                    <div class="task ${isNA ? 'na' : ''}" onclick="event.stopPropagation()">
                         <input
                             type="checkbox"
                             id="task-${event.id}-${task.key}"
