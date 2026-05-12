@@ -2290,13 +2290,13 @@
 
                 if (data.success && data.events) {
                     const sheetEventMap = {};
-                    data.events.forEach(e => { sheetEventMap[e.name] = e; });
+                    data.events.forEach(e => { sheetEventMap[e.name] = e; sheetEventMap[e.name.trim()] = e; });
 
-                    const existingNames = new Set(events.map(e => e.name));
+                    const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
 
                     // Full mirror: update all fields from sheet for existing events
                     events.forEach(localEvent => {
-                        const s = sheetEventMap[localEvent.name];
+                        const s = sheetEventMap[localEvent.name] || sheetEventMap[localEvent.name.trim()];
                         if (!s) return;
                         if (s.status !== undefined && s.status)   localEvent.status   = s.status;
                         if (s.owner)    localEvent.owner    = s.owner;
@@ -2319,7 +2319,7 @@
 
                     // Add new events from sheet that don't exist locally
                     data.events.forEach(s => {
-                        if (existingNames.has(s.name)) return;
+                        if (existingNames.has(s.name.trim().toLowerCase())) return;
                         events.push({
                             id: Math.max(...events.map(e => e.id), 0) + 1,
                             name: s.name,
@@ -2853,7 +2853,18 @@
             }));
         }
 
+        function deduplicateEvents() {
+            const seen = new Map();
+            events = events.filter(e => {
+                const key = e.name.trim().toLowerCase();
+                if (seen.has(key)) return false;
+                seen.set(key, true);
+                return true;
+            });
+        }
+
         function saveEvents() {
+            deduplicateEvents();
             localStorage.setItem('lesEvents', JSON.stringify(events));
         }
 
