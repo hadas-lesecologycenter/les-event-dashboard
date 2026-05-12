@@ -1642,7 +1642,6 @@
         let currentMonth = new Date();
         let selectedDate = null;
         let currentBriefEvent = null;
-        let forceCompleteMode = false;
 
         // Spreadsheet event data
         const spreadsheetEvents = [
@@ -2081,26 +2080,6 @@
             applyFilters();
         }
 
-        function toggleForceComplete() {
-            forceCompleteMode = !forceCompleteMode;
-            document.querySelectorAll('[id^="forceBtn-"]').forEach(btn => {
-                updateForceBtnStyle(btn.id.split('-')[1]);
-            });
-        }
-
-        function updateForceBtnStyle(eventId) {
-            const btn = document.getElementById(`forceBtn-${eventId}`);
-            if (!btn) return;
-            if (forceCompleteMode) {
-                btn.style.borderColor = '#ef4444';
-                btn.style.color = '#ef4444';
-                btn.textContent = '⚙️ Force ON';
-            } else {
-                btn.style.borderColor = '#e5e7eb';
-                btn.style.color = '#9ca3af';
-                btn.textContent = '⚙️ Force OFF';
-            }
-        }
 
         async function syncEventTasks(eventId) {
             const event = events.find(e => e.id === eventId);
@@ -3271,7 +3250,6 @@
                                 <div>
                                     <button onclick="checkAllTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#10b981';this.style.color='#10b981'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">☑️ Check All</button>
                                     <button onclick="syncEventTasks(${event.id})" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af;" onmouseover="this.style.borderColor='#4285f4';this.style.color='#4285f4'" onmouseout="this.style.borderColor='#e5e7eb';this.style.color='#9ca3af'">🔗 Sync Tasks</button>
-                                    <button onclick="toggleForceComplete()" id="forceBtn-${event.id}" style="background: none; border: 1px solid #e5e7eb; border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 0.8em; color: #9ca3af; margin-left: 6px;" onmouseover="this.style.borderColor='#ef4444';this.style.color='#ef4444'" onmouseout="updateForceBtnStyle(${event.id})">⚙️ Force OFF</button>
                                 </div>
                                 <div class="progress-bar">
                                     <div class="progress-fill" style="width: ${progress}%"></div>
@@ -3318,8 +3296,6 @@
                             metricsDiv.innerHTML = renderMetricsDisplay(manualMetrics, event);
                         }
                     }
-                    // Update Force Complete button style
-                    updateForceBtnStyle(event.id);
                 }, 100);
             });
         }
