@@ -2832,18 +2832,14 @@
             }));
         }
 
-        function deduplicateEvents() {
-            const seen = new Map();
+        function saveEvents() {
+            // Deduplicate by ID only (not name — same-named events are valid)
+            const seen = new Set();
             events = events.filter(e => {
-                const key = e.name.trim().toLowerCase();
-                if (seen.has(key)) return false;
-                seen.set(key, true);
+                if (seen.has(e.id)) return false;
+                seen.add(e.id);
                 return true;
             });
-        }
-
-        function saveEvents() {
-            deduplicateEvents();
             localStorage.setItem('lesEvents', JSON.stringify(events));
         }
 
