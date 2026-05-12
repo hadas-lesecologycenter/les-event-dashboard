@@ -2990,7 +2990,19 @@
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
                 saveEvents();
-                renderTableView();
+                syncEventToSheet(event);
+
+                if (isChecked) {
+                    if (taskKey === 'calendar') openGoogleCalendar(event);
+                    if (taskKey === 'brief') openBriefModal(event);
+                    if (taskKey === 'eventbrite') openEventbriteForm(event);
+                    if (taskKey === 'compost') openCompostSheet(event);
+                    if (taskKey === 'report') openEventReportingForm(event);
+                }
+
+                autoProgressEvent(event);
+                autoCompleteEvent(event);
+                applyFilters();
             }
         }
 
