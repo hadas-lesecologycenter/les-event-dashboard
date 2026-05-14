@@ -1098,6 +1098,123 @@
         .draft-link:hover {
             text-decoration: underline;
         }
+
+        .stats-container {
+            display: grid;
+            gap: 30px;
+        }
+
+        .stats-section {
+            border-top: 2px solid #e5ddd1;
+            padding-top: 30px;
+        }
+
+        .stats-section:first-child {
+            border-top: none;
+            padding-top: 0;
+        }
+
+        .stats-section h2 {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #1d5432;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-item {
+            background: linear-gradient(135deg, #f0f4ef 0%, #e8eee5 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid #d4cec0;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(29, 84, 50, 0.15);
+        }
+
+        .stat-item .value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #1d5432;
+            margin-bottom: 8px;
+        }
+
+        .stat-item .label {
+            font-size: 0.9em;
+            color: #6a5a4a;
+            font-weight: 500;
+        }
+
+        .percentage-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5ddd1;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .percentage-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1d5432 0%, #2d7a52 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .chart-container {
+            background: linear-gradient(135deg, #f0f4ef 0%, #e8eee5 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #d4cec0;
+            margin-top: 15px;
+        }
+
+        .chart-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 12px;
+        }
+
+        .chart-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .chart-label {
+            min-width: 120px;
+            font-size: 0.9em;
+            font-weight: 500;
+            color: #2c2416;
+        }
+
+        .chart-bar {
+            flex: 1;
+            height: 24px;
+            background: #e5ddd1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .chart-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #1d5432 0%, #2d7a52 100%);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 8px;
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -1112,6 +1229,7 @@
             <button class="view-btn" data-view="table">📊 Table View</button>
             <button class="view-btn" data-view="kanban">🎯 Kanban</button>
             <button class="view-btn" data-view="tasks">📌 Open Tasks</button>
+            <button class="view-btn" data-view="stats">📈 Stats</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
         </div>
@@ -1211,7 +1329,7 @@
             </div>
         </div>
 
-        <div id="statsView" class="stats-bar" style="display: none;"></div>
+        <div id="statsView" class="stats-bar" style="display: none; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
 
         <div id="impactView" class="impact-report" style="display: none; padding: 30px; background: white; border-radius: 12px; margin: 20px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></div>
 
@@ -2067,6 +2185,182 @@
             `;
         }
 
+        function displayStats() {
+            const statsView = document.getElementById('statsView');
+            const allEvents = events.filter(e => {
+                const eventDate = e.date instanceof Date ? e.date : new Date(e.date);
+                return true;
+            });
+
+            if (allEvents.length === 0) {
+                statsView.innerHTML = '<p style="text-align: center; color: #6a5a4a;">No events to display statistics for.</p>';
+                return;
+            }
+
+            const now = new Date();
+            now.setHours(0, 0, 0, 0);
+
+            const upcoming = allEvents.filter(e => {
+                const eventDate = e.date instanceof Date ? e.date : new Date(e.date);
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate >= now;
+            });
+            const past = allEvents.filter(e => {
+                const eventDate = e.date instanceof Date ? e.date : new Date(e.date);
+                eventDate.setHours(0, 0, 0, 0);
+                return eventDate < now;
+            });
+
+            // Count by owner
+            const byOwner = {};
+            allEvents.forEach(e => {
+                byOwner[e.owner] = (byOwner[e.owner] || 0) + 1;
+            });
+
+            // Count by category
+            const byCategory = {};
+            allEvents.forEach(e => {
+                byCategory[e.primaryCategory] = (byCategory[e.primaryCategory] || 0) + 1;
+            });
+
+            // Count by type
+            const byType = {};
+            allEvents.forEach(e => {
+                byType[e.type] = (byType[e.type] || 0) + 1;
+            });
+
+            // Count by status
+            const byStatus = {};
+            allEvents.forEach(e => {
+                byStatus[e.status || 'Planning'] = (byStatus[e.status || 'Planning'] || 0) + 1;
+            });
+
+            // Task completion metrics
+            const taskKeys = ['brief', 'eventbrite', 'calendar', 'comms', 'compost', 'opsCheckin', 'reminder', 'report', 'treeMap', 'thankYou', 'coordConfirm', 'coordEmail', 'outreachReport'];
+            const taskCompletion = {};
+            taskKeys.forEach(task => {
+                const completed = allEvents.filter(e => e[task] === 'Yes').length;
+                const applicable = allEvents.filter(e => e[task] !== 'N/A').length;
+                if (applicable > 0) {
+                    taskCompletion[task] = Math.round((completed / applicable) * 100);
+                }
+            });
+
+            const maxOwnerCount = Math.max(...Object.values(byOwner), 1);
+            const maxCategoryCount = Math.max(...Object.values(byCategory), 1);
+            const maxTypeCount = Math.max(...Object.values(byType), 1);
+            const maxStatusCount = Math.max(...Object.values(byStatus), 1);
+
+            statsView.innerHTML = `
+                <div class="stats-container">
+                    <div class="stats-section">
+                        <h2>📊 Overview</h2>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="value">${allEvents.length}</div>
+                                <div class="label">Total Events</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">${upcoming.length}</div>
+                                <div class="label">Upcoming</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">${past.length}</div>
+                                <div class="label">Past</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="value">${((upcoming.length / allEvents.length) * 100).toFixed(0)}%</div>
+                                <div class="label">% Upcoming</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <h2>👥 Events by Owner</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byOwner)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([owner, count]) => `
+                                    <div class="chart-row">
+                                        <div class="chart-label">${owner}</div>
+                                        <div class="chart-bar">
+                                            <div class="chart-bar-fill" style="width: ${(count / maxOwnerCount) * 100}%">${count}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <h2>🏷️ Events by Category</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byCategory)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([category, count]) => `
+                                    <div class="chart-row">
+                                        <div class="chart-label">${category}</div>
+                                        <div class="chart-bar">
+                                            <div class="chart-bar-fill" style="width: ${(count / maxCategoryCount) * 100}%">${count}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <h2>🎯 Events by Type</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byType)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([type, count]) => `
+                                    <div class="chart-row">
+                                        <div class="chart-label">${type}</div>
+                                        <div class="chart-bar">
+                                            <div class="chart-bar-fill" style="width: ${(count / maxTypeCount) * 100}%">${count}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <h2>✅ Events by Status</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byStatus)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([status, count]) => `
+                                    <div class="chart-row">
+                                        <div class="chart-label">${status}</div>
+                                        <div class="chart-bar">
+                                            <div class="chart-bar-fill" style="width: ${(count / maxStatusCount) * 100}%">${count}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="stats-section">
+                        <h2>📋 Task Completion Rate</h2>
+                        <div class="chart-container">
+                            ${Object.entries(taskCompletion)
+                                .sort((a, b) => b[1] - a[1])
+                                .map(([task, percent]) => {
+                                    const taskLabel = task.replace(/([A-Z])/g, ' $1').trim();
+                                    return `
+                                        <div class="chart-row">
+                                            <div class="chart-label">${taskLabel}</div>
+                                            <div class="chart-bar">
+                                                <div class="chart-bar-fill" style="width: ${percent}%">${percent}%</div>
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
                 function switchView(view) {
             currentView = view;
             document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
@@ -2077,8 +2371,13 @@
             document.getElementById('calendarView').classList.toggle('active', view === 'calendar');
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
             document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
+            document.getElementById('statsView').style.display = view === 'stats' ? 'block' : 'none';
 
-            applyFilters();
+            if (view === 'stats') {
+                displayStats();
+            } else {
+                applyFilters();
+            }
         }
 
 
@@ -2924,6 +3223,7 @@
             else if (currentView === 'calendar') renderCalendar();
             else if (currentView === 'kanban') renderKanban();
             else if (currentView === 'tasks') renderOpenTasks();
+            else if (currentView === 'stats') displayStats();
         }
 
 
