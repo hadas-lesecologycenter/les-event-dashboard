@@ -1099,225 +1099,8 @@
             text-decoration: underline;
         }
 
-        /* ── Stats Tab ── */
-        .stats-container { display: grid; gap: 24px; }
-
-        .stats-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            padding-bottom: 8px;
-        }
-        .stats-title { font-size: 1.2em; font-weight: 700; color: #1d5432; }
-        .stats-range { font-size: 0.9em; color: #6a5a4a; }
-
-        .kpi-row {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-            gap: 12px;
-        }
-        .kpi-card {
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            border-left: 5px solid #1d5432;
-        }
-        .kpi-card.up { border-color: #10b981; }
-        .kpi-card.rate { border-color: #8b5cf6; }
-        .kpi-card.risk { border-color: #ef4444; }
-        .kpi-val { font-size: 2.2em; font-weight: 700; color: #1d5432; line-height: 1.1; margin-bottom: 4px; }
-        .kpi-card.up .kpi-val { color: #10b981; }
-        .kpi-card.rate .kpi-val { color: #8b5cf6; }
-        .kpi-card.risk .kpi-val { color: #ef4444; }
-        .kpi-lbl { font-size: 0.85em; font-weight: 600; color: #6a5a4a; text-transform: uppercase; letter-spacing: 0.03em; }
-
-        .section { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-        .section-title { font-size: 1em; font-weight: 700; color: #2c2416; margin-bottom: 16px; }
-
-        .pipeline {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-        }
-        .pipeline-stage {
-            background: #f9f6f1;
-            border-radius: 10px;
-            padding: 14px;
-            text-align: center;
-            border: 2px solid #e5ddd1;
-        }
-        .pipeline-stage.planning { border-color: #f59e0b; background: #fffbeb; }
-        .pipeline-stage.inprogress { border-color: #10b981; background: #f0fdf4; }
-        .pipeline-stage.complete { border-color: #059669; background: #ecfdf5; }
-        .pipeline-stage.canceled { border-color: #9ca3af; background: #f3f4f6; }
-        .pipeline-num { font-size: 1.8em; font-weight: 700; }
-        .pipeline-stage.planning .pipeline-num { color: #f59e0b; }
-        .pipeline-stage.inprogress .pipeline-num { color: #10b981; }
-        .pipeline-stage.complete .pipeline-num { color: #059669; }
-        .pipeline-stage.canceled .pipeline-num { color: #9ca3af; }
-        .pipeline-label { font-size: 0.8em; font-weight: 600; color: #6a5a4a; margin-top: 6px; }
-        .pipeline-pct { font-size: 0.75em; color: #9ca3af; }
-
-        .upcoming-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .upcoming-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 14px;
-            background: #f9f6f1;
-            border-radius: 8px;
-            border-left: 4px solid #1d5432;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .upcoming-item:hover { background: #f0ebe5; transform: translateX(2px); }
-        .upcoming-item.alert { border-color: #ef4444; background: #fef2f2; }
-        .upcoming-item.warn { border-color: #f59e0b; background: #fffbeb; }
-        .upcoming-date {
-            font-size: 0.8em;
-            font-weight: 700;
-            color: #1d5432;
-            background: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            white-space: nowrap;
-        }
-        .upcoming-info { flex: 1; min-width: 0; }
-        .upcoming-name { font-weight: 600; color: #2c2416; }
-        .upcoming-meta { font-size: 0.8em; color: #6a5a4a; }
-        .upcoming-badge {
-            background: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.75em;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-        .upcoming-item.alert .upcoming-badge { color: #b91c1c; background: #fee2e2; }
-        .upcoming-item.warn .upcoming-badge { color: #92400e; background: #fef3c7; }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-        @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
-
-        .workload-bar {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 14px;
-        }
-        .workload-name { width: 90px; font-weight: 600; font-size: 0.9em; }
-        .workload-chart {
-            flex: 1;
-            height: 32px;
-            background: #e5ddd1;
-            border-radius: 4px;
-            overflow: hidden;
-            position: relative;
-        }
-        .workload-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 0.75em;
-            font-weight: 700;
-            min-width: 24px;
-        }
-        .workload-stat { font-size: 0.85em; color: #6a5a4a; font-weight: 600; white-space: nowrap; }
-
-        .task-health {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .task-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .task-name { width: 140px; font-size: 0.9em; font-weight: 600; }
-        .task-bar { flex: 1; height: 20px; background: #e5ddd1; border-radius: 3px; overflow: hidden; }
-        .task-fill {
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 6px;
-            color: white;
-            font-size: 0.75em;
-            font-weight: 700;
-        }
-        .task-fill.good { background: #059669; }
-        .task-fill.ok { background: #f59e0b; }
-        .task-fill.bad { background: #ef4444; }
-        .task-stat { font-size: 0.8em; color: #6a5a4a; white-space: nowrap; width: 50px; text-align: right; }
-
-        .monthly-bars {
-            display: flex;
-            align-items: flex-end;
-            gap: 6px;
-            height: 140px;
-            padding-bottom: 12px;
-        }
-        .month-bar {
-            flex: 1;
-            background: #1d5432;
-            border-radius: 4px 4px 0 0;
-            position: relative;
-            cursor: pointer;
-            transition: all 0.2s;
-            min-height: 8px;
-        }
-        .month-bar:hover { background: #0f4620; }
-        .month-bar.current { background: #10b981; }
-        .month-bar-label {
-            position: absolute;
-            bottom: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 0.75em;
-            color: #6a5a4a;
-            font-weight: 600;
-        }
-
-        .bottleneck-list { display: flex; flex-direction: column; gap: 10px; }
-        .bottleneck-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px;
-            background: #fef2f2;
-            border-left: 4px solid #ef4444;
-            border-radius: 6px;
-        }
-        .bottleneck-task { flex: 1; font-weight: 600; font-size: 0.9em; }
-        .bottleneck-count { font-size: 1.3em; font-weight: 700; color: #ef4444; }
-
-        .readiness-bars { display: flex; flex-direction: column; gap: 10px; }
-        .readiness-row { display: flex; align-items: center; gap: 12px; }
-        .readiness-label { width: 180px; font-weight: 600; font-size: 0.9em; }
-        .readiness-bar { flex: 1; height: 24px; background: #e5ddd1; border-radius: 4px; overflow: hidden; }
-        .readiness-fill { height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; }
-        .readiness-fill.ready { background: #059669; }
-        .readiness-fill.inprogress { background: #10b981; }
-        .readiness-fill.notstarted { background: #f59e0b; }
-        .readiness-count { width: 50px; text-align: right; font-weight: 700; font-size: 1.1em; }
-
-        .empty-state { text-align: center; color: #9ca3af; padding: 30px; font-size: 0.95em; }
-    </style>
+        /* ── Stats tab ── */
+        .stats-container { display: grid; gap: 32px; }
 
         .stats-kpi-row {
             display: grid;
@@ -2607,204 +2390,359 @@
             `;
         }
 
+        const STATS_OWNER_COLORS  = { 'Maddy': '#10b981', 'Hadas': '#3b82f6', 'Gretel': '#f59e0b' };
+        const STATS_CAT_COLORS    = { 'Outreach': '#f59e0b', 'Education': '#3b82f6', 'Stewardship': '#10b981' };
+        const STATS_TYPE_COLORS   = { 'PUBLIC PROGRAM': '#8b5cf6', 'PUBLIC VOLUNTEER EVENT': '#10b981', 'PRIVATE VOLUNTEER EVENT': '#3b82f6', 'FIELD TRIP': '#f59e0b', 'TABLING': '#ef4444' };
+        const STATS_STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#ef4444', 'Canceled': '#9ca3af' };
+        const STATS_TASK_LABELS = {
+            brief: 'Event Brief', eventbrite: 'Eventbrite Page', calendar: 'Calendar Entry',
+            comms: 'Comms Request', compost: 'Compost Order', opsCheckin: 'Ops Check-in',
+            reminder: 'Reminder Email', report: 'Event Report', treeMap: 'Tree Map Update',
+            thankYou: 'Thank-You Email', coordConfirm: 'Coordinator Confirm',
+            coordEmail: 'Coordinator Email', outreachReport: 'Outreach Report',
+            scouting: 'Block Walk', equipment: 'Equipment Reserved'
+        };
+
+        function getStatsDate(e) {
+            const d = e.date instanceof Date ? new Date(e.date) : new Date(e.date);
+            d.setHours(0,0,0,0);
+            return d;
+        }
+
+        function countOverdueTasks(event, now) {
+            const eventDate = getStatsDate(event);
+            const wf = getEventWorkflow(event);
+            const all = [...wf.setup, ...wf.execution, ...wf.completion];
+            let count = 0;
+            all.forEach(t => {
+                if (event[t.key] === 'Yes' || event[t.key] === 'N/A') return;
+                const due = new Date(eventDate);
+                due.setDate(due.getDate() + (t.daysOffset || 0));
+                if (due < now) count++;
+            });
+            return count;
+        }
+
+        function buildDonut(data, colors, size = 140) {
+            const total = Object.values(data).reduce((a,b) => a+b, 0);
+            if (total === 0) return '';
+            const cx = size / 2, cy = size / 2;
+            const r = size / 2 - 6;
+            const inner = r - 28;
+            let angle = -Math.PI / 2;
+            const slices = Object.entries(data).map(([key, val]) => {
+                const frac = val / total;
+                const a1 = angle;
+                const a2 = angle + frac * Math.PI * 2;
+                angle = a2;
+                const large = frac > 0.5 ? 1 : 0;
+                const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+                const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+                const x3 = cx + inner * Math.cos(a2), y3 = cy + inner * Math.sin(a2);
+                const x4 = cx + inner * Math.cos(a1), y4 = cy + inner * Math.sin(a1);
+                const path = `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${inner} ${inner} 0 ${large} 0 ${x4} ${y4} Z`;
+                return `<path d="${path}" fill="${colors[key] || '#1d5432'}" stroke="white" stroke-width="2"/>`;
+            }).join('');
+            return `<svg class="donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                ${slices}
+                <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="22" font-weight="700" fill="#1d5432">${total}</text>
+                <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="10" fill="#6a5a4a" letter-spacing="0.5">EVENTS</text>
+            </svg>`;
+        }
+
         function displayStats() {
             const statsView = document.getElementById('statsView');
-            if (events.length === 0) {
-                statsView.innerHTML = '<div class="empty-state">📊 No events yet. Create your first event to see stats.</div>';
+            const allEventsRaw = events;
+
+            if (allEventsRaw.length === 0) {
+                statsView.innerHTML = '<p style="text-align:center;color:#6a5a4a;padding:40px;">No events to display.</p>';
                 return;
             }
 
+            // Year filter
+            const yearSet = new Set(allEventsRaw.map(e => getStatsDate(e).getFullYear()));
+            const years = Array.from(yearSet).sort();
+            let selectedYear = localStorage.getItem('statsYear') || 'all';
+            if (selectedYear !== 'all' && !years.includes(parseInt(selectedYear))) selectedYear = 'all';
+
+            const allEvents = selectedYear === 'all'
+                ? allEventsRaw
+                : allEventsRaw.filter(e => getStatsDate(e).getFullYear() === parseInt(selectedYear));
+
             const now = new Date(); now.setHours(0,0,0,0);
-            const getDate = e => { const d = e.date instanceof Date ? new Date(e.date) : new Date(e.date); d.setHours(0,0,0,0); return d; };
-            const count = (arr, key) => arr.reduce((acc, e) => { const v = e[key] || 'N/A'; acc[v] = (acc[v] || 0) + 1; return acc; }, {});
+            const weekFromNow = new Date(now); weekFromNow.setDate(weekFromNow.getDate() + 7);
 
-            const upcoming30 = events.filter(e => { const d = getDate(e); return d >= now && d < new Date(now.getTime() + 30*86400000); });
-            const byStatus = count(events, 'status');
-            const inProg = byStatus['In Progress'] || 0;
-            const complete = byStatus['Complete'] || 0;
-            const planning = byStatus['Planning'] || 0;
-            const canceled = byStatus['Canceled'] || 0;
-            const hold = byStatus['Hold'] || 0;
+            const upcoming = allEvents.filter(e => getStatsDate(e) >= now);
+            const past     = allEvents.filter(e => getStatsDate(e) < now);
+            const thisWeek = allEvents.filter(e => { const d = getStatsDate(e); return d >= now && d <= weekFromNow; });
+            const thisMonth = allEvents.filter(e => { const d = getStatsDate(e); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+            const nextEvent = [...upcoming].sort((a,b) => getStatsDate(a) - getStatsDate(b))[0];
+            const nextEventDays = nextEvent ? Math.ceil((getStatsDate(nextEvent) - now) / 86400000) : null;
 
-            // Overall completion rate
-            let totalTasks = 0, doneTasks = 0;
-            events.forEach(e => {
+            const countBy = (arr, key) => arr.reduce((acc, e) => { const v = e[key] || 'Unknown'; acc[v] = (acc[v]||0)+1; return acc; }, {});
+            const byOwner    = countBy(allEvents, 'owner');
+            const byCategory = countBy(allEvents, 'primaryCategory');
+            const byType     = countBy(allEvents, 'type');
+            const byStatus   = countBy(allEvents, 'status');
+
+            const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const byMonth = Object.fromEntries(monthNames.map(m => [m, 0]));
+            allEvents.forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
+            const maxMonth = Math.max(...Object.values(byMonth), 1);
+            const curMonthName = monthNames[now.getMonth()];
+
+            // Day of week distribution
+            const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const byDow = Object.fromEntries(dowNames.map(d => [d, 0]));
+            allEvents.forEach(e => { byDow[dowNames[getStatsDate(e).getDay()]]++; });
+            const maxDow = Math.max(...Object.values(byDow), 1);
+
+            // Active events & task completion
+            const activeEvents = allEvents.filter(e => e.status === 'In Progress' || e.status === 'Planning');
+            let totalT = 0, doneT = 0;
+            activeEvents.forEach(e => {
                 const wf = getEventWorkflow(e);
                 [...wf.setup, ...wf.execution, ...wf.completion].forEach(t => {
-                    if (e[t.key] !== 'N/A') { totalTasks++; if (e[t.key] === 'Yes') doneTasks++; }
+                    if (e[t.key] !== 'N/A') { totalT++; if (e[t.key] === 'Yes') doneT++; }
                 });
             });
-            const completionPct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
+            const overallRate = totalT > 0 ? Math.round((doneT / totalT) * 100) : 0;
 
-            // Event readiness by completion %
-            const readiness = { ready: 0, inprogress: 0, notstarted: 0 };
-            events.filter(e => e.status !== 'Complete' && e.status !== 'Canceled').forEach(e => {
-                const wf = getEventWorkflow(e);
-                const all = [...wf.setup, ...wf.execution, ...wf.completion];
-                const done = all.filter(t => e[t.key] === 'Yes' || e[t.key] === 'N/A').length;
-                const pct = all.length > 0 ? (done / all.length) * 100 : 0;
-                if (pct === 100) readiness.ready++;
-                else if (pct >= 50) readiness.inprogress++;
-                else readiness.notstarted++;
-            });
+            // Per-task completion
+            const taskStats = Object.entries(STATS_TASK_LABELS).map(([key, label]) => {
+                const applicable = allEvents.filter(e => e[key] !== undefined && e[key] !== 'N/A');
+                if (!applicable.length) return null;
+                const completed = applicable.filter(e => e[key] === 'Yes').length;
+                return { label, completed, applicable: applicable.length, pct: Math.round((completed / applicable.length) * 100) };
+            }).filter(Boolean).sort((a,b) => b.pct - a.pct);
 
-            // Task bottlenecks
-            const taskKeys = ['brief', 'eventbrite', 'calendar', 'comms', 'compost', 'opsCheckin', 'reminder', 'report', 'treeMap', 'thankYou'];
-            const taskLabels = { brief: 'Event Brief', eventbrite: 'Eventbrite Page', calendar: 'Calendar', comms: 'Comms', compost: 'Compost', opsCheckin: 'Ops Check-in', reminder: 'Reminder', report: 'Report', treeMap: 'Tree Map', thankYou: 'Thank You' };
-            const bottlenecks = taskKeys
-                .map(key => { const app = events.filter(e => e[key] !== 'N/A' && e[key] !== 'Yes'); return { label: taskLabels[key], count: app.length }; })
-                .filter(b => b.count > 0)
-                .sort((a,b) => b.count - a.count)
-                .slice(0, 4);
-
-            // Monthly distribution
-            const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-            const byMonth = Object.fromEntries(months.map(m => [m, 0]));
-            events.forEach(e => { byMonth[months[getDate(e).getMonth()]]++; });
-            const maxMonth = Math.max(...Object.values(byMonth), 1);
+            // Events at risk: upcoming events with overdue tasks
+            const atRisk = upcoming
+                .filter(e => e.status !== 'Canceled' && e.status !== 'Complete')
+                .map(e => ({ event: e, overdue: countOverdueTasks(e, now), daysAway: Math.ceil((getStatsDate(e) - now) / 86400000) }))
+                .filter(r => r.overdue > 0)
+                .sort((a,b) => b.overdue - a.overdue || a.daysAway - b.daysAway)
+                .slice(0, 6);
 
             // Owner workload
-            const byOwner = count(events, 'owner');
-            const maxOwner = Math.max(...Object.values(byOwner), 1);
+            const ownerWorkload = Object.keys(byOwner).map(owner => {
+                const ownerEvents = allEvents.filter(e => e.owner === owner);
+                const ownerUpcoming = ownerEvents.filter(e => getStatsDate(e) >= now && e.status !== 'Canceled' && e.status !== 'Complete');
+                const ownerOverdue = ownerUpcoming.reduce((sum, e) => sum + countOverdueTasks(e, now), 0);
+                return { owner, total: ownerEvents.length, upcoming: ownerUpcoming.length, overdue: ownerOverdue };
+            }).sort((a,b) => b.upcoming - a.upcoming);
 
-            // Task completion by type
-            const taskCompletion = taskKeys
-                .map(key => {
-                    const app = events.filter(e => e[key] !== 'N/A');
-                    if (!app.length) return null;
-                    const done = app.filter(e => e[key] === 'Yes').length;
-                    return { label: taskLabels[key], done, app: app.length, pct: Math.round((done / app.length) * 100) };
-                })
-                .filter(Boolean)
-                .sort((a,b) => b.pct - a.pct);
+            // Smart insights
+            const insights = [];
+            if (thisWeek.length > 0) {
+                insights.push({ type: 'good', icon: '📆', title: `${thisWeek.length} event${thisWeek.length>1?'s':''} this week`, desc: thisWeek.map(e => e.name).slice(0,2).join(', ') + (thisWeek.length > 2 ? '…' : '') });
+            }
+            const totalOverdue = atRisk.reduce((s, r) => s + r.overdue, 0);
+            if (totalOverdue > 0) {
+                insights.push({ type: 'alert', icon: '⚠️', title: `${totalOverdue} overdue task${totalOverdue>1?'s':''}`, desc: `Across ${atRisk.length} upcoming event${atRisk.length>1?'s':''}` });
+            }
+            const planningCount = byStatus['Planning'] || 0;
+            if (planningCount > 0) {
+                insights.push({ type: 'warn', icon: '📝', title: `${planningCount} in Planning`, desc: 'Waiting to start execution' });
+            }
+            if (insights.length === 0) {
+                insights.push({ type: 'good', icon: '✨', title: 'All clear', desc: 'No overdue tasks or urgent events' });
+            }
+
+            function bar(count, max, color) {
+                const w = Math.max((count / max) * 100, 3);
+                return `<div class="chart-bar"><div class="chart-bar-fill" style="width:${w}%;background:${color};">${count}</div></div>`;
+            }
 
             statsView.innerHTML = `
             <div class="stats-container">
-                <div class="kpi-row">
-                    <div class="kpi-card"><div class="kpi-val">${events.length}</div><div class="kpi-lbl">Total</div></div>
-                    <div class="kpi-card up"><div class="kpi-val">${upcoming30.length}</div><div class="kpi-lbl">Next 30d</div></div>
-                    <div class="kpi-card rate"><div class="kpi-val">${completionPct}%</div><div class="kpi-lbl">Complete</div></div>
-                    <div class="kpi-card risk"><div class="kpi-val">${inProg}</div><div class="kpi-lbl">In Progress</div></div>
-                </div>
 
-                <div class="section">
-                    <div class="section-title">📊 Event Pipeline</div>
-                    <div class="pipeline">
-                        <div class="pipeline-stage planning">
-                            <div class="pipeline-num">${planning}</div>
-                            <div class="pipeline-label">Planning</div>
-                            <div class="pipeline-pct">${Math.round((planning / events.length) * 100)}%</div>
-                        </div>
-                        <div class="pipeline-stage inprogress">
-                            <div class="pipeline-num">${inProg}</div>
-                            <div class="pipeline-label">In Progress</div>
-                            <div class="pipeline-pct">${Math.round((inProg / events.length) * 100)}%</div>
-                        </div>
-                        <div class="pipeline-stage complete">
-                            <div class="pipeline-num">${complete}</div>
-                            <div class="pipeline-label">Complete</div>
-                            <div class="pipeline-pct">${Math.round((complete / events.length) * 100)}%</div>
-                        </div>
-                        <div class="pipeline-stage canceled">
-                            <div class="pipeline-num">${canceled + hold}</div>
-                            <div class="pipeline-label">Closed</div>
-                            <div class="pipeline-pct">${Math.round(((canceled + hold) / events.length) * 100)}%</div>
-                        </div>
+                <div class="stats-toolbar">
+                    <div class="stats-year-pills">
+                        <button class="year-pill ${selectedYear==='all'?'active':''}" data-year="all">All Time</button>
+                        ${years.map(y => `<button class="year-pill ${selectedYear==String(y)?'active':''}" data-year="${y}">${y}</button>`).join('')}
                     </div>
+                    <div class="stats-summary-line">Showing <strong>${allEvents.length}</strong> event${allEvents.length===1?'':'s'} ${selectedYear==='all' ? 'across all time' : 'in ' + selectedYear}</div>
                 </div>
 
-                <div class="grid-2">
-                    <div class="section">
-                        <div class="section-title">👥 Team Workload</div>
-                        <div class="workload-bar" style="margin-bottom:16px;">
-                            <div class="workload-name">Total</div>
-                            <div class="workload-chart">
-                                <div class="workload-fill" style="width:100%">${events.length}</div>
+                <div class="insights-row">
+                    ${insights.map(i => `
+                        <div class="insight-card ${i.type}">
+                            <div class="insight-icon">${i.icon}</div>
+                            <div class="insight-body">
+                                <div class="insight-title">${i.title}</div>
+                                <div class="insight-desc">${i.desc}</div>
                             </div>
-                            <div class="workload-stat"></div>
                         </div>
-                        ${Object.entries(byOwner).sort((a,b)=>b[1]-a[1]).map(([owner, n]) =>
-                            `<div class="workload-bar">
-                                <div class="workload-name">${owner}</div>
-                                <div class="workload-chart">
-                                    <div class="workload-fill" style="width:${(n/maxOwner)*100}%">${n}</div>
-                                </div>
-                                <div class="workload-stat">${Math.round((n / events.length) * 100)}%</div>
-                            </div>`
-                        ).join('')}
-                    </div>
+                    `).join('')}
+                </div>
 
-                    <div class="section">
-                        <div class="section-title">📅 Monthly Activity</div>
-                        <div class="monthly-bars">
-                            ${months.map(m => {
+                <div class="stats-kpi-row">
+                    <div class="kpi-card kpi-total">
+                        <div class="kpi-value">${allEvents.length}</div>
+                        <div class="kpi-label">Total Events</div>
+                    </div>
+                    <div class="kpi-card kpi-upcoming">
+                        <div class="kpi-value">${upcoming.length}</div>
+                        <div class="kpi-label">Upcoming</div>
+                    </div>
+                    <div class="kpi-card kpi-month">
+                        <div class="kpi-value">${thisMonth.length}</div>
+                        <div class="kpi-label">This Month</div>
+                    </div>
+                    <div class="kpi-card kpi-progress">
+                        <div class="kpi-value">${byStatus['In Progress'] || 0}</div>
+                        <div class="kpi-label">In Progress</div>
+                    </div>
+                    <div class="kpi-card kpi-rate">
+                        <div class="kpi-value">${overallRate}%</div>
+                        <div class="kpi-label">Task Completion</div>
+                    </div>
+                    ${nextEvent ? `<div class="kpi-card kpi-next">
+                        <div class="kpi-value">${nextEventDays === 0 ? 'Today' : nextEventDays + 'd'}</div>
+                        <div class="kpi-label">Next Event</div>
+                        <div class="kpi-sub">${nextEvent.name}</div>
+                    </div>` : ''}
+                </div>
+
+                <div class="stats-section">
+                    <h2>🧑‍🤝‍🧑 Team Workload</h2>
+                    <div class="workload-grid">
+                        ${ownerWorkload.map(w => `
+                            <div class="workload-card" style="border-top-color:${STATS_OWNER_COLORS[w.owner]||'#1d5432'};">
+                                <div class="owner-name">${w.owner}</div>
+                                <div class="workload-stats">
+                                    <div class="workload-stat"><div class="num">${w.total}</div><div class="lbl">Total</div></div>
+                                    <div class="workload-stat"><div class="num">${w.upcoming}</div><div class="lbl">Upcoming</div></div>
+                                    <div class="workload-stat ${w.overdue>0?'overdue':''}"><div class="num">${w.overdue}</div><div class="lbl">Overdue</div></div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                ${atRisk.length > 0 ? `
+                <div class="stats-section">
+                    <h2>⚠️ Events at Risk</h2>
+                    <div class="risk-list">
+                        ${atRisk.map(r => `
+                            <div class="risk-item ${r.daysAway <= 7 ? '' : 'warn'}" onclick="openEventDetailsModal(${r.event.id})">
+                                <div style="flex:1;">
+                                    <div class="risk-name">${r.event.name}</div>
+                                    <div class="risk-meta">${r.event.owner} · ${formatDate(getStatsDate(r.event))} · ${r.daysAway === 0 ? 'today' : r.daysAway + ' day' + (r.daysAway>1?'s':'') + ' away'}</div>
+                                </div>
+                                <div class="risk-badge">${r.overdue} overdue</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>` : ''}
+
+                <div class="stats-two-col">
+                    <div class="stats-section">
+                        <h2>📅 Monthly Activity</h2>
+                        <div class="monthly-chart">
+                            ${monthNames.map(m => {
                                 const n = byMonth[m];
-                                const h = n > 0 ? Math.max((n / maxMonth) * 100, 8) : 0;
-                                const isCur = m === months[now.getMonth()];
-                                return `<div class="month-bar ${isCur ? 'current' : ''}" style="height:${h}%" title="${m}: ${n} events">
-                                    <div class="month-bar-label">${m}</div>
+                                const h = n > 0 ? Math.max((n / maxMonth) * 100, 12) : 0;
+                                const cur = m === curMonthName && (selectedYear === 'all' || parseInt(selectedYear) === now.getFullYear());
+                                return `<div class="month-col">
+                                    <div class="month-bar-wrap">
+                                        <div class="month-bar ${cur ? 'current' : ''} ${n === 0 ? 'empty' : ''}" style="height:${h}%">
+                                            ${n > 0 ? `<span class="month-count">${n}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="month-label ${cur ? 'current' : ''}">${m}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="stats-section">
+                        <h2>📆 Day of Week</h2>
+                        <div class="dow-chart">
+                            ${dowNames.map(d => {
+                                const n = byDow[d];
+                                const h = n > 0 ? Math.max((n / maxDow) * 100, 12) : 0;
+                                return `<div class="dow-col">
+                                    <div class="dow-bar-wrap">
+                                        <div class="dow-bar ${n === 0 ? 'empty' : ''}" style="height:${h}%">
+                                            ${n > 0 ? `<span class="dow-count">${n}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="dow-label">${d}</div>
                                 </div>`;
                             }).join('')}
                         </div>
                     </div>
                 </div>
 
-                ${bottlenecks.length > 0 ? `
-                <div class="section">
-                    <div class="section-title">🚧 Task Bottlenecks</div>
-                    <div class="bottleneck-list">
-                        ${bottlenecks.map(b => `
-                            <div class="bottleneck-item">
-                                <div class="bottleneck-task">${b.label}</div>
-                                <div class="bottleneck-count">${b.count}</div>
+                <div class="stats-two-col">
+                    <div class="stats-section">
+                        <h2>🏷️ Category Mix</h2>
+                        <div class="donut-wrap">
+                            ${buildDonut(byCategory, STATS_CAT_COLORS, 140)}
+                            <div class="donut-legend">
+                                ${Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,n]) => {
+                                    const pct = Math.round((n / allEvents.length) * 100);
+                                    return `<div class="donut-legend-item">
+                                        <span class="donut-swatch" style="background:${STATS_CAT_COLORS[cat]||'#1d5432'}"></span>
+                                        <span class="donut-name">${cat}</span>
+                                        <span class="donut-val">${n} · ${pct}%</span>
+                                    </div>`;
+                                }).join('')}
                             </div>
-                        `).join('')}
+                        </div>
                     </div>
-                </div>` : ''}
-
-                <div class="section">
-                    <div class="section-title">✅ Event Readiness</div>
-                    <div class="readiness-bars">
-                        <div class="readiness-row">
-                            <div class="readiness-label">Ready to Launch</div>
-                            <div class="readiness-bar">
-                                <div class="readiness-fill ready" style="width:${readiness.ready > 0 ? '100%' : '0%'}">${readiness.ready}</div>
-                            </div>
-                            <div class="readiness-count">${readiness.ready}</div>
-                        </div>
-                        <div class="readiness-row">
-                            <div class="readiness-label">In Progress (50%+)</div>
-                            <div class="readiness-bar">
-                                <div class="readiness-fill inprogress" style="width:${readiness.inprogress > 0 ? '100%' : '0%'}">${readiness.inprogress}</div>
-                            </div>
-                            <div class="readiness-count">${readiness.inprogress}</div>
-                        </div>
-                        <div class="readiness-row">
-                            <div class="readiness-label">Just Getting Started</div>
-                            <div class="readiness-bar">
-                                <div class="readiness-fill notstarted" style="width:${readiness.notstarted > 0 ? '100%' : '0%'}">${readiness.notstarted}</div>
-                            </div>
-                            <div class="readiness-count">${readiness.notstarted}</div>
+                    <div class="stats-section">
+                        <h2>👥 By Owner</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byOwner).sort((a,b)=>b[1]-a[1]).map(([owner,n]) =>
+                                `<div class="chart-row"><div class="chart-label">${owner}</div>${bar(n, Math.max(...Object.values(byOwner)), STATS_OWNER_COLORS[owner]||'#1d5432')}</div>`
+                            ).join('')}
                         </div>
                     </div>
                 </div>
 
-                <div class="section">
-                    <div class="section-title">📋 Task Completion Health</div>
-                    <div class="task-health">
-                        ${taskCompletion.map(({label, done, app, pct}) => {
-                            const color = pct >= 80 ? 'good' : pct >= 50 ? 'ok' : 'bad';
-                            return `<div class="task-row">
-                                <div class="task-name">${label}</div>
-                                <div class="task-bar">
-                                    <div class="task-fill ${color}" style="width:${Math.max(pct,3)}%"></div>
-                                </div>
-                                <div class="task-stat">${done}/${app}</div>
+                <div class="stats-two-col">
+                    <div class="stats-section">
+                        <h2>🎯 By Type</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type,n]) =>
+                                `<div class="chart-row"><div class="chart-label" style="font-size:0.8em;width:145px;min-width:145px">${type}</div>${bar(n, Math.max(...Object.values(byType)), STATS_TYPE_COLORS[type]||'#1d5432')}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                    <div class="stats-section">
+                        <h2>✅ By Status</h2>
+                        <div class="chart-container">
+                            ${Object.entries(byStatus).sort((a,b)=>b[1]-a[1]).map(([status,n]) =>
+                                `<div class="chart-row"><div class="chart-label">${status}</div>${bar(n, Math.max(...Object.values(byStatus)), STATS_STATUS_COLORS[status]||'#1d5432')}</div>`
+                            ).join('')}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-section">
+                    <h2>📋 Task Completion Rate</h2>
+                    <div class="chart-container">
+                        ${taskStats.map(({label, completed, applicable, pct}) => {
+                            const color = pct >= 80 ? '#059669' : pct >= 50 ? '#f59e0b' : '#ef4444';
+                            return `<div class="chart-row">
+                                <div class="chart-label">${label}</div>
+                                <div class="chart-bar"><div class="chart-bar-fill" style="width:${Math.max(pct,3)}%;background:${color};">${pct}%</div></div>
+                                <div style="min-width:50px;text-align:right;font-size:0.8em;color:#9ca3af;">${completed}/${applicable}</div>
                             </div>`;
                         }).join('')}
                     </div>
                 </div>
+
             </div>`;
+
+            statsView.querySelectorAll('.year-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    localStorage.setItem('statsYear', btn.dataset.year);
+                    displayStats();
+                });
+            });
         }
 
                 function switchView(view) {
