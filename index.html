@@ -2465,9 +2465,18 @@
             let selectedYear = localStorage.getItem('statsYear') || 'all';
             if (selectedYear !== 'all' && !years.includes(parseInt(selectedYear))) selectedYear = 'all';
 
-            const allEvents = selectedYear === 'all'
+            const yearFiltered = selectedYear === 'all'
                 ? allEventsRaw
                 : allEventsRaw.filter(e => getStatsDate(e).getFullYear() === parseInt(selectedYear));
+
+            // Month filter (applied after year)
+            const monthNamesFull = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            let selectedMonth = localStorage.getItem('statsMonth') || 'all';
+            if (selectedMonth !== 'all' && (parseInt(selectedMonth) < 0 || parseInt(selectedMonth) > 11)) selectedMonth = 'all';
+
+            const allEvents = selectedMonth === 'all'
+                ? yearFiltered
+                : yearFiltered.filter(e => getStatsDate(e).getMonth() === parseInt(selectedMonth));
 
             const now = new Date(); now.setHours(0,0,0,0);
             const weekFromNow = new Date(now); weekFromNow.setDate(weekFromNow.getDate() + 7);
@@ -2486,8 +2495,9 @@
             const byStatus   = countBy(allEvents, 'status');
 
             const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            // Monthly chart ignores month filter so the year shape is visible; selected month is highlighted instead
             const byMonth = Object.fromEntries(monthNames.map(m => [m, 0]));
-            allEvents.forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
+            yearFiltered.forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
             const maxMonth = Math.max(...Object.values(byMonth), 1);
             const curMonthName = monthNames[now.getMonth()];
 
@@ -2557,12 +2567,28 @@
             statsView.innerHTML = `
             <div class="stats-container">
 
-                <div class="stats-toolbar">
-                    <div class="stats-year-pills">
-                        <button class="year-pill ${selectedYear==='all'?'active':''}" data-year="all">All Time</button>
-                        ${years.map(y => `<button class="year-pill ${selectedYear==String(y)?'active':''}" data-year="${y}">${y}</button>`).join('')}
+                <div class="stats-toolbar" style="flex-direction:column;align-items:stretch;gap:8px;">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <span style="font-size:0.75em;font-weight:700;color:#9ca3af;letter-spacing:0.05em;text-transform:uppercase;min-width:46px;">Year</span>
+                        <div class="stats-year-pills">
+                            <button class="year-pill ${selectedYear==='all'?'active':''}" data-year="all">All</button>
+                            ${years.map(y => `<button class="year-pill ${selectedYear==String(y)?'active':''}" data-year="${y}">${y}</button>`).join('')}
+                        </div>
                     </div>
-                    <div class="stats-summary-line">Showing <strong>${allEvents.length}</strong> event${allEvents.length===1?'':'s'} ${selectedYear==='all' ? 'across all time' : 'in ' + selectedYear}</div>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <span style="font-size:0.75em;font-weight:700;color:#9ca3af;letter-spacing:0.05em;text-transform:uppercase;min-width:46px;">Month</span>
+                        <div class="stats-year-pills">
+                            <button class="month-pill year-pill ${selectedMonth==='all'?'active':''}" data-month="all">All</button>
+                            ${monthNamesFull.map((m, idx) => `<button class="month-pill year-pill ${selectedMonth==String(idx)?'active':''}" data-month="${idx}">${m}</button>`).join('')}
+                        </div>
+                    </div>
+                    <div class="stats-summary-line">
+                        Showing <strong>${allEvents.length}</strong> event${allEvents.length===1?'':'s'}
+                        ${selectedMonth==='all' && selectedYear==='all' ? 'across all time' :
+                          selectedMonth==='all' ? 'in ' + selectedYear :
+                          selectedYear==='all' ? 'in ' + monthNamesFull[parseInt(selectedMonth)] + ' (all years)' :
+                          'in ' + monthNamesFull[parseInt(selectedMonth)] + ' ' + selectedYear}
+                    </div>
                 </div>
 
                 <div class="insights-row">
@@ -2641,13 +2667,14 @@
                     <div class="stats-section">
                         <h2>📅 Monthly Activity</h2>
                         <div class="monthly-chart">
-                            ${monthNames.map(m => {
+                            ${monthNames.map((m, idx) => {
                                 const n = byMonth[m];
                                 const h = n > 0 ? Math.max((n / maxMonth) * 100, 12) : 0;
-                                const cur = m === curMonthName && (selectedYear === 'all' || parseInt(selectedYear) === now.getFullYear());
+                                const isSelected = selectedMonth !== 'all' && parseInt(selectedMonth) === idx;
+                                const cur = isSelected || (selectedMonth === 'all' && m === curMonthName && (selectedYear === 'all' || parseInt(selectedYear) === now.getFullYear()));
                                 return `<div class="month-col">
                                     <div class="month-bar-wrap">
-                                        <div class="month-bar ${cur ? 'current' : ''} ${n === 0 ? 'empty' : ''}" style="height:${h}%">
+                                        <div class="month-bar ${cur ? 'current' : ''} ${n === 0 ? 'empty' : ''}" style="height:${h}%;cursor:pointer;" data-month-bar="${idx}">
                                             ${n > 0 ? `<span class="month-count">${n}</span>` : ''}
                                         </div>
                                     </div>
@@ -2737,9 +2764,23 @@
 
             </div>`;
 
-            statsView.querySelectorAll('.year-pill').forEach(btn => {
+            statsView.querySelectorAll('.year-pill[data-year]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     localStorage.setItem('statsYear', btn.dataset.year);
+                    displayStats();
+                });
+            });
+            statsView.querySelectorAll('.month-pill[data-month]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    localStorage.setItem('statsMonth', btn.dataset.month);
+                    displayStats();
+                });
+            });
+            statsView.querySelectorAll('[data-month-bar]').forEach(bar => {
+                bar.addEventListener('click', () => {
+                    const monthIdx = bar.dataset.monthBar;
+                    const current = localStorage.getItem('statsMonth') || 'all';
+                    localStorage.setItem('statsMonth', current === monthIdx ? 'all' : monthIdx);
                     displayStats();
                 });
             });
