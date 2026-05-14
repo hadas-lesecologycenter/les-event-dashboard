@@ -2910,7 +2910,7 @@
         let lastSheetSync = 0;
         const SYNC_INTERVAL = 30000; // Sync every 30 seconds
 
-        function normalizeEventType(type) {
+        function normalizeTypeKey(type) {
             if (!type) return '';
             return String(type).toUpperCase().replace(/\s+/g, '_');
         }
@@ -2922,7 +2922,7 @@
                     event: {
                         name: event.name,
                         owner: event.owner,
-                        date: event.date instanceof Date ? event.date.toLocaleDateString('en-US') : event.date,
+                        date: event.date instanceof Date ? formatDateForInput(event.date) : event.date,
                         time: event.time || '',
                         endTime: event.endTime || '',
                         location: event.location || '',
@@ -3093,7 +3093,7 @@
                 const params = new URLSearchParams({
                     action: 'getEventMetrics',
                     eventName: event.name,
-                    eventType: normalizeEventType(event.type)
+                    eventType: normalizeTypeKey(event.type)
                 });
                 const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const data = await response.json();
@@ -3135,21 +3135,21 @@
         function renderMetricsDisplay(metrics, event) {
             if (!metrics) return '';
 
-            const normalizedType = normalizeEventType(event.type);
+            const normalizedType = normalizeTypeKey(event.type);
             const isManual = !metrics.source;
             let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
             html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><div style="font-weight: 600; color: #1d5432;">📊 Metrics' + (isManual ? ' (Manual)' : ' (Form)') + '</div>';
             html += `<button onclick="openMetricsEditor(${event.id}, '${normalizedType}')" style="background: #1d5432; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button></div>`;
 
             if (normalizedType === 'PUBLIC_PROGRAM' || normalizedType === 'TABLING') {
-                const participants = displayMetrics.participants || displayMetrics.participants === 0 ? displayMetrics.participants : '-';
+                const participants = metrics.participants || metrics.participants === 0 ? metrics.participants : '-';
                 html += `<div>👥 Participants: <strong>${participants}</strong></div>`;
             }
             if (['FIELD_TRIP', 'PUBLIC_VOLUNTEER_EVENT', 'PRIVATE_VOLUNTEER_EVENT'].includes(normalizedType)) {
-                const volunteers = displayMetrics.volunteers || displayMetrics.volunteers === 0 ? displayMetrics.volunteers : '-';
-                const trees = displayMetrics.trees || displayMetrics.trees === 0 ? displayMetrics.trees : '-';
-                const compost = displayMetrics.compost || displayMetrics.compost === 0 ? displayMetrics.compost : '-';
-                const hours = displayMetrics.hours || displayMetrics.hours === 0 ? displayMetrics.hours : '-';
+                const volunteers = metrics.volunteers || metrics.volunteers === 0 ? metrics.volunteers : '-';
+                const trees = metrics.trees || metrics.trees === 0 ? metrics.trees : '-';
+                const compost = metrics.compost || metrics.compost === 0 ? metrics.compost : '-';
+                const hours = metrics.hours || metrics.hours === 0 ? metrics.hours : '-';
                 html += `<div>👥 Volunteers: <strong>${volunteers}</strong></div>`;
                 html += `<div>🌳 Trees: <strong>${trees}</strong></div>`;
                 html += `<div>♻️ Compost: <strong>${compost} lbs</strong></div>`;
@@ -3246,7 +3246,7 @@
         function syncMetricsToAppsScript(event, metrics, eventType) {
             const payload = {
                 eventName: event.name,
-                eventDate: event.date instanceof Date ? event.date.toISOString().split('T')[0] : event.date,
+                eventDate: event.date instanceof Date ? formatDateForInput(event.date) : event.date,
                 eventType: eventType,
                 owner: event.owner,
                 metrics: metrics
@@ -4080,19 +4080,21 @@
 
         function openGoogleCalendar(event) {
             const pad = n => String(n).padStart(2, '0');
-            const d = new Date(event.date);
+            const d = event.date instanceof Date ? event.date : parseLocalDate(event.date);
             const dateStr = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}`;
 
             let startStr, endStr;
-            if (event.time) {
-                const [sh, sm] = event.time.split(':');
-                startStr = `${dateStr}T${pad(sh)}${pad(sm)}00`;
-                if (event.endTime) {
-                    const [eh, em] = event.endTime.split(':');
-                    endStr = `${dateStr}T${pad(eh)}${pad(em)}00`;
+            const start24 = to24HourTime(event.time);
+            if (start24) {
+                const [sh, sm] = start24.split(':');
+                startStr = `${dateStr}T${sh}${sm}00`;
+                const end24 = to24HourTime(event.endTime);
+                if (end24) {
+                    const [eh, em] = end24.split(':');
+                    endStr = `${dateStr}T${eh}${em}00`;
                 } else {
                     const endD = new Date(d);
-                    endD.setHours(parseInt(sh) + 1, parseInt(sm));
+                    endD.setHours(parseInt(sh, 10) + 1, parseInt(sm, 10));
                     endStr = `${dateStr}T${pad(endD.getHours())}${pad(endD.getMinutes())}00`;
                 }
             } else {
@@ -4226,7 +4228,7 @@
             // Pre-populate with event data
             briefForm.eventNameInternal.value = event.name;
             briefForm.eventLead.value = event.owner || '';
-            briefForm.briefDate.value = event.date.toISOString().split('T')[0];
+            briefForm.briefDate.value = event.date instanceof Date ? formatDateForInput(event.date) : (event.date || '');
             briefForm.startTime.value = event.time || '';
             briefForm.endTime.value = event.endTime || '';
             briefForm.location.value = event.location || '';
@@ -4326,7 +4328,7 @@
             const eventData = {
                 name: event.name,
                 description: event.eventbriefDraft?.description || `${event.name} - ${event.primaryCategory}`,
-                date: event.date.toISOString().split('T')[0],
+                date: event.date instanceof Date ? formatDateForInput(event.date) : event.date,
                 startTime: event.time || '09:00',
                 endTime: event.endTime || '10:00',
                 location: event.location || '',

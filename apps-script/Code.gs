@@ -589,8 +589,9 @@ function rowMatchesMonthYear(dateVal, month, year) {
 }
 
 function findColumnIndex(headers, searchTerm) {
+  const target = String(searchTerm).trim().toLowerCase();
   for (let i = 0; i < headers.length; i++) {
-    if (String(headers[i]).toLowerCase().includes(searchTerm.toLowerCase())) return i;
+    if (String(headers[i]).trim().toLowerCase() === target) return i;
   }
   return -1;
 }
@@ -613,11 +614,13 @@ function parseEventRow(row, headers) {
     date = dateStr instanceof Date ? dateStr : new Date(dateStr);
   }
 
+  const tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  const dateStrOut = date ? Utilities.formatDate(date, tz, 'yyyy-MM-dd') : null;
   return {
-    id: hashCode(name + (date ? date.toString() : '')),
+    id: hashCode(name + (dateStrOut || '')),
     name: name,
     owner: getColumn('Owner') || 'Unassigned',
-    date: date ? date.toISOString().split('T')[0] : null,
+    date: dateStrOut,
     time: formatSheetTime(getColumn('Time')),
     endTime: formatSheetTime(getColumn('End Time')),
     location: getColumn('Location') || '',
