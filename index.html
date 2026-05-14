@@ -1259,6 +1259,167 @@
             font-weight: 500;
         }
         .month-label.current { color: #10b981; font-weight: 700; }
+
+        /* Year filter */
+        .stats-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding-bottom: 8px;
+        }
+        .stats-year-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+        .year-pill {
+            padding: 6px 14px;
+            border: 1.5px solid #d4cec0;
+            background: white;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #6a5a4a;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .year-pill:hover { border-color: #1d5432; color: #1d5432; }
+        .year-pill.active { background: #1d5432; color: white; border-color: #1d5432; }
+        .stats-summary-line {
+            font-size: 0.85em;
+            color: #6a5a4a;
+        }
+        .stats-summary-line strong { color: #1d5432; }
+
+        /* Insights / alerts */
+        .insights-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 12px;
+        }
+        .insight-card {
+            background: white;
+            border-left: 4px solid #1d5432;
+            border-radius: 8px;
+            padding: 14px 16px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .insight-card.warn  { border-left-color: #f59e0b; background: #fffbeb; }
+        .insight-card.alert { border-left-color: #ef4444; background: #fef2f2; }
+        .insight-card.good  { border-left-color: #10b981; background: #f0fdf4; }
+        .insight-icon { font-size: 1.6em; }
+        .insight-body { flex: 1; }
+        .insight-title { font-weight: 700; font-size: 0.9em; color: #2c2416; margin-bottom: 2px; }
+        .insight-desc  { font-size: 0.8em; color: #6a5a4a; }
+
+        /* Owner workload cards */
+        .workload-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 14px;
+        }
+        .workload-card {
+            background: white;
+            border-radius: 12px;
+            padding: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            border-top: 4px solid #1d5432;
+        }
+        .workload-card .owner-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #2c2416;
+        }
+        .workload-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+        .workload-stat { text-align: center; padding: 8px 4px; background: #f9f6f1; border-radius: 6px; }
+        .workload-stat .num { font-size: 1.4em; font-weight: 700; color: #1d5432; line-height: 1.1; }
+        .workload-stat .lbl { font-size: 0.7em; color: #6a5a4a; text-transform: uppercase; letter-spacing: 0.03em; margin-top: 2px; }
+        .workload-stat.overdue .num { color: #ef4444; }
+
+        /* Day of week chart */
+        .dow-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 110px;
+            background: #f9f6f1;
+            border: 1px solid #e5ddd1;
+            border-radius: 10px;
+            padding: 12px 14px 0;
+        }
+        .dow-col { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; }
+        .dow-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; justify-content: center; }
+        .dow-bar {
+            width: 75%;
+            border-radius: 4px 4px 0 0;
+            background: #3b82f6;
+            transition: height 0.4s ease;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .dow-bar.empty { height: 0; }
+        .dow-count { font-size: 0.72em; font-weight: 700; color: white; padding-top: 3px; }
+        .dow-label { font-size: 0.75em; color: #6a5a4a; padding: 4px 0 8px; font-weight: 500; }
+
+        /* Donut chart */
+        .donut-wrap {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+            background: #f9f6f1;
+            border: 1px solid #e5ddd1;
+            border-radius: 10px;
+            padding: 16px 20px;
+        }
+        .donut-svg { flex-shrink: 0; }
+        .donut-legend { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+        .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: 0.88em; }
+        .donut-swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+        .donut-legend-item .donut-name { flex: 1; color: #2c2416; }
+        .donut-legend-item .donut-val  { font-weight: 700; color: #1d5432; }
+
+        /* Events at risk */
+        .risk-list {
+            background: #f9f6f1;
+            border: 1px solid #e5ddd1;
+            border-radius: 10px;
+            padding: 12px;
+        }
+        .risk-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 4px solid #ef4444;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .risk-item:last-child { margin-bottom: 0; }
+        .risk-item:hover { transform: translateX(3px); }
+        .risk-item.warn { border-left-color: #f59e0b; }
+        .risk-name { flex: 1; font-weight: 600; font-size: 0.92em; }
+        .risk-meta { font-size: 0.78em; color: #6a5a4a; }
+        .risk-badge {
+            background: #fef2f2;
+            color: #b91c1c;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: 700;
+        }
+        .risk-item.warn .risk-badge { background: #fffbeb; color: #92400e; }
+        .risk-empty { text-align: center; color: #6a5a4a; font-size: 0.9em; padding: 16px; }
     </style>
 </head>
 <body>
@@ -2229,28 +2390,94 @@
             `;
         }
 
+        const STATS_OWNER_COLORS  = { 'Maddy': '#10b981', 'Hadas': '#3b82f6', 'Gretel': '#f59e0b' };
+        const STATS_CAT_COLORS    = { 'Outreach': '#f59e0b', 'Education': '#3b82f6', 'Stewardship': '#10b981' };
+        const STATS_TYPE_COLORS   = { 'PUBLIC PROGRAM': '#8b5cf6', 'PUBLIC VOLUNTEER EVENT': '#10b981', 'PRIVATE VOLUNTEER EVENT': '#3b82f6', 'FIELD TRIP': '#f59e0b', 'TABLING': '#ef4444' };
+        const STATS_STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#ef4444', 'Canceled': '#9ca3af' };
+        const STATS_TASK_LABELS = {
+            brief: 'Event Brief', eventbrite: 'Eventbrite Page', calendar: 'Calendar Entry',
+            comms: 'Comms Request', compost: 'Compost Order', opsCheckin: 'Ops Check-in',
+            reminder: 'Reminder Email', report: 'Event Report', treeMap: 'Tree Map Update',
+            thankYou: 'Thank-You Email', coordConfirm: 'Coordinator Confirm',
+            coordEmail: 'Coordinator Email', outreachReport: 'Outreach Report',
+            scouting: 'Block Walk', equipment: 'Equipment Reserved'
+        };
+
+        function getStatsDate(e) {
+            const d = e.date instanceof Date ? new Date(e.date) : new Date(e.date);
+            d.setHours(0,0,0,0);
+            return d;
+        }
+
+        function countOverdueTasks(event, now) {
+            const eventDate = getStatsDate(event);
+            const wf = getEventWorkflow(event);
+            const all = [...wf.setup, ...wf.execution, ...wf.completion];
+            let count = 0;
+            all.forEach(t => {
+                if (event[t.key] === 'Yes' || event[t.key] === 'N/A') return;
+                const due = new Date(eventDate);
+                due.setDate(due.getDate() + (t.daysOffset || 0));
+                if (due < now) count++;
+            });
+            return count;
+        }
+
+        function buildDonut(data, colors, size = 140) {
+            const total = Object.values(data).reduce((a,b) => a+b, 0);
+            if (total === 0) return '';
+            const cx = size / 2, cy = size / 2;
+            const r = size / 2 - 6;
+            const inner = r - 28;
+            let angle = -Math.PI / 2;
+            const slices = Object.entries(data).map(([key, val]) => {
+                const frac = val / total;
+                const a1 = angle;
+                const a2 = angle + frac * Math.PI * 2;
+                angle = a2;
+                const large = frac > 0.5 ? 1 : 0;
+                const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+                const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+                const x3 = cx + inner * Math.cos(a2), y3 = cy + inner * Math.sin(a2);
+                const x4 = cx + inner * Math.cos(a1), y4 = cy + inner * Math.sin(a1);
+                const path = `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${inner} ${inner} 0 ${large} 0 ${x4} ${y4} Z`;
+                return `<path d="${path}" fill="${colors[key] || '#1d5432'}" stroke="white" stroke-width="2"/>`;
+            }).join('');
+            return `<svg class="donut-svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                ${slices}
+                <text x="${cx}" y="${cy - 4}" text-anchor="middle" font-size="22" font-weight="700" fill="#1d5432">${total}</text>
+                <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="10" fill="#6a5a4a" letter-spacing="0.5">EVENTS</text>
+            </svg>`;
+        }
+
         function displayStats() {
             const statsView = document.getElementById('statsView');
-            const allEvents = events;
+            const allEventsRaw = events;
 
-            if (allEvents.length === 0) {
+            if (allEventsRaw.length === 0) {
                 statsView.innerHTML = '<p style="text-align:center;color:#6a5a4a;padding:40px;">No events to display.</p>';
                 return;
             }
 
+            // Year filter
+            const yearSet = new Set(allEventsRaw.map(e => getStatsDate(e).getFullYear()));
+            const years = Array.from(yearSet).sort();
+            let selectedYear = localStorage.getItem('statsYear') || 'all';
+            if (selectedYear !== 'all' && !years.includes(parseInt(selectedYear))) selectedYear = 'all';
+
+            const allEvents = selectedYear === 'all'
+                ? allEventsRaw
+                : allEventsRaw.filter(e => getStatsDate(e).getFullYear() === parseInt(selectedYear));
+
             const now = new Date(); now.setHours(0,0,0,0);
-            const getDate = e => { const d = e.date instanceof Date ? new Date(e.date) : new Date(e.date); d.setHours(0,0,0,0); return d; };
+            const weekFromNow = new Date(now); weekFromNow.setDate(weekFromNow.getDate() + 7);
 
-            const upcoming = allEvents.filter(e => getDate(e) >= now);
-            const past     = allEvents.filter(e => getDate(e) < now);
-            const thisMonth = allEvents.filter(e => { const d = getDate(e); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
-            const nextEvent = [...upcoming].sort((a,b) => getDate(a) - getDate(b))[0];
-            const nextEventDays = nextEvent ? Math.ceil((getDate(nextEvent) - now) / 86400000) : null;
-
-            const OWNER_COLORS  = { 'Maddy': '#10b981', 'Hadas': '#3b82f6', 'Gretel': '#f59e0b' };
-            const CAT_COLORS    = { 'Outreach': '#f59e0b', 'Education': '#3b82f6', 'Stewardship': '#10b981' };
-            const TYPE_COLORS   = { 'PUBLIC PROGRAM': '#8b5cf6', 'PUBLIC VOLUNTEER EVENT': '#10b981', 'PRIVATE VOLUNTEER EVENT': '#3b82f6', 'FIELD TRIP': '#f59e0b', 'TABLING': '#ef4444' };
-            const STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#ef4444', 'Canceled': '#9ca3af' };
+            const upcoming = allEvents.filter(e => getStatsDate(e) >= now);
+            const past     = allEvents.filter(e => getStatsDate(e) < now);
+            const thisWeek = allEvents.filter(e => { const d = getStatsDate(e); return d >= now && d <= weekFromNow; });
+            const thisMonth = allEvents.filter(e => { const d = getStatsDate(e); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+            const nextEvent = [...upcoming].sort((a,b) => getStatsDate(a) - getStatsDate(b))[0];
+            const nextEventDays = nextEvent ? Math.ceil((getStatsDate(nextEvent) - now) / 86400000) : null;
 
             const countBy = (arr, key) => arr.reduce((acc, e) => { const v = e[key] || 'Unknown'; acc[v] = (acc[v]||0)+1; return acc; }, {});
             const byOwner    = countBy(allEvents, 'owner');
@@ -2260,11 +2487,17 @@
 
             const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
             const byMonth = Object.fromEntries(monthNames.map(m => [m, 0]));
-            allEvents.forEach(e => { byMonth[monthNames[getDate(e).getMonth()]]++; });
+            allEvents.forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
             const maxMonth = Math.max(...Object.values(byMonth), 1);
             const curMonthName = monthNames[now.getMonth()];
 
-            // Overall task completion across active events
+            // Day of week distribution
+            const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+            const byDow = Object.fromEntries(dowNames.map(d => [d, 0]));
+            allEvents.forEach(e => { byDow[dowNames[getStatsDate(e).getDay()]]++; });
+            const maxDow = Math.max(...Object.values(byDow), 1);
+
+            // Active events & task completion
             const activeEvents = allEvents.filter(e => e.status === 'In Progress' || e.status === 'Planning');
             let totalT = 0, doneT = 0;
             activeEvents.forEach(e => {
@@ -2275,21 +2508,46 @@
             });
             const overallRate = totalT > 0 ? Math.round((doneT / totalT) * 100) : 0;
 
-            // Per-task completion with human-readable labels
-            const TASK_LABELS = {
-                brief: 'Event Brief', eventbrite: 'Eventbrite Page', calendar: 'Calendar Entry',
-                comms: 'Comms Request', compost: 'Compost Order', opsCheckin: 'Ops Check-in',
-                reminder: 'Reminder Email', report: 'Event Report', treeMap: 'Tree Map Update',
-                thankYou: 'Thank-You Email', coordConfirm: 'Coordinator Confirm',
-                coordEmail: 'Coordinator Email', outreachReport: 'Outreach Report',
-                scouting: 'Block Walk', equipment: 'Equipment Reserved'
-            };
-            const taskStats = Object.entries(TASK_LABELS).map(([key, label]) => {
+            // Per-task completion
+            const taskStats = Object.entries(STATS_TASK_LABELS).map(([key, label]) => {
                 const applicable = allEvents.filter(e => e[key] !== undefined && e[key] !== 'N/A');
                 if (!applicable.length) return null;
                 const completed = applicable.filter(e => e[key] === 'Yes').length;
                 return { label, completed, applicable: applicable.length, pct: Math.round((completed / applicable.length) * 100) };
             }).filter(Boolean).sort((a,b) => b.pct - a.pct);
+
+            // Events at risk: upcoming events with overdue tasks
+            const atRisk = upcoming
+                .filter(e => e.status !== 'Canceled' && e.status !== 'Complete')
+                .map(e => ({ event: e, overdue: countOverdueTasks(e, now), daysAway: Math.ceil((getStatsDate(e) - now) / 86400000) }))
+                .filter(r => r.overdue > 0)
+                .sort((a,b) => b.overdue - a.overdue || a.daysAway - b.daysAway)
+                .slice(0, 6);
+
+            // Owner workload
+            const ownerWorkload = Object.keys(byOwner).map(owner => {
+                const ownerEvents = allEvents.filter(e => e.owner === owner);
+                const ownerUpcoming = ownerEvents.filter(e => getStatsDate(e) >= now && e.status !== 'Canceled' && e.status !== 'Complete');
+                const ownerOverdue = ownerUpcoming.reduce((sum, e) => sum + countOverdueTasks(e, now), 0);
+                return { owner, total: ownerEvents.length, upcoming: ownerUpcoming.length, overdue: ownerOverdue };
+            }).sort((a,b) => b.upcoming - a.upcoming);
+
+            // Smart insights
+            const insights = [];
+            if (thisWeek.length > 0) {
+                insights.push({ type: 'good', icon: '📆', title: `${thisWeek.length} event${thisWeek.length>1?'s':''} this week`, desc: thisWeek.map(e => e.name).slice(0,2).join(', ') + (thisWeek.length > 2 ? '…' : '') });
+            }
+            const totalOverdue = atRisk.reduce((s, r) => s + r.overdue, 0);
+            if (totalOverdue > 0) {
+                insights.push({ type: 'alert', icon: '⚠️', title: `${totalOverdue} overdue task${totalOverdue>1?'s':''}`, desc: `Across ${atRisk.length} upcoming event${atRisk.length>1?'s':''}` });
+            }
+            const planningCount = byStatus['Planning'] || 0;
+            if (planningCount > 0) {
+                insights.push({ type: 'warn', icon: '📝', title: `${planningCount} in Planning`, desc: 'Waiting to start execution' });
+            }
+            if (insights.length === 0) {
+                insights.push({ type: 'good', icon: '✨', title: 'All clear', desc: 'No overdue tasks or urgent events' });
+            }
 
             function bar(count, max, color) {
                 const w = Math.max((count / max) * 100, 3);
@@ -2298,6 +2556,26 @@
 
             statsView.innerHTML = `
             <div class="stats-container">
+
+                <div class="stats-toolbar">
+                    <div class="stats-year-pills">
+                        <button class="year-pill ${selectedYear==='all'?'active':''}" data-year="all">All Time</button>
+                        ${years.map(y => `<button class="year-pill ${selectedYear==String(y)?'active':''}" data-year="${y}">${y}</button>`).join('')}
+                    </div>
+                    <div class="stats-summary-line">Showing <strong>${allEvents.length}</strong> event${allEvents.length===1?'':'s'} ${selectedYear==='all' ? 'across all time' : 'in ' + selectedYear}</div>
+                </div>
+
+                <div class="insights-row">
+                    ${insights.map(i => `
+                        <div class="insight-card ${i.type}">
+                            <div class="insight-icon">${i.icon}</div>
+                            <div class="insight-body">
+                                <div class="insight-title">${i.title}</div>
+                                <div class="insight-desc">${i.desc}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
 
                 <div class="stats-kpi-row">
                     <div class="kpi-card kpi-total">
@@ -2328,38 +2606,97 @@
                 </div>
 
                 <div class="stats-section">
-                    <h2>📅 Monthly Activity</h2>
-                    <div class="monthly-chart">
-                        ${monthNames.map(m => {
-                            const n = byMonth[m];
-                            const h = n > 0 ? Math.max((n / maxMonth) * 100, 12) : 0;
-                            const cur = m === curMonthName;
-                            return `<div class="month-col">
-                                <div class="month-bar-wrap">
-                                    <div class="month-bar ${cur ? 'current' : ''} ${n === 0 ? 'empty' : ''}" style="height:${h}%">
-                                        ${n > 0 ? `<span class="month-count">${n}</span>` : ''}
-                                    </div>
+                    <h2>🧑‍🤝‍🧑 Team Workload</h2>
+                    <div class="workload-grid">
+                        ${ownerWorkload.map(w => `
+                            <div class="workload-card" style="border-top-color:${STATS_OWNER_COLORS[w.owner]||'#1d5432'};">
+                                <div class="owner-name">${w.owner}</div>
+                                <div class="workload-stats">
+                                    <div class="workload-stat"><div class="num">${w.total}</div><div class="lbl">Total</div></div>
+                                    <div class="workload-stat"><div class="num">${w.upcoming}</div><div class="lbl">Upcoming</div></div>
+                                    <div class="workload-stat ${w.overdue>0?'overdue':''}"><div class="num">${w.overdue}</div><div class="lbl">Overdue</div></div>
                                 </div>
-                                <div class="month-label ${cur ? 'current' : ''}">${m}</div>
-                            </div>`;
-                        }).join('')}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                ${atRisk.length > 0 ? `
+                <div class="stats-section">
+                    <h2>⚠️ Events at Risk</h2>
+                    <div class="risk-list">
+                        ${atRisk.map(r => `
+                            <div class="risk-item ${r.daysAway <= 7 ? '' : 'warn'}" onclick="openEventDetailsModal(${r.event.id})">
+                                <div style="flex:1;">
+                                    <div class="risk-name">${r.event.name}</div>
+                                    <div class="risk-meta">${r.event.owner} · ${formatDate(getStatsDate(r.event))} · ${r.daysAway === 0 ? 'today' : r.daysAway + ' day' + (r.daysAway>1?'s':'') + ' away'}</div>
+                                </div>
+                                <div class="risk-badge">${r.overdue} overdue</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>` : ''}
+
+                <div class="stats-two-col">
+                    <div class="stats-section">
+                        <h2>📅 Monthly Activity</h2>
+                        <div class="monthly-chart">
+                            ${monthNames.map(m => {
+                                const n = byMonth[m];
+                                const h = n > 0 ? Math.max((n / maxMonth) * 100, 12) : 0;
+                                const cur = m === curMonthName && (selectedYear === 'all' || parseInt(selectedYear) === now.getFullYear());
+                                return `<div class="month-col">
+                                    <div class="month-bar-wrap">
+                                        <div class="month-bar ${cur ? 'current' : ''} ${n === 0 ? 'empty' : ''}" style="height:${h}%">
+                                            ${n > 0 ? `<span class="month-count">${n}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="month-label ${cur ? 'current' : ''}">${m}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                    <div class="stats-section">
+                        <h2>📆 Day of Week</h2>
+                        <div class="dow-chart">
+                            ${dowNames.map(d => {
+                                const n = byDow[d];
+                                const h = n > 0 ? Math.max((n / maxDow) * 100, 12) : 0;
+                                return `<div class="dow-col">
+                                    <div class="dow-bar-wrap">
+                                        <div class="dow-bar ${n === 0 ? 'empty' : ''}" style="height:${h}%">
+                                            ${n > 0 ? `<span class="dow-count">${n}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="dow-label">${d}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
                     </div>
                 </div>
 
                 <div class="stats-two-col">
                     <div class="stats-section">
-                        <h2>👥 By Owner</h2>
-                        <div class="chart-container">
-                            ${Object.entries(byOwner).sort((a,b)=>b[1]-a[1]).map(([owner,n]) =>
-                                `<div class="chart-row"><div class="chart-label">${owner}</div>${bar(n, Math.max(...Object.values(byOwner)), OWNER_COLORS[owner]||'#1d5432')}</div>`
-                            ).join('')}
+                        <h2>🏷️ Category Mix</h2>
+                        <div class="donut-wrap">
+                            ${buildDonut(byCategory, STATS_CAT_COLORS, 140)}
+                            <div class="donut-legend">
+                                ${Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,n]) => {
+                                    const pct = Math.round((n / allEvents.length) * 100);
+                                    return `<div class="donut-legend-item">
+                                        <span class="donut-swatch" style="background:${STATS_CAT_COLORS[cat]||'#1d5432'}"></span>
+                                        <span class="donut-name">${cat}</span>
+                                        <span class="donut-val">${n} · ${pct}%</span>
+                                    </div>`;
+                                }).join('')}
+                            </div>
                         </div>
                     </div>
                     <div class="stats-section">
-                        <h2>🏷️ By Category</h2>
+                        <h2>👥 By Owner</h2>
                         <div class="chart-container">
-                            ${Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,n]) =>
-                                `<div class="chart-row"><div class="chart-label">${cat}</div>${bar(n, Math.max(...Object.values(byCategory)), CAT_COLORS[cat]||'#1d5432')}</div>`
+                            ${Object.entries(byOwner).sort((a,b)=>b[1]-a[1]).map(([owner,n]) =>
+                                `<div class="chart-row"><div class="chart-label">${owner}</div>${bar(n, Math.max(...Object.values(byOwner)), STATS_OWNER_COLORS[owner]||'#1d5432')}</div>`
                             ).join('')}
                         </div>
                     </div>
@@ -2370,7 +2707,7 @@
                         <h2>🎯 By Type</h2>
                         <div class="chart-container">
                             ${Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type,n]) =>
-                                `<div class="chart-row"><div class="chart-label" style="font-size:0.8em;width:145px;min-width:145px">${type}</div>${bar(n, Math.max(...Object.values(byType)), TYPE_COLORS[type]||'#1d5432')}</div>`
+                                `<div class="chart-row"><div class="chart-label" style="font-size:0.8em;width:145px;min-width:145px">${type}</div>${bar(n, Math.max(...Object.values(byType)), STATS_TYPE_COLORS[type]||'#1d5432')}</div>`
                             ).join('')}
                         </div>
                     </div>
@@ -2378,7 +2715,7 @@
                         <h2>✅ By Status</h2>
                         <div class="chart-container">
                             ${Object.entries(byStatus).sort((a,b)=>b[1]-a[1]).map(([status,n]) =>
-                                `<div class="chart-row"><div class="chart-label">${status}</div>${bar(n, Math.max(...Object.values(byStatus)), STATUS_COLORS[status]||'#1d5432')}</div>`
+                                `<div class="chart-row"><div class="chart-label">${status}</div>${bar(n, Math.max(...Object.values(byStatus)), STATS_STATUS_COLORS[status]||'#1d5432')}</div>`
                             ).join('')}
                         </div>
                     </div>
@@ -2399,6 +2736,13 @@
                 </div>
 
             </div>`;
+
+            statsView.querySelectorAll('.year-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    localStorage.setItem('statsYear', btn.dataset.year);
+                    displayStats();
+                });
+            });
         }
 
                 function switchView(view) {
