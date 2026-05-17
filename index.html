@@ -2034,8 +2034,8 @@
         function normalizeEventType(type) {
             if (!type) return 'FIELD TRIP';
             const valid = ['FIELD TRIP', 'PRIVATE VOLUNTEER EVENT', 'PUBLIC VOLUNTEER EVENT', 'PUBLIC PROGRAM', 'TABLING'];
-            const spaced = type.replace(/_/g, ' ');
-            return valid.includes(spaced) ? spaced : 'FIELD TRIP';
+            const upper = type.replace(/_/g, ' ').trim().toUpperCase();
+            return valid.includes(upper) ? upper : type;
         }
 
         // Initialize events from spreadsheet on load
