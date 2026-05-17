@@ -2863,6 +2863,7 @@
             document.getElementById('tasksView').style.display = view === 'tasks' ? 'block' : 'none';
             document.getElementById('kanbanView').style.display = view === 'kanban' ? 'block' : 'none';
             document.getElementById('statsView').style.display = view === 'stats' ? 'block' : 'none';
+            document.getElementById('sharedFilterBar').style.display = view === 'stats' ? 'none' : '';
 
             if (view === 'stats') {
                 displayStats();
