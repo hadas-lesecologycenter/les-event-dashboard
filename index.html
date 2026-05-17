@@ -2033,9 +2033,24 @@
 
         function normalizeEventType(type) {
             if (!type) return 'FIELD TRIP';
-            const valid = ['FIELD TRIP', 'PRIVATE VOLUNTEER EVENT', 'PUBLIC VOLUNTEER EVENT', 'PUBLIC PROGRAM', 'TABLING'];
-            const upper = type.replace(/_/g, ' ').trim().toUpperCase();
-            return valid.includes(upper) ? upper : type;
+            const t = type.replace(/_/g, ' ').trim().toUpperCase();
+
+            // Exact canonical matches
+            const canonical = ['FIELD TRIP', 'PRIVATE VOLUNTEER EVENT', 'PUBLIC VOLUNTEER EVENT', 'PUBLIC PROGRAM', 'TABLING'];
+            if (canonical.includes(t)) return t;
+
+            // Keyword-based fallback (order matters — more specific first)
+            if (t.includes('PRIVATE')) return 'PRIVATE VOLUNTEER EVENT';
+            if (t.includes('PUBLIC VOLUNTEER') || t.includes('PUBLIC VOL')) return 'PUBLIC VOLUNTEER EVENT';
+            if (t.includes('FIELD TRIP') || t.includes('SCHOOL')) return 'FIELD TRIP';
+            if (t.includes('TABLING')) return 'TABLING';
+            if (t.includes('WORKSHOP') || t.includes('PROGRAM') || t.includes('WALK') ||
+                t.includes('VIRTUAL') || t.includes('CBLES') || t.includes('TALK') ||
+                t.includes('TOUR') || t.includes('SESSION') || t.includes('INFO')) return 'PUBLIC PROGRAM';
+            if (t.includes('PUBLIC')) return 'PUBLIC VOLUNTEER EVENT';
+            if (t.includes('VOLUNTEER') || t.includes('STC') || t.includes('STEWARDSHIP')) return 'PRIVATE VOLUNTEER EVENT';
+
+            return 'PUBLIC PROGRAM';
         }
 
         // Initialize events from spreadsheet on load
