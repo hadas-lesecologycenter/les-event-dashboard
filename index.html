@@ -2032,14 +2032,10 @@
         }
 
         function normalizeEventType(type) {
-            const typeMap = {
-                'TABLING': 'TABLING',
-                'PUBLIC_PROGRAM': 'PUBLIC PROGRAM',
-                'PRIVATE_VOLUNTEER_EVENT': 'PRIVATE VOLUNTEER EVENT',
-                'PUBLIC_VOLUNTEER_EVENT': 'PUBLIC VOLUNTEER EVENT',
-                'FIELD_TRIP': 'FIELD TRIP'
-            };
-            return typeMap[type] || 'FIELD TRIP';
+            if (!type) return 'FIELD TRIP';
+            const valid = ['FIELD TRIP', 'PRIVATE VOLUNTEER EVENT', 'PUBLIC VOLUNTEER EVENT', 'PUBLIC PROGRAM', 'TABLING'];
+            const spaced = type.replace(/_/g, ' ');
+            return valid.includes(spaced) ? spaced : 'FIELD TRIP';
         }
 
         // Initialize events from spreadsheet on load
@@ -3533,9 +3529,11 @@
         function loadEvents() {
 
             const applyDefaults = (e) => {
-                const isPrivateStewardship = e.type === 'PRIVATE VOLUNTEER EVENT' && e.primaryCategory === 'Stewardship';
+                const type = normalizeEventType(e.type);
+                const isPrivateStewardship = type === 'PRIVATE VOLUNTEER EVENT' && e.primaryCategory === 'Stewardship';
                 return {
                     ...e,
+                    type,
                     date: parseLocalDate(e.date),
                     volunteer: e.volunteer !== undefined ? e.volunteer : (isPrivateStewardship ? 'No' : 'N/A')
                 };
