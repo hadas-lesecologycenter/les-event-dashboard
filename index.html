@@ -3006,7 +3006,7 @@
                         if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
                         if (s.location !== undefined) localEvent.location = s.location;
                         if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category; }
-                        if (s.type)     localEvent.type     = s.type;
+                        if (s.type)     localEvent.type     = normalizeEventType(s.type);
                         // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
                         // a race condition where a 30-second poll overwrites a locally-checked task
                         // back to 'No' before the sheet write has been confirmed.
@@ -3030,7 +3030,7 @@
                             location: s.location || '',
                             category: s.category || '',
                             primaryCategory: s.category || '',
-                            type: s.type || 'FIELD TRIP',
+                            type: normalizeEventType(s.type),
                             status: s.status || 'Planning',
                             brief: s.brief || 'No',
                             eventbrite: s.eventbrite || 'No',
@@ -3544,6 +3544,7 @@
             if (saved) {
                 try {
                     events = JSON.parse(saved).map(applyDefaults);
+                    saveEvents();
                     return;
                 } catch (e) {
                     console.warn('Failed to load from localStorage:', e);
