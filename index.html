@@ -4176,9 +4176,10 @@
             if (!event || event.status !== 'Planning') return;
 
             const workflow = getEventWorkflow(event);
-            const setupDone = workflow.setup.every(task => event[task.key] === 'Yes' || event[task.key] === 'N/A');
+            const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
+            const anyChecked = allTasks.some(task => event[task.key] === 'Yes');
 
-            if (setupDone) {
+            if (anyChecked) {
                 event.status = 'In Progress';
                 syncEventToSheet(event);
             }
