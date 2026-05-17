@@ -2462,6 +2462,52 @@
             </svg>`;
         }
 
+        let _statsAllEvents = [];
+
+        function showStatEvents(field, value, clickEvent) {
+            const matching = _statsAllEvents
+                .filter(e => e[field] === value)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            let panel = document.getElementById('statDrillPanel');
+            if (!panel) {
+                panel = document.createElement('div');
+                panel.id = 'statDrillPanel';
+                panel.style.cssText = 'position:fixed;background:white;border-radius:10px;box-shadow:0 6px 24px rgba(0,0,0,0.18);padding:16px;z-index:9000;max-width:320px;max-height:380px;overflow-y:auto;font-size:0.9em;';
+                document.body.appendChild(panel);
+                document.addEventListener('click', (e) => {
+                    if (panel && !panel.contains(e.target)) panel.style.display = 'none';
+                }, true);
+            }
+
+            const label = value;
+            panel.innerHTML = `
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;border-bottom:1px solid #e8ddd0;padding-bottom:8px;">
+                    <strong style="color:#1d5432;">${label} <span style="font-weight:400;color:#9ca3af;">(${matching.length})</span></strong>
+                    <button onclick="document.getElementById('statDrillPanel').style.display='none'" style="background:none;border:none;font-size:1.2em;cursor:pointer;color:#9ca3af;line-height:1;">×</button>
+                </div>
+                ${matching.length === 0 ? '<p style="color:#9ca3af;">No events</p>' : matching.map(e =>
+                    `<div onclick="closeStatPanel();openEventDetailsModal(${e.id})" style="padding:6px 4px;border-bottom:1px solid #f0ebe4;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;" onmouseover="this.style.background='#f9f7f2'" onmouseout="this.style.background=''">
+                        <span style="color:#2c2416;font-weight:500;">${e.name}</span>
+                        <span style="color:#9ca3af;font-size:0.85em;white-space:nowrap;">${formatDate(e.date)}</span>
+                    </div>`
+                ).join('')}`;
+
+            const vw = window.innerWidth, vh = window.innerHeight;
+            let x = clickEvent.clientX + 12, y = clickEvent.clientY - 20;
+            panel.style.display = 'block';
+            const pw = panel.offsetWidth || 320, ph = panel.offsetHeight || 200;
+            if (x + pw > vw - 10) x = clickEvent.clientX - pw - 12;
+            if (y + ph > vh - 10) y = vh - ph - 10;
+            panel.style.left = Math.max(10, x) + 'px';
+            panel.style.top = Math.max(10, y) + 'px';
+        }
+
+        function closeStatPanel() {
+            const p = document.getElementById('statDrillPanel');
+            if (p) p.style.display = 'none';
+        }
+
         function displayStats() {
             const statsView = document.getElementById('statsView');
             const allEventsRaw = events;
@@ -2489,6 +2535,7 @@
             const allEvents = selectedMonth === 'all'
                 ? yearFiltered
                 : yearFiltered.filter(e => getStatsDate(e).getMonth() === parseInt(selectedMonth));
+            _statsAllEvents = allEvents;
 
             const now = new Date(); now.setHours(0,0,0,0);
             const weekFromNow = new Date(now); weekFromNow.setDate(weekFromNow.getDate() + 7);
@@ -2722,7 +2769,7 @@
                             <div class="donut-legend">
                                 ${Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,n]) => {
                                     const pct = Math.round((n / allEvents.length) * 100);
-                                    return `<div class="donut-legend-item">
+                                    return `<div class="donut-legend-item stat-drillable" data-stat-field="primaryCategory" data-stat-value="${cat}" style="cursor:pointer;" title="Click to see events">
                                         <span class="donut-swatch" style="background:${STATS_CAT_COLORS[cat]||'#1d5432'}"></span>
                                         <span class="donut-name">${cat}</span>
                                         <span class="donut-val">${n} · ${pct}%</span>
@@ -2735,7 +2782,7 @@
                         <h2>👥 By Owner</h2>
                         <div class="chart-container">
                             ${Object.entries(byOwner).sort((a,b)=>b[1]-a[1]).map(([owner,n]) =>
-                                `<div class="chart-row"><div class="chart-label">${owner}</div>${bar(n, Math.max(...Object.values(byOwner)), STATS_OWNER_COLORS[owner]||'#1d5432')}</div>`
+                                `<div class="chart-row stat-drillable" data-stat-field="owner" data-stat-value="${owner}" style="cursor:pointer;" title="Click to see events"><div class="chart-label">${owner}</div>${bar(n, Math.max(...Object.values(byOwner)), STATS_OWNER_COLORS[owner]||'#1d5432')}</div>`
                             ).join('')}
                         </div>
                     </div>
@@ -2746,7 +2793,7 @@
                         <h2>🎯 By Type</h2>
                         <div class="chart-container">
                             ${Object.entries(byType).sort((a,b)=>b[1]-a[1]).map(([type,n]) =>
-                                `<div class="chart-row"><div class="chart-label" style="font-size:0.8em;width:145px;min-width:145px">${type}</div>${bar(n, Math.max(...Object.values(byType)), STATS_TYPE_COLORS[type]||'#1d5432')}</div>`
+                                `<div class="chart-row stat-drillable" data-stat-field="type" data-stat-value="${type}" style="cursor:pointer;" title="Click to see events"><div class="chart-label" style="font-size:0.8em;width:145px;min-width:145px">${type}</div>${bar(n, Math.max(...Object.values(byType)), STATS_TYPE_COLORS[type]||'#1d5432')}</div>`
                             ).join('')}
                         </div>
                     </div>
@@ -2754,7 +2801,7 @@
                         <h2>✅ By Status</h2>
                         <div class="chart-container">
                             ${Object.entries(byStatus).sort((a,b)=>b[1]-a[1]).map(([status,n]) =>
-                                `<div class="chart-row"><div class="chart-label">${status}</div>${bar(n, Math.max(...Object.values(byStatus)), STATS_STATUS_COLORS[status]||'#1d5432')}</div>`
+                                `<div class="chart-row stat-drillable" data-stat-field="status" data-stat-value="${status}" style="cursor:pointer;" title="Click to see events"><div class="chart-label">${status}</div>${bar(n, Math.max(...Object.values(byStatus)), STATS_STATUS_COLORS[status]||'#1d5432')}</div>`
                             ).join('')}
                         </div>
                     </div>
@@ -2794,6 +2841,13 @@
                     const current = localStorage.getItem('statsMonth') || 'all';
                     localStorage.setItem('statsMonth', current === monthIdx ? 'all' : monthIdx);
                     displayStats();
+                });
+            });
+
+            statsView.querySelectorAll('.stat-drillable').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showStatEvents(el.dataset.statField, el.dataset.statValue, e);
                 });
             });
         }
