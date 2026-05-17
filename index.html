@@ -3048,6 +3048,7 @@
                         });
                     });
 
+                    events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
                     lastSheetSync = now;
                     applyFilters();
@@ -3366,6 +3367,8 @@
 
         function init() {
             loadEvents();
+            events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
+            saveEvents();
             setupEventListeners();
             setupCalendarListeners();
             applyFilters();
