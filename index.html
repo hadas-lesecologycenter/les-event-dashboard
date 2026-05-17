@@ -5055,6 +5055,14 @@
                 autoCompleteEvent(event);
                 applyFilters();
                 openEventDetailsModal(eventId);
+
+                if (isChecked) {
+                    if (taskKey === 'calendar') openGoogleCalendar(event);
+                    if (taskKey === 'brief') openBriefModal(event);
+                    if (taskKey === 'eventbrite') openEventbriteForm(event);
+                    if (taskKey === 'compost') openCompostSheet(event);
+                    if (taskKey === 'report') openEventReportingForm(event);
+                }
             }
         }
 
