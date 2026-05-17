@@ -3074,7 +3074,7 @@
                         if (s.time)     localEvent.time     = s.time;
                         if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
                         if (s.location !== undefined) localEvent.location = s.location;
-                        if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category; }
+                        if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category.split(',')[0].trim(); }
                         if (s.type)     localEvent.type     = normalizeEventType(s.type);
                         // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
                         // a race condition where a 30-second poll overwrites a locally-checked task
@@ -3098,7 +3098,7 @@
                             time: s.time || '12:00 PM',
                             location: s.location || '',
                             category: s.category || '',
-                            primaryCategory: s.category || '',
+                            primaryCategory: s.category ? s.category.split(',')[0].trim() : '',
                             type: normalizeEventType(s.type),
                             status: s.status || 'Planning',
                             brief: s.brief || 'No',
@@ -3602,10 +3602,12 @@
 
             const applyDefaults = (e) => {
                 const type = normalizeEventType(e.type);
-                const isPrivateStewardship = type === 'PRIVATE VOLUNTEER EVENT' && e.primaryCategory === 'Stewardship';
+                const primaryCategory = e.primaryCategory ? e.primaryCategory.split(',')[0].trim() : (e.category ? e.category.split(',')[0].trim() : '');
+                const isPrivateStewardship = type === 'PRIVATE VOLUNTEER EVENT' && primaryCategory === 'Stewardship';
                 return {
                     ...e,
                     type,
+                    primaryCategory,
                     date: parseLocalDate(e.date),
                     volunteer: e.volunteer !== undefined ? e.volunteer : (isPrivateStewardship ? 'No' : 'N/A')
                 };
