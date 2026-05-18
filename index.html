@@ -4161,8 +4161,9 @@
                 const isCompleted = task.key === 'brief' && event.eventbriefCompleted;
 
                 let draftLinkHTML = '';
-                if (hasDraft) {
-                    draftLinkHTML = `<a href="#" class="draft-link" data-event-id="${event.id}" onclick="event.preventDefault(); openBriefModal(events.find(e => e.id === ${event.id}));">📝 View Draft</a>`;
+                if (task.key === 'brief' && !isNA) {
+                    const label = event.eventbriefCompleted ? '📋 View Brief' : (event.eventbriefDraft ? '📝 View Draft' : '📝 Create Brief');
+                    draftLinkHTML = `<a href="#" class="draft-link" data-event-id="${event.id}" onclick="event.preventDefault(); openBriefModal(events.find(e => e.id === ${event.id}));">${label}</a>`;
                 }
 
                 let externalLinkHTML = '';
