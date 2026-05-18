@@ -4257,6 +4257,9 @@
             events = events.filter(e => e.id !== eventId);
             saveEvents();
             applyFilters();
+            // Also remove from Google Sheet
+            const params = new URLSearchParams({ action: 'deleteEvent', name: event.name });
+            fetch(`${APPS_SCRIPT_URL}?${params}`).catch(() => {});
         }
 
         function autoProgressEvent(event) {
