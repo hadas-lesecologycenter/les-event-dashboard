@@ -3064,6 +3064,7 @@
                     data.events.forEach(e => { sheetEventMap[e.name] = e; sheetEventMap[e.name.trim()] = e; });
 
                     const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
+                    const deletedNames = getDeletedNames();
 
                     // Full mirror: update all fields from sheet for existing events
                     events.forEach(localEvent => {
@@ -3088,9 +3089,10 @@
                         });
                     });
 
-                    // Add new events from sheet that don't exist locally
+                    // Add new events from sheet that don't exist locally and haven't been deleted
                     data.events.forEach(s => {
                         if (existingNames.has(s.name.trim().toLowerCase())) return;
+                        if (deletedNames.has(s.name.trim().toLowerCase())) return;
                         events.push({
                             id: Math.max(...events.map(e => e.id), 0) + 1,
                             name: s.name,
@@ -4239,10 +4241,19 @@
             document.getElementById('eventForm').dataset.editingId = eventId;
         }
 
+        function getDeletedNames() {
+            try { return new Set(JSON.parse(localStorage.getItem('lesDeletedEvents') || '[]')); } catch { return new Set(); }
+        }
+        function markDeleted(name) {
+            const s = getDeletedNames(); s.add(name.trim().toLowerCase());
+            localStorage.setItem('lesDeletedEvents', JSON.stringify([...s]));
+        }
+
         function deleteEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
             if (!confirm(`Are you sure you want to delete "${event.name}"? This cannot be undone.`)) return;
+            markDeleted(event.name);
             events = events.filter(e => e.id !== eventId);
             saveEvents();
             applyFilters();
