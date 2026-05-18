@@ -1967,7 +1967,7 @@
                 <div style="border-top: 1px solid #e8ddd0; padding-top: 16px;">
                     <div style="display: flex; gap: 10px; align-items: center;">
                         <button type="button" class="cancel-btn" onclick="closeEventbritePreview()">Cancel</button>
-                        <button type="button" class="save-btn" id="confirmEventbriteBtn">Open Eventbrite</button>
+                        <button type="button" class="save-btn" id="confirmEventbriteBtn">Create on Eventbrite</button>
                     </div>
                 </div>
             </div>
@@ -4620,9 +4620,73 @@
             });
         }
 
-        function createEventbriteEvent() {
-            closeEventbritePreview();
-            window.open('https://www.eventbrite.com/create', '_blank');
+        async function createEventbriteEvent() {
+            if (!currentBriefEvent) return;
+            const briefFormOpen = document.getElementById('briefModal') && document.getElementById('briefModal').classList.contains('active');
+            const brief = briefFormOpen ? collectBriefData() : (currentBriefEvent.eventbriefDraft || {});
+            const event = currentBriefEvent;
+
+            const confirmBtn = document.getElementById('confirmEventbriteBtn');
+            confirmBtn.disabled = true;
+            confirmBtn.textContent = 'Creating...';
+
+            try {
+                const dateStr = event.date instanceof Date ? formatDateForInput(event.date) : event.date;
+                const start24 = parseTimeTo24h(event.time);
+                const endH = String(parseInt(start24.split(':')[0]) + 1).padStart(2, '0');
+                const end24 = event.endTime ? parseTimeTo24h(event.endTime) : `${endH}:${start24.split(':')[1]}`;
+                const startUtc = new Date(`${dateStr}T${start24}:00`).toISOString();
+                const endUtc = new Date(`${dateStr}T${end24}:00`).toISOString();
+
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=createEventbriteEvent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        event: {
+                            name: event.name,
+                            startUtc,
+                            endUtc,
+                            location: event.location || '',
+                            notes: event.notes || ''
+                        },
+                        brief: {
+                            description: buildEbDescription(event, brief),
+                            visual: brief.visual || event.eventbriefDraft?.visual || ''
+                        }
+                    })
+                });
+
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Unknown error');
+
+                event.eventbriteId = result.eventId;
+                event.eventbriteUrl = result.eventUrl;
+                event.eventbrite = 'Yes';
+                saveEvents();
+                syncEventToSheet(event);
+                closeEventbritePreview();
+                if (briefFormOpen) closeBriefModal();
+                applyFilters();
+
+                window.open(result.eventUrl, '_blank');
+
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:380px;';
+                toast.innerHTML = `Draft created on Eventbrite!<br><a href="${result.eventUrl}" target="_blank" style="color:white;text-decoration:underline;font-size:0.9em;">Open on Eventbrite</a>`;
+                document.body.appendChild(toast);
+                setTimeout(() => { if (toast.parentNode) toast.remove(); }, 10000);
+
+            } catch (error) {
+                console.error('Eventbrite error:', error);
+                const errToast = document.createElement('div');
+                errToast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:380px;white-space:pre-wrap;';
+                errToast.textContent = `Failed to create Eventbrite event\n\n${error.message}`;
+                document.body.appendChild(errToast);
+                setTimeout(() => { if (errToast.parentNode) errToast.remove(); }, 8000);
+            } finally {
+                confirmBtn.disabled = false;
+                confirmBtn.textContent = 'Create on Eventbrite';
+            }
         }
 
         function showEventbritePreview(briefOverride) {

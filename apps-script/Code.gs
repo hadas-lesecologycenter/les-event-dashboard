@@ -92,6 +92,10 @@ function doPost(e) {
       return handleSyncEvent(payload);
     }
 
+    if (action === 'createEventbriteEvent') {
+      return handleCreateEventbriteEvent(payload);
+    }
+
     const { eventName, taskField, value } = payload;
 
     if (!eventName || !taskField) {
@@ -397,6 +401,74 @@ function handleSyncEvent(eventData) {
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
     }
+
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({
+      success: false,
+      error: error.toString()
+    })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Create a draft Eventbrite event from event + brief data
+ */
+function handleCreateEventbriteEvent(data) {
+  try {
+    const apiKey = PropertiesService.getScriptProperties().getProperty('EVENTBRITE_API_KEY');
+    const orgId = PropertiesService.getScriptProperties().getProperty('EVENTBRITE_ORG_ID') || '13297911311';
+
+    if (!apiKey) {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: false,
+        error: 'EVENTBRITE_API_KEY not set. Add it in Apps Script → Project Settings → Script Properties.'
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const { event, brief } = data;
+    const description = (brief && brief.description) || event.notes || '';
+
+    const payload = {
+      event: {
+        name: { text: event.name },
+        description: { text: description },
+        start: { timezone: 'America/New_York', utc: event.startUtc },
+        end: { timezone: 'America/New_York', utc: event.endUtc },
+        currency: 'USD',
+        status: 'draft',
+        online_event: false
+      }
+    };
+
+    if (event.location) {
+      payload.event.location = {
+        address: { address_1: event.location, region: 'New York', country_code: 'US' }
+      };
+    }
+
+    const response = UrlFetchApp.fetch(
+      'https://www.eventbriteapi.com/v3/organizations/' + orgId + '/events/',
+      {
+        method: 'post',
+        headers: {
+          'Authorization': 'Bearer ' + apiKey,
+          'Content-Type': 'application/json'
+        },
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true
+      }
+    );
+
+    const result = JSON.parse(response.getContentText());
+    if (response.getResponseCode() !== 200) {
+      throw new Error(result.error_description || result.detail || JSON.stringify(result));
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      eventId: result.id,
+      eventUrl: 'https://www.eventbrite.com/e/' + result.id
+    })).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
