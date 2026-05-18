@@ -32,6 +32,11 @@ function doGet(e) {
     return handleSyncBrief({ brief });
   }
 
+  if (e && e.parameter && e.parameter.action === 'deleteEvent') {
+    const name = e.parameter.name || '';
+    return handleDeleteEvent(name);
+  }
+
   try {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
@@ -398,6 +403,27 @@ function handleSyncEvent(eventData) {
       success: false,
       error: error.toString()
     })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Delete an event row from the tracker sheet by name
+ */
+function handleDeleteEvent(name) {
+  try {
+    if (!name) throw new Error('Missing event name');
+    const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
+    const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+    const data = sheet.getDataRange().getValues();
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][0]).trim().toLowerCase() === name.trim().toLowerCase()) {
+        sheet.deleteRow(i + 1);
+        return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: true, note: 'row not found' })).setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
