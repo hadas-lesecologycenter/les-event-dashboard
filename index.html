@@ -1920,42 +1920,54 @@
     <div id="eventbritePreviewModal" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
             <div class="modal-header">
-                <h3>Eventbrite Event Preview</h3>
+                <h3>Create Eventbrite Listing</h3>
                 <button class="modal-close" onclick="closeEventbritePreview()">&times;</button>
             </div>
             <div style="padding: 20px;">
-                <div style="background: #f9f7f2; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                    <div id="ebPreviewImageWrap" style="margin-bottom: 15px; display:none;">
-                        <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Image</label>
-                        <img id="ebPreviewImage" src="" alt="Event image" style="display:block;margin-top:6px;max-width:100%;max-height:180px;border-radius:6px;object-fit:cover;">
+                <p style="color:#6a5a4a;font-size:0.9em;margin-bottom:16px;">Copy each field below and paste it into the Eventbrite form. Click <strong>Open Eventbrite</strong> when ready.</p>
+                <div style="background: #f9f7f2; padding: 20px; border-radius: 8px; margin-bottom: 20px; display:flex; flex-direction:column; gap:16px;">
+
+                    <div id="ebPreviewImageWrap" style="display:none;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;">Image URL</label>
+                            <button onclick="ebCopy('ebPreviewImageUrl', this)" style="font-size:0.75em;padding:3px 10px;border:1px solid #d4c5b0;border-radius:4px;background:white;cursor:pointer;color:#6a5a4a;">Copy</button>
+                        </div>
+                        <img id="ebPreviewImage" src="" alt="Event image" style="display:block;max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-bottom:6px;">
+                        <code id="ebPreviewImageUrl" style="font-size:0.78em;color:#888;word-break:break-all;display:block;"></code>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Event Title</label>
-                        <p id="ebPreviewTitle" style="margin: 5px 0 0 0; color: #2c2416;"></p>
+
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;">Event Title</label>
+                            <button onclick="ebCopy('ebPreviewTitle', this)" style="font-size:0.75em;padding:3px 10px;border:1px solid #d4c5b0;border-radius:4px;background:white;cursor:pointer;color:#6a5a4a;">Copy</button>
+                        </div>
+                        <p id="ebPreviewTitle" style="margin:0;color:#2c2416;font-weight:500;"></p>
                     </div>
-                    <div style="margin-bottom: 15px;">
-                        <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Description</label>
-                        <p id="ebPreviewDescription" style="margin: 5px 0 0 0; color: #2c2416; white-space: pre-wrap; font-size: 0.95em; line-height: 1.5;"></p>
+
+                    <div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;">Description</label>
+                            <button onclick="ebCopy('ebPreviewDescription', this)" style="font-size:0.75em;padding:3px 10px;border:1px solid #d4c5b0;border-radius:4px;background:white;cursor:pointer;color:#6a5a4a;">Copy</button>
+                        </div>
+                        <p id="ebPreviewDescription" style="margin:0;color:#2c2416;white-space:pre-wrap;font-size:0.95em;line-height:1.5;"></p>
                     </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
                         <div>
-                            <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Date & Time</label>
-                            <p id="ebPreviewDateTime" style="margin: 5px 0 0 0; color: #2c2416;"></p>
+                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;display:block;margin-bottom:4px;">Date &amp; Time</label>
+                            <p id="ebPreviewDateTime" style="margin:0;color:#2c2416;font-size:0.95em;"></p>
                         </div>
                         <div>
-                            <label style="font-weight: 600; color: #1d5432; font-size: 0.9em;">Location</label>
-                            <p id="ebPreviewLocation" style="margin: 5px 0 0 0; color: #2c2416;"></p>
+                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;display:block;margin-bottom:4px;">Location</label>
+                            <p id="ebPreviewLocation" style="margin:0;color:#2c2416;font-size:0.95em;"></p>
                         </div>
                     </div>
                 </div>
 
-                <div style="border-top: 1px solid #e8ddd0; padding-top: 20px;">
-                    <p style="color: #6a5a4a; font-size: 0.9em; margin-bottom: 15px;">
-                        A <strong>draft</strong> event will be created on Eventbrite. You can review and publish it there.
-                    </p>
-                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <div style="border-top: 1px solid #e8ddd0; padding-top: 16px;">
+                    <div style="display: flex; gap: 10px; align-items: center;">
                         <button type="button" class="cancel-btn" onclick="closeEventbritePreview()">Cancel</button>
-                        <button type="button" class="save-btn" id="confirmEventbriteBtn">Copy details &amp; Open Eventbrite</button>
+                        <button type="button" class="save-btn" id="confirmEventbriteBtn">Open Eventbrite</button>
                     </div>
                 </div>
             </div>
@@ -4596,44 +4608,21 @@
             return brief;
         }
 
-        async function createEventbriteEvent() {
-            if (!currentBriefEvent) return;
-            const briefFormOpen = document.getElementById('briefModal') && document.getElementById('briefModal').classList.contains('active');
-            const brief = briefFormOpen ? collectBriefData() : (currentBriefEvent.eventbriefDraft || {});
-            const event = currentBriefEvent;
+        function ebCopy(elementId, btn) {
+            const text = document.getElementById(elementId).textContent.trim();
+            navigator.clipboard.writeText(text).then(() => {
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                btn.style.color = '#10b981';
+                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
+            }).catch(() => {
+                prompt('Copy this:', text);
+            });
+        }
 
-            const eventDate = event.date instanceof Date ? event.date : new Date(event.date + 'T12:00:00');
-            const dateStr = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const timeDisplay = event.time ? (event.endTime ? `${event.time} – ${event.endTime}` : event.time) : '';
-            const description = buildEbDescription(event, brief);
-            const imageUrl = brief.visual || event.eventbriefDraft?.visual || '';
-
-            const lines = [
-                `Title: ${event.name}`,
-                `Date: ${dateStr}`,
-                timeDisplay ? `Time: ${timeDisplay}` : '',
-                event.location ? `Location: ${event.location}` : '',
-                '',
-                description ? `Description:\n${description}` : '',
-                imageUrl ? `\nImage URL: ${imageUrl}` : ''
-            ].filter(l => l !== undefined);
-
-            const clipText = lines.join('\n').trim();
-
-            try {
-                await navigator.clipboard.writeText(clipText);
-            } catch (e) {
-                prompt('Copy these details into Eventbrite:', clipText);
-            }
-
+        function createEventbriteEvent() {
             closeEventbritePreview();
             window.open('https://www.eventbrite.com/create', '_blank');
-
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:380px;';
-            toast.innerHTML = 'Event details copied to clipboard.<br><span style="font-size:0.85em;opacity:0.9;">Paste the description &amp; image URL into Eventbrite.</span>';
-            document.body.appendChild(toast);
-            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
         }
 
         function showEventbritePreview(briefOverride) {
@@ -4657,6 +4646,7 @@
             const imgEl = document.getElementById('ebPreviewImage');
             if (imageUrl) {
                 imgEl.src = imageUrl;
+                document.getElementById('ebPreviewImageUrl').textContent = imageUrl;
                 imgWrap.style.display = 'block';
             } else {
                 imgWrap.style.display = 'none';
