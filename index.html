@@ -4787,6 +4787,15 @@
                 confirmBtn.disabled = false;
                 confirmBtn.textContent = 'Create Draft on Eventbrite';
             }
+
+            closeEventbritePreview();
+            window.open('https://www.eventbrite.com/create', '_blank');
+
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:380px;';
+            toast.innerHTML = 'Event details copied to clipboard.<br><span style="font-size:0.85em;opacity:0.9;">Paste the description &amp; image URL into Eventbrite.</span>';
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
         }
 
         function showEventbritePreview(briefOverride) {
