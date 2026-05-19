@@ -4631,7 +4631,9 @@
             confirmBtn.textContent = 'Creating...';
 
             try {
-                const dateStr = event.date instanceof Date ? formatDateForInput(event.date) : event.date;
+                const dateStr = event.date instanceof Date
+                    ? formatDateForInput(event.date)
+                    : String(event.date || '').substring(0, 10);
                 const start24 = parseTimeTo24h(event.time);
                 const endH = String(parseInt(start24.split(':')[0]) + 1).padStart(2, '0');
                 const end24 = event.endTime ? parseTimeTo24h(event.endTime) : `${endH}:${start24.split(':')[1]}`;
