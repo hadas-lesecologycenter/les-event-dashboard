@@ -4638,10 +4638,9 @@
                 const startUtc = new Date(`${dateStr}T${start24}:00`).toISOString();
                 const endUtc = new Date(`${dateStr}T${end24}:00`).toISOString();
 
-                const response = await fetch(`${APPS_SCRIPT_URL}?action=createEventbriteEvent`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain' },
-                    body: JSON.stringify({
+                const ebParams = new URLSearchParams({
+                    action: 'createEventbriteEvent',
+                    data: JSON.stringify({
                         event: {
                             name: event.name,
                             startUtc,
@@ -4655,6 +4654,7 @@
                         }
                     })
                 });
+                const response = await fetch(`${APPS_SCRIPT_URL}?${ebParams}`);
 
                 const result = await response.json();
                 if (!result.success) throw new Error(result.error || 'Unknown error');

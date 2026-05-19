@@ -37,6 +37,11 @@ function doGet(e) {
     return handleDeleteEvent(name);
   }
 
+  if (e && e.parameter && e.parameter.action === 'createEventbriteEvent') {
+    const data = JSON.parse(e.parameter.data || '{}');
+    return handleCreateEventbriteEvent(data);
+  }
+
   try {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
