@@ -5086,6 +5086,10 @@
                             <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Status</label>
                             <div style="color: #1d5432; font-weight: 500;">${event.status || 'Planning'}</div>
                         </div>
+                        ${event.location ? `<div style="grid-column: 1 / -1;">
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Location</label>
+                            <div style="color: #1d5432; font-weight: 500;">📍 ${event.location}</div>
+                        </div>` : ''}
                     </div>
 
                     <div style="margin-bottom: 15px;">
