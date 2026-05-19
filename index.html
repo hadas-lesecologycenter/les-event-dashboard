@@ -1924,7 +1924,7 @@
                 <button class="modal-close" onclick="closeEventbritePreview()">&times;</button>
             </div>
             <div style="padding: 20px;">
-                <p style="color:#6a5a4a;font-size:0.9em;margin-bottom:16px;">Copy each field below and paste it into the Eventbrite form. Click <strong>Open Eventbrite</strong> when ready.</p>
+                <p style="color:#6a5a4a;font-size:0.9em;margin-bottom:16px;">Review the event details below, then click <strong>Create on Eventbrite</strong> to create a draft listing automatically.</p>
                 <div style="background: #f9f7f2; padding: 20px; border-radius: 8px; margin-bottom: 20px; display:flex; flex-direction:column; gap:16px;">
 
                     <div id="ebPreviewImageWrap" style="display:none;">
@@ -4640,7 +4640,7 @@
 
                 const response = await fetch(`${APPS_SCRIPT_URL}?action=createEventbriteEvent`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'text/plain' },
                     body: JSON.stringify({
                         event: {
                             name: event.name,
