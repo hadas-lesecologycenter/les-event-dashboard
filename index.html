@@ -4637,8 +4637,14 @@
                 const start24 = parseTimeTo24h(event.time);
                 const endH = String(parseInt(start24.split(':')[0]) + 1).padStart(2, '0');
                 const end24 = event.endTime ? parseTimeTo24h(event.endTime) : `${endH}:${start24.split(':')[1]}`;
-                const startUtc = new Date(`${dateStr}T${start24}:00`).toISOString();
-                const endUtc = new Date(`${dateStr}T${end24}:00`).toISOString();
+                console.log('EB date debug:', { raw_date: event.date, raw_time: event.time, raw_endTime: event.endTime, dateStr, start24, end24 });
+                const startDate = new Date(`${dateStr}T${start24}:00`);
+                const endDate = new Date(`${dateStr}T${end24}:00`);
+                if (isNaN(startDate) || isNaN(endDate)) {
+                    throw new Error(`Invalid date/time — date: "${event.date}" → "${dateStr}", time: "${event.time}" → "${start24}"`);
+                }
+                const startUtc = startDate.toISOString();
+                const endUtc = endDate.toISOString();
 
                 const ebParams = new URLSearchParams({
                     action: 'createEventbriteEvent',
