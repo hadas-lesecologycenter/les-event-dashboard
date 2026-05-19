@@ -287,7 +287,7 @@
         .filter-pill[data-color="hadas"].active { background: #3a5a8b; border-color: #3a5a8b; }
         .filter-pill[data-color="gretel"].active { background: #5a3a8b; border-color: #5a3a8b; }
         .filter-pill[data-color="planning"].active { background: #fbbf24; border-color: #fbbf24; color: #1a1a1a; }
-        .filter-pill[data-color="hold"].active { background: #ef4444; border-color: #ef4444; }
+        .filter-pill[data-color="hold"].active { background: #6b7280; border-color: #6b7280; }
         .filter-pill[data-color="confirmed"].active { background: #10b981; border-color: #10b981; }
         .filter-pill[data-color="canceled"].active { background: #6b7280; border-color: #6b7280; }
 
@@ -350,6 +350,11 @@
         .event-card.past {
             border-left-color: #999;
             opacity: 0.8;
+        }
+
+        .event-card.on-hold {
+            border-left-color: #9ca3af;
+            background: #f9fafb;
         }
 
         .event-header {
@@ -448,8 +453,8 @@
         }
 
         .status-hold {
-            background: #fee2e2;
-            color: #991b1b;
+            background: #f3f4f6;
+            color: #4b5563;
         }
 
         .status-confirmed {
@@ -1544,8 +1549,8 @@
                     <h3 style="font-weight: 700; color: #92400e; margin-bottom: 15px; font-size: 1em; margin-top: 0;">📋 Planning</h3>
                     <div class="kanban-cards" data-status="Planning" style="flex: 1; display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
-                <div class="kanban-column" data-column="hold" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px; padding: 15px; overflow-y: auto; border: 2px solid #ef4444; display: flex; flex-direction: column;">
-                    <h3 style="font-weight: 700; color: #991b1b; margin-bottom: 15px; font-size: 1em; margin-top: 0;">⏸ Hold</h3>
+                <div class="kanban-column" data-column="hold" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; padding: 15px; overflow-y: auto; border: 2px solid #9ca3af; display: flex; flex-direction: column;">
+                    <h3 style="font-weight: 700; color: #4b5563; margin-bottom: 15px; font-size: 1em; margin-top: 0;">⏸ Hold</h3>
                     <div class="kanban-cards" data-status="Hold" style="flex: 1; display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
                 <div class="kanban-column" data-column="in-progress" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; padding: 15px; overflow-y: auto; border: 2px solid #10b981; display: flex; flex-direction: column;">
@@ -2210,7 +2215,7 @@
                     return true;
                 });
                 const eventsList = dayEvents.map(e => {
-                    const color = CATEGORY_COLORS[e.primaryCategory] || '#1d5432';
+                    const color = e.status === 'Hold' ? '#9ca3af' : (CATEGORY_COLORS[e.primaryCategory] || '#1d5432');
                     return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">${e.name}</div>`;
                 }).join('');
 
@@ -2337,7 +2342,7 @@
 
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', 'In Progress': '#34d399', Canceled: '#9ca3af' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#6b7280', 'In Progress': '#34d399', Canceled: '#9ca3af' };
 
             // Impact from reporting spreadsheet
             const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
@@ -2423,7 +2428,7 @@
         const STATS_OWNER_COLORS  = { 'Maddy': '#10b981', 'Hadas': '#3b82f6', 'Gretel': '#f59e0b' };
         const STATS_CAT_COLORS    = { 'Outreach': '#f59e0b', 'Education': '#3b82f6', 'Stewardship': '#10b981' };
         const STATS_TYPE_COLORS   = { 'PUBLIC PROGRAM': '#8b5cf6', 'PUBLIC VOLUNTEER EVENT': '#10b981', 'PRIVATE VOLUNTEER EVENT': '#3b82f6', 'FIELD TRIP': '#f59e0b', 'TABLING': '#ef4444' };
-        const STATS_STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#ef4444', 'Canceled': '#9ca3af' };
+        const STATS_STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#6b7280', 'Canceled': '#9ca3af' };
         const STATS_TASK_LABELS = {
             brief: 'Event Brief', eventbrite: 'Eventbrite Page', calendar: 'Calendar Entry',
             comms: 'Comms Request', compost: 'Compost Order', opsCheckin: 'Ops Check-in',
@@ -3770,8 +3775,9 @@
                     `;
                 }).join('');
 
+                const holdBg = event.status === 'Hold' ? '#f3f4f6' : 'white';
                 return `
-                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='white'">
+                    <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s; background: ${holdBg};" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='${holdBg}'">
                         <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${formatDate(event.date)}</td>
@@ -3938,7 +3944,7 @@
             const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', 'In Progress': '#34d399', Canceled: '#9ca3af' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#6b7280', 'In Progress': '#34d399', Canceled: '#9ca3af' };
 
             statsBar.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
@@ -4057,7 +4063,7 @@
                 const progress = getEventProgress(event);
 
                 return `
-                    <div class="event-card ${isPast ? 'past' : ''}" onclick="openEventDetailsModal(${event.id})" style="cursor: pointer;">
+                    <div class="event-card ${isPast ? 'past' : ''} ${event.status === 'Hold' ? 'on-hold' : ''}" onclick="openEventDetailsModal(${event.id})" style="cursor: pointer;">
                         <div class="event-header">
                             <div class="event-title">
                                 <h3>${event.name}</h3>
@@ -4909,12 +4915,13 @@
 
                 const card = document.createElement('div');
                 card.draggable = true;
+                const isHold = status === 'Hold';
                 card.style.cssText = `
-                    background: white;
+                    background: ${isHold ? '#f3f4f6' : 'white'};
                     border-radius: 8px;
                     padding: 12px;
                     cursor: grab;
-                    border: 1px solid #e5e7eb;
+                    border: 1px solid ${isHold ? '#9ca3af' : '#e5e7eb'};
                     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
                     transition: all 0.2s ease;
                 `;
@@ -4926,10 +4933,11 @@
 
                 card.innerHTML = `
                     <div style="font-weight: 700; color: #1d5432; margin-bottom: 8px; font-size: 0.9em; line-height: 1.3;">${event.name}</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <div style="font-size: 0.75em; padding: 3px 8px; background: #f3f4f6; border-radius: 4px; color: #4b5563; font-weight: 600;">👤 ${event.owner}</div>
                         <div style="font-size: 0.75em; color: #6a5a4a;">📅 ${formatDate(event.date)}</div>
                     </div>
+                    ${event.location ? `<div style="font-size: 0.75em; color: #6a5a4a; margin-bottom: 6px;">📍 ${event.location}</div>` : ''}
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75em; color: #6a5a4a;">
                         <div style="width: 100%; height: 5px; background: #e8ddd0; border-radius: 2px; overflow: hidden;">
                             <div style="height: 100%; background: linear-gradient(90deg, #1d5432, #2d7a52); width: ${completionPercent}%; transition: width 0.3s ease;"></div>
@@ -5078,6 +5086,10 @@
                             <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Status</label>
                             <div style="color: #1d5432; font-weight: 500;">${event.status || 'Planning'}</div>
                         </div>
+                        ${event.location ? `<div style="grid-column: 1 / -1;">
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Location</label>
+                            <div style="color: #1d5432; font-weight: 500;">📍 ${event.location}</div>
+                        </div>` : ''}
                     </div>
 
                     <div style="margin-bottom: 15px;">
