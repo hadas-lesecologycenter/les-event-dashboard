@@ -4302,7 +4302,7 @@
         }
 
         function autoCompleteEvent(event) {
-            if (!event || event.status === 'Complete' || event.status === 'Canceled') return;
+            if (!event || event.status === 'Complete' || event.status === 'Canceled' || event.status === 'Hold') return;
 
             const workflow = getEventWorkflow(event);
             const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
