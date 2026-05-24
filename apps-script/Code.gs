@@ -355,9 +355,21 @@ function handleSyncEvent(eventData) {
         if (idx !== -1) newRow[idx] = val;
       });
 
-      // Insert right after the last data row (not at sheet end)
-      const nextRow = data.length + 1;
-      sheet.getRange(nextRow, 1, 1, newRow.length).setValues([newRow]);
+      // Insert in date order
+      const dateColIdx = findColumnIndex(headers, 'Date');
+      const newDate = event.date ? new Date(event.date) : new Date('9999-12-31');
+      let insertBefore = -1;
+      for (let i = 1; i < data.length; i++) {
+        if (!data[i][0]) continue;
+        const rowDate = data[i][dateColIdx] ? new Date(data[i][dateColIdx]) : new Date('9999-12-31');
+        if (!isNaN(rowDate) && newDate < rowDate) { insertBefore = i + 1; break; }
+      }
+      if (insertBefore === -1) {
+        sheet.getRange(data.length + 1, 1, 1, newRow.length).setValues([newRow]);
+      } else {
+        sheet.insertRowBefore(insertBefore);
+        sheet.getRange(insertBefore, 1, 1, newRow.length).setValues([newRow]);
+      }
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
         message: `Event "${event.name}" created in sheet`,
