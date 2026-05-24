@@ -1902,7 +1902,7 @@
                 <div class="brief-buttons">
                     <button type="button" class="brief-btn draft" id="saveDraftBtn">Save as Draft</button>
                     <button type="button" class="brief-btn complete" id="completeBriefBtn">Complete Brief</button>
-                    <button type="button" class="brief-btn eventbrite" id="createEventbriteBtn">Create Eventbrite Event</button>
+                    <a href="https://www.eventbrite.com/organizations/events/create" target="_blank" class="brief-btn eventbrite" style="text-decoration:none;text-align:center;">Open Eventbrite</a>
                 </div>
             </form>
         </div>
@@ -1922,62 +1922,6 @@
     </div>
 
     <!-- Eventbrite Preview Modal -->
-    <div id="eventbritePreviewModal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 700px; max-height: 90vh; overflow-y: auto;">
-            <div class="modal-header">
-                <h3>Create Eventbrite Listing</h3>
-                <button class="modal-close" onclick="closeEventbritePreview()">&times;</button>
-            </div>
-            <div style="padding: 20px;">
-                <p style="color:#6a5a4a;font-size:0.9em;margin-bottom:16px;">Review the event details below, then click <strong>Create on Eventbrite</strong> to create a draft listing automatically.</p>
-                <div style="background: #f9f7f2; padding: 20px; border-radius: 8px; margin-bottom: 20px; display:flex; flex-direction:column; gap:16px;">
-
-                    <div id="ebPreviewImageWrap" style="display:none;">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;">Image URL</label>
-                            <button onclick="ebCopy('ebPreviewImageUrl', this)" style="font-size:0.75em;padding:3px 10px;border:1px solid #d4c5b0;border-radius:4px;background:white;cursor:pointer;color:#6a5a4a;">Copy</button>
-                        </div>
-                        <img id="ebPreviewImage" src="" alt="Event image" style="display:block;max-width:100%;max-height:160px;border-radius:6px;object-fit:cover;margin-bottom:6px;">
-                        <code id="ebPreviewImageUrl" style="font-size:0.78em;color:#888;word-break:break-all;display:block;"></code>
-                    </div>
-
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;">Event Title</label>
-                            <button onclick="ebCopy('ebPreviewTitle', this)" style="font-size:0.75em;padding:3px 10px;border:1px solid #d4c5b0;border-radius:4px;background:white;cursor:pointer;color:#6a5a4a;">Copy</button>
-                        </div>
-                        <p id="ebPreviewTitle" style="margin:0;color:#2c2416;font-weight:500;"></p>
-                    </div>
-
-                    <div>
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;">Description</label>
-                            <button onclick="ebCopy('ebPreviewDescription', this)" style="font-size:0.75em;padding:3px 10px;border:1px solid #d4c5b0;border-radius:4px;background:white;cursor:pointer;color:#6a5a4a;">Copy</button>
-                        </div>
-                        <p id="ebPreviewDescription" style="margin:0;color:#2c2416;white-space:pre-wrap;font-size:0.95em;line-height:1.5;"></p>
-                    </div>
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:15px;">
-                        <div>
-                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;display:block;margin-bottom:4px;">Date &amp; Time</label>
-                            <p id="ebPreviewDateTime" style="margin:0;color:#2c2416;font-size:0.95em;"></p>
-                        </div>
-                        <div>
-                            <label style="font-weight:600;color:#1d5432;font-size:0.85em;display:block;margin-bottom:4px;">Location</label>
-                            <p id="ebPreviewLocation" style="margin:0;color:#2c2416;font-size:0.95em;"></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="border-top: 1px solid #e8ddd0; padding-top: 16px;">
-                    <div style="display: flex; gap: 10px; align-items: center;">
-                        <button type="button" class="cancel-btn" onclick="closeEventbritePreview()">Cancel</button>
-                        <button type="button" class="save-btn" id="confirmEventbriteBtn">Create on Eventbrite</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
 
     <script>
@@ -3500,8 +3444,6 @@
             });
             document.getElementById('saveDraftBtn').addEventListener('click', saveBriefDraft);
             document.getElementById('completeBriefBtn').addEventListener('click', completeBrief);
-            document.getElementById('createEventbriteBtn').addEventListener('click', showEventbritePreview);
-            document.getElementById('confirmEventbriteBtn').addEventListener('click', createEventbriteEvent);
 
             document.getElementById('eventForm').addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -4448,14 +4390,8 @@
             return `${String(h).padStart(2, '0')}:${m}`;
         }
 
-        function buildEbDescription(event, brief) {
-            return brief.description || event.notes || '';
-        }
-
         function openEventbriteForm(event) {
-            currentBriefEvent = event;
-            const brief = event.eventbriefDraft || {};
-            showEventbritePreview(brief);
+            window.open('https://www.eventbrite.com/organizations/events/create', '_blank');
         }
 
         function openCompostSheet(event) {
@@ -4589,159 +4525,6 @@
             closeBriefModal();
             applyFilters();
         }
-
-        function collectBriefData() {
-            const briefForm = document.getElementById('briefForm');
-            const brief = {};
-
-            for (let elem of briefForm.elements) {
-                if (elem.name) {
-                    if (elem.type === 'checkbox') {
-                        if (elem.checked) {
-                            if (!brief[elem.name]) brief[elem.name] = [];
-                            brief[elem.name].push(elem.value);
-                        }
-                    } else if (elem.type === 'radio') {
-                        if (elem.checked) {
-                            brief[elem.name] = elem.value;
-                        }
-                    } else if (elem.value) {
-                        brief[elem.name] = elem.value;
-                    }
-                }
-            }
-
-            return brief;
-        }
-
-        function ebCopy(elementId, btn) {
-            const text = document.getElementById(elementId).textContent.trim();
-            navigator.clipboard.writeText(text).then(() => {
-                const orig = btn.textContent;
-                btn.textContent = 'Copied!';
-                btn.style.color = '#10b981';
-                setTimeout(() => { btn.textContent = orig; btn.style.color = ''; }, 1500);
-            }).catch(() => {
-                prompt('Copy this:', text);
-            });
-        }
-
-        async function createEventbriteEvent() {
-            if (!currentBriefEvent) return;
-            const briefFormOpen = document.getElementById('briefModal') && document.getElementById('briefModal').classList.contains('active');
-            const brief = briefFormOpen ? collectBriefData() : (currentBriefEvent.eventbriefDraft || {});
-            const event = currentBriefEvent;
-
-            const confirmBtn = document.getElementById('confirmEventbriteBtn');
-            confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Creating...';
-
-            try {
-                const dateStr = event.date instanceof Date
-                    ? formatDateForInput(event.date)
-                    : String(event.date || '').substring(0, 10);
-                const start24 = parseTimeTo24h(event.time);
-                const endH = String(parseInt(start24.split(':')[0]) + 1).padStart(2, '0');
-                const end24 = event.endTime ? parseTimeTo24h(event.endTime) : `${endH}:${start24.split(':')[1]}`;
-                console.log('EB date debug:', { raw_date: event.date, raw_time: event.time, raw_endTime: event.endTime, dateStr, start24, end24 });
-                const startDate = new Date(`${dateStr}T${start24}:00`);
-                const endDate = new Date(`${dateStr}T${end24}:00`);
-                if (isNaN(startDate) || isNaN(endDate)) {
-                    throw new Error(`Invalid date/time — date: "${event.date}" → "${dateStr}", time: "${event.time}" → "${start24}"`);
-                }
-                const startUtc = startDate.toISOString();
-                const endUtc = endDate.toISOString();
-
-                const ebParams = new URLSearchParams({
-                    action: 'createEventbriteEvent',
-                    data: JSON.stringify({
-                        event: {
-                            name: event.name,
-                            startUtc,
-                            endUtc,
-                            location: event.location || '',
-                            notes: event.notes || ''
-                        },
-                        brief: {
-                            description: buildEbDescription(event, brief),
-                            visual: brief.visual || event.eventbriefDraft?.visual || ''
-                        }
-                    })
-                });
-                const response = await fetch(`${APPS_SCRIPT_URL}?${ebParams}`);
-
-                const result = await response.json();
-                if (!result.success) throw new Error(result.error || 'Unknown error');
-
-                event.eventbriteId = result.eventId;
-                event.eventbriteUrl = result.eventUrl;
-                event.eventbrite = 'Yes';
-                saveEvents();
-                syncEventToSheet(event);
-                closeEventbritePreview();
-                if (briefFormOpen) closeBriefModal();
-                applyFilters();
-
-                window.open(result.eventUrl, '_blank');
-
-                const toast = document.createElement('div');
-                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#10b981;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:380px;';
-                toast.innerHTML = `Draft created on Eventbrite!<br><a href="${result.eventUrl}" target="_blank" style="color:white;text-decoration:underline;font-size:0.9em;">Open on Eventbrite</a>`;
-                document.body.appendChild(toast);
-                setTimeout(() => { if (toast.parentNode) toast.remove(); }, 10000);
-
-            } catch (error) {
-                console.error('Eventbrite error:', error);
-                const errToast = document.createElement('div');
-                errToast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,.15);max-width:380px;white-space:pre-wrap;';
-                errToast.textContent = `Failed to create Eventbrite event\n\n${error.message}`;
-                document.body.appendChild(errToast);
-                setTimeout(() => { if (errToast.parentNode) errToast.remove(); }, 8000);
-            } finally {
-                confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Create on Eventbrite';
-            }
-        }
-
-        function showEventbritePreview(briefOverride) {
-            if (!currentBriefEvent) return;
-
-            const briefFormOpen = document.getElementById('briefModal') && document.getElementById('briefModal').classList.contains('active');
-            const brief = briefOverride !== undefined ? briefOverride : (briefFormOpen ? collectBriefData() : (currentBriefEvent.eventbriefDraft || {}));
-
-            const description = buildEbDescription(currentBriefEvent, brief);
-            const location = currentBriefEvent.location || 'TBD';
-
-            const eventDate = currentBriefEvent.date instanceof Date ? currentBriefEvent.date : new Date(currentBriefEvent.date + 'T12:00:00');
-            const dateStr = eventDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-            const timeStr = currentBriefEvent.time || '';
-            const endTimeStr = currentBriefEvent.endTime || '';
-            const timeDisplay = timeStr ? (endTimeStr ? `${timeStr} – ${endTimeStr}` : timeStr) : 'Time TBD';
-
-            // Image
-            const imageUrl = brief.visual || currentBriefEvent.eventbriefDraft?.visual || '';
-            const imgWrap = document.getElementById('ebPreviewImageWrap');
-            const imgEl = document.getElementById('ebPreviewImage');
-            if (imageUrl) {
-                imgEl.src = imageUrl;
-                document.getElementById('ebPreviewImageUrl').textContent = imageUrl;
-                imgWrap.style.display = 'block';
-            } else {
-                imgWrap.style.display = 'none';
-            }
-
-            document.getElementById('ebPreviewTitle').textContent = currentBriefEvent.name;
-            document.getElementById('ebPreviewDescription').textContent = description || '(No description — add one in the brief)';
-            document.getElementById('ebPreviewDateTime').textContent = `${dateStr} · ${timeDisplay}`;
-            document.getElementById('ebPreviewLocation').textContent = location;
-
-            document.getElementById('eventbritePreviewModal').style.display = 'block';
-        }
-
-        function closeEventbritePreview() {
-            document.getElementById('eventbritePreviewModal').style.display = 'none';
-        }
-
 
         function renderOpenTasks() {
             const container = document.getElementById('openTasksContainer');
