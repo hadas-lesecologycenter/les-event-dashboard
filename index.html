@@ -701,7 +701,7 @@
 
         .calendar-day-events {
             font-size: 0.72em;
-            color: #fff;
+            color: #2c2416;
             overflow: hidden;
             display: flex;
             flex-direction: column;
@@ -710,42 +710,41 @@
         }
 
         .calendar-day-event {
-            background: #1d5432;
-            padding: 4px 6px;
-            border-radius: 3px;
+            background: #fff;
+            padding: 4px 7px;
+            border-radius: 4px;
             white-space: normal;
-            font-weight: 500;
             line-height: 1.3;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.12);
         }
 
         .calendar-day-event .cal-event-name {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-weight: 600;
+            display: block;
+            font-weight: 700;
             margin-bottom: 3px;
         }
 
-        .cal-owner-badge {
-            display: inline-flex;
+        .calendar-day-event .cal-event-meta {
+            display: flex;
+            flex-wrap: wrap;
             align-items: center;
-            justify-content: center;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            font-size: 10px;
-            font-weight: 800;
-            color: white;
-            flex-shrink: 0;
-            border: 1.5px solid rgba(255,255,255,0.6);
+            gap: 5px;
+            font-size: 1em;
         }
 
-        .calendar-day-event .cal-event-meta {
-            display: block;
-            opacity: 0.95;
-            font-size: 1em;
-            line-height: 1.4;
-            letter-spacing: 0.01em;
+        .cal-owner-tag {
+            display: inline-block;
+            padding: 1px 7px;
+            border-radius: 10px;
+            font-size: 0.95em;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+        }
+
+        .cal-loc-icon {
+            font-size: 1.25em;
+            line-height: 1;
         }
 
         .calendar-day-event.outreach {
@@ -2072,6 +2071,8 @@
         };
 
         const OWNER_COLORS = { Maddy: '#8b3a3a', Hadas: '#3a5a8b', Gretel: '#5a3a8b' };
+        const CATEGORY_BG   = { Outreach: '#fef3c7', Education: '#dbeafe', Stewardship: '#dcfce7' };
+        const CATEGORY_TEXT = { Outreach: '#92400e', Education: '#1e3a8a', Stewardship: '#166534' };
 
         function locationIcon(loc) {
             if (!loc) return '';
@@ -2211,16 +2212,21 @@
                     return true;
                 });
                 const eventsList = dayEvents.map(e => {
-                    const color = e.status === 'Hold' ? '#9ca3af' : (CATEGORY_COLORS[e.primaryCategory] || '#1d5432');
+                    const isHold = e.status === 'Hold';
+                    const bg = isHold ? '#f3f4f6' : (CATEGORY_BG[e.primaryCategory] || '#e8f0e4');
+                    const txt = isHold ? '#4b5563' : (CATEGORY_TEXT[e.primaryCategory] || '#1d5432');
                     const ownerColor = OWNER_COLORS[e.owner] || '#1d5432';
-                    const ownerInitial = (e.owner || '?')[0];
                     const time = e.time ? to12HourTime(e.time) : '';
-                    const locPart = e.location ? locationIcon(e.location) : '';
-                    const supportPart = e.supporting ? `+${e.supporting}` : '';
-                    const meta = [time, locPart, supportPart].filter(Boolean).join(' · ');
-                    return `<div class="calendar-day-event" style="background:${color};cursor:pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">
-                        <span class="cal-event-name"><span class="cal-owner-badge" style="background:${ownerColor};">${ownerInitial}</span>${e.name}</span>
-                        ${meta ? `<span class="cal-event-meta">${meta}</span>` : ''}
+                    const locIcon = e.location ? locationIcon(e.location) : '';
+                    const supporting = e.supporting ? `+${e.supporting}` : '';
+                    return `<div class="calendar-day-event" style="background:${bg};color:${txt};cursor:pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">
+                        <span class="cal-event-name">${e.name}</span>
+                        <span class="cal-event-meta">
+                            <span class="cal-owner-tag" style="background:${ownerColor};" title="Owner: ${e.owner}">${e.owner}</span>
+                            ${time ? `<span>${time}</span>` : ''}
+                            ${locIcon ? `<span class="cal-loc-icon" title="${e.location}">${locIcon}</span>` : ''}
+                            ${supporting ? `<span style="opacity:0.8;">${supporting}</span>` : ''}
+                        </span>
                     </div>`;
                 }).join('');
 
