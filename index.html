@@ -4217,17 +4217,32 @@
             localStorage.setItem('lesDeletedEvents', JSON.stringify([...s]));
         }
 
-        function deleteEvent(eventId) {
+        async function deleteEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
             if (!confirm(`Are you sure you want to delete "${event.name}"? This cannot be undone.`)) return;
+
+            // Remove locally first so the UI feels instant
             markDeleted(event.name);
             events = events.filter(e => e.id !== eventId);
             saveEvents();
             applyFilters();
-            // Also remove from Google Sheet
-            const params = new URLSearchParams({ action: 'deleteEvent', name: event.name });
-            fetch(`${APPS_SCRIPT_URL}?${params}`).catch(() => {});
+
+            // Delete from Google Sheet and confirm it worked
+            try {
+                const params = new URLSearchParams({ action: 'deleteEvent', name: event.name });
+                const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
+                const result = await response.json();
+                if (!result.success) throw new Error(result.error || 'Sheet returned failure');
+            } catch (err) {
+                console.error('Sheet deletion failed:', err);
+                // Warn the user — the event is gone locally but may reappear on next sync
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:16px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:360px;line-height:1.5;';
+                toast.innerHTML = `⚠️ <strong>"${event.name}"</strong> was removed from the dashboard but could not be deleted from Google Sheets. It may reappear after the next sync — please delete it manually from the sheet.`;
+                document.body.appendChild(toast);
+                setTimeout(() => { if (toast.parentNode) toast.remove(); }, 8000);
+            }
         }
 
         function autoProgressEvent(event) {
