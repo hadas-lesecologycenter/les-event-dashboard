@@ -1630,6 +1630,20 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>Supporting</label>
+                    <div style="display:flex;gap:16px;margin-top:6px;">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;">
+                            <input type="checkbox" id="supportMaddy" value="Maddy"> Maddy
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;">
+                            <input type="checkbox" id="supportHadas" value="Hadas"> Hadas
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:400;">
+                            <input type="checkbox" id="supportGretel" value="Gretel"> Gretel
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
                     <label for="eventLocation">Location</label>
                     <input type="text" id="eventLocation" placeholder="e.g., Tompkins Square Park">
                 </div>
@@ -2040,6 +2054,16 @@
             'Stewardship': '#10b981'
         };
 
+        const OWNER_COLORS = { Maddy: '#8b3a3a', Hadas: '#3a5a8b', Gretel: '#5a3a8b' };
+
+        function locationIcon(loc) {
+            if (!loc) return '';
+            const l = loc.toLowerCase();
+            if (l.includes('garden')) return '🌸';
+            if (l.includes('seward park')) return '🍃';
+            return '📍';
+        }
+
         const TASK_WORKFLOWS = {
             'FIELD TRIP': {
                 setup: [
@@ -2171,9 +2195,12 @@
                 });
                 const eventsList = dayEvents.map(e => {
                     const color = e.status === 'Hold' ? '#9ca3af' : (CATEGORY_COLORS[e.primaryCategory] || '#1d5432');
+                    const ownerColor = OWNER_COLORS[e.owner] || '#fff';
                     const time = e.time ? to12HourTime(e.time) : '';
-                    const meta = [time, e.owner, e.location].filter(Boolean).join(' · ');
-                    return `<div class="calendar-day-event" style="background: ${color}; cursor: pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">
+                    const locPart = e.location ? locationIcon(e.location) : '';
+                    const supportPart = e.supporting ? `+${e.supporting}` : '';
+                    const meta = [time, locPart, supportPart].filter(Boolean).join(' · ');
+                    return `<div class="calendar-day-event" style="background:${color};border-left:3px solid ${ownerColor};cursor:pointer;" data-event-id="${e.id}" onclick="event.stopPropagation(); openEventDetailsModal(${e.id})">
                         <span class="cal-event-name">${e.name}</span>
                         ${meta ? `<span class="cal-event-meta">${meta}</span>` : ''}
                     </div>`;
@@ -2972,6 +2999,7 @@
                     event: {
                         name: event.name,
                         owner: event.owner,
+                        supporting: event.supporting || '',
                         date: event.date instanceof Date ? formatDateForInput(event.date) : event.date,
                         time: event.time || '',
                         endTime: event.endTime || '',
@@ -3055,6 +3083,7 @@
                         if (!s) return;
                         if (s.status !== undefined && s.status)   localEvent.status   = s.status;
                         if (s.owner)    localEvent.owner    = s.owner;
+                        if (s.supporting !== undefined) localEvent.supporting = s.supporting;
                         if (s.date)     localEvent.date     = parseLocalDate(s.date);
                         if (s.time)     localEvent.time     = s.time;
                         if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
@@ -3080,6 +3109,7 @@
                             id: Math.max(...events.map(e => e.id), 0) + 1,
                             name: s.name,
                             owner: s.owner || '',
+                            supporting: s.supporting || '',
                             date: parseLocalDate(s.date),
                             time: s.time || '12:00 PM',
                             location: s.location || '',
@@ -3475,6 +3505,7 @@
                 const updatedEvent = {
                     name: document.getElementById('eventName').value,
                     owner: document.getElementById('eventOwner').value,
+                    supporting: ['Maddy','Hadas','Gretel'].filter(n => document.getElementById(`support${n}`)?.checked).join(', '),
                     date: eventDate,
                     time: to12HourTime(document.getElementById('eventTime').value) || '12:00 PM',
                     endTime: to12HourTime(document.getElementById('eventEndTime').value) || '',
@@ -4032,8 +4063,9 @@
                                 </div>
                                 <div class="event-meta">
                                     <span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span>
+                                    ${event.supporting ? `<span class="meta-item" style="color:#6a5a4a;">+ ${event.supporting}</span>` : ''}
                                     <span class="meta-item">📅 ${formatDate(event.date)} ${to12HourTime(event.time)}${event.endTime ? ' - ' + to12HourTime(event.endTime) : ''}</span>
-                                    ${event.location ? `<span class="meta-item">📍 ${event.location}</span>` : ''}
+                                    ${event.location ? `<span class="meta-item">${locationIcon(event.location)} ${event.location}</span>` : ''}
                                 </div>
                                 <div id="metrics-${event.id}" class="metrics-placeholder"></div>
                             </div>
@@ -4213,6 +4245,10 @@
             document.getElementById('eventEndTime').value = to24HourTime(event.endTime);
             document.getElementById('eventLocation').value = event.location || '';
             document.getElementById('eventOwner').value = event.owner;
+            ['Maddy','Hadas','Gretel'].forEach(n => {
+                const el = document.getElementById(`support${n}`);
+                if (el) el.checked = (event.supporting || '').includes(n);
+            });
             document.getElementById('eventStatus').value = event.status || 'Planning';
             document.getElementById('eventPrimaryCategory').value = event.primaryCategory;
             document.getElementById('eventSecondaryCategory').value = event.secondaryCategory || '';
@@ -4748,10 +4784,10 @@
                 card.innerHTML = `
                     <div style="font-weight: 700; color: #1d5432; margin-bottom: 8px; font-size: 0.9em; line-height: 1.3;">${event.name}</div>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                        <div style="font-size: 0.75em; padding: 3px 8px; background: #f3f4f6; border-radius: 4px; color: #4b5563; font-weight: 600;">👤 ${event.owner}</div>
+                        <div style="font-size: 0.75em; padding: 3px 8px; background: #f3f4f6; border-radius: 4px; color: #4b5563; font-weight: 600;">👤 ${event.owner}${event.supporting ? ` <span style="opacity:0.7;">+${event.supporting}</span>` : ''}</div>
                         <div style="font-size: 0.75em; color: #6a5a4a;">📅 ${formatDate(event.date)}</div>
                     </div>
-                    ${event.location ? `<div style="font-size: 0.75em; color: #6a5a4a; margin-bottom: 6px;">📍 ${event.location}</div>` : ''}
+                    ${event.location ? `<div style="font-size: 0.75em; color: #6a5a4a; margin-bottom: 6px;">${locationIcon(event.location)} ${event.location}</div>` : ''}
                     <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75em; color: #6a5a4a;">
                         <div style="width: 100%; height: 5px; background: #e8ddd0; border-radius: 2px; overflow: hidden;">
                             <div style="height: 100%; background: linear-gradient(90deg, #1d5432, #2d7a52); width: ${completionPercent}%; transition: width 0.3s ease;"></div>
@@ -4902,7 +4938,11 @@
                         </div>
                         ${event.location ? `<div style="grid-column: 1 / -1;">
                             <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Location</label>
-                            <div style="color: #1d5432; font-weight: 500;">📍 ${event.location}</div>
+                            <div style="color: #1d5432; font-weight: 500;">${locationIcon(event.location)} ${event.location}</div>
+                        </div>` : ''}
+                        ${event.supporting ? `<div style="grid-column: 1 / -1;">
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Supporting</label>
+                            <div style="color: #1d5432; font-weight: 500;">${event.supporting}</div>
                         </div>` : ''}
                     </div>
 
