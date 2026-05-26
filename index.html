@@ -352,7 +352,7 @@
             opacity: 0.8;
         }
 
-        .event-card.on-hold {
+        .event-card.on-hold, .event-card.canceled {
             border-left-color: #9ca3af;
             background: #f9fafb;
         }
@@ -2212,7 +2212,7 @@
                     return true;
                 });
                 const eventsList = dayEvents.map(e => {
-                    const isHold = e.status === 'Hold';
+                    const isHold = e.status === 'Hold' || e.status === 'Canceled';
                     const bg = isHold ? '#f3f4f6' : (CATEGORY_BG[e.primaryCategory] || '#e8f0e4');
                     const txt = isHold ? '#4b5563' : (CATEGORY_TEXT[e.primaryCategory] || '#1d5432');
                     const ownerColor = OWNER_COLORS[e.owner] || '#1d5432';
@@ -3788,7 +3788,7 @@
                     `;
                 }).join('');
 
-                const holdBg = event.status === 'Hold' ? '#f3f4f6' : 'white';
+                const holdBg = (event.status === 'Hold' || event.status === 'Canceled') ? '#f3f4f6' : 'white';
                 return `
                     <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s; background: ${holdBg};" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='${holdBg}'">
                         <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}</td>
@@ -4076,7 +4076,7 @@
                 const progress = getEventProgress(event);
 
                 return `
-                    <div class="event-card ${isPast ? 'past' : ''} ${event.status === 'Hold' ? 'on-hold' : ''}" onclick="openEventDetailsModal(${event.id})" style="cursor: pointer;">
+                    <div class="event-card ${isPast ? 'past' : ''} ${event.status === 'Hold' ? 'on-hold' : ''} ${event.status === 'Canceled' ? 'canceled' : ''}" onclick="openEventDetailsModal(${event.id})" style="cursor: pointer;">
                         <div class="event-header">
                             <div class="event-title">
                                 <h3>${event.name}</h3>
@@ -4789,7 +4789,7 @@
 
                 const card = document.createElement('div');
                 card.draggable = true;
-                const isHold = status === 'Hold';
+                const isHold = status === 'Hold' || status === 'Canceled';
                 card.style.cssText = `
                     background: ${isHold ? '#f3f4f6' : 'white'};
                     border-radius: 8px;
