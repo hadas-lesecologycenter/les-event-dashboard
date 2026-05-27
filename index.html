@@ -1469,6 +1469,7 @@
             <button class="view-btn" data-view="stats">📈 Stats</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
+            <button onclick="reloadFromSheet()" title="Clear local cache and reload all events from Google Sheets" style="padding: 12px 16px; background: none; color: #6b7280; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;" onmouseover="this.style.borderColor='#1d5432';this.style.color='#1d5432'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6b7280'">↺ Reload from Sheet</button>
         </div>
 
         <div class="filter-bar" id="sharedFilterBar">
@@ -3177,6 +3178,13 @@
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
             }
+        }
+
+        function reloadFromSheet() {
+            if (!confirm('This will clear your local cache and reload all events fresh from Google Sheets. Continue?')) return;
+            localStorage.removeItem('lesEvents');
+            localStorage.removeItem('bulkSyncDone');
+            location.reload();
         }
 
         // Bulk sync all local events to sheet (staggered to avoid rate limits)
