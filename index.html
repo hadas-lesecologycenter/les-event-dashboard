@@ -3010,6 +3010,8 @@
         const metricsCache = {};
         let lastSheetSync = 0;
         const SYNC_INTERVAL = 30000; // Sync every 30 seconds
+        // True when no localStorage existed at page load — sheet data should fully replace sample data
+        let freshDevice = !localStorage.getItem('lesEvents');
 
         function normalizeTypeKey(type) {
             if (!type) return '';
@@ -3095,67 +3097,76 @@
                 const data = await response.json();
 
                 if (data.success && data.events) {
-                    const sheetEventMap = {};
-                    data.events.forEach(e => { sheetEventMap[e.name] = e; sheetEventMap[e.name.trim()] = e; });
-
-                    const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
-                    const deletedNames = getDeletedNames();
-
-                    // Full mirror: update all fields from sheet for existing events
-                    events.forEach(localEvent => {
-                        const s = sheetEventMap[localEvent.name] || sheetEventMap[localEvent.name.trim()];
-                        if (!s) return;
-                        if (s.status !== undefined && s.status)   localEvent.status   = s.status;
-                        if (s.owner)    localEvent.owner    = s.owner;
-                        if (s.supporting !== undefined) localEvent.supporting = s.supporting;
-                        if (s.date)     localEvent.date     = parseLocalDate(s.date);
-                        if (s.time)     localEvent.time     = s.time;
-                        if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
-                        if (s.location !== undefined) localEvent.location = s.location;
-                        if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category.split(',')[0].trim(); }
-                        if (s.type)     localEvent.type     = normalizeEventType(s.type);
-                        // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
-                        // a race condition where a 30-second poll overwrites a locally-checked task
-                        // back to 'No' before the sheet write has been confirmed.
-                        const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
-                        taskKeys.forEach(key => {
-                            if (!(key in s)) return;
-                            if (s[key] === 'Yes') localEvent[key] = 'Yes';
-                            if (s[key] === 'N/A') localEvent[key] = 'N/A';
-                        });
+                    const buildFromSheet = (s, id) => ({
+                        id,
+                        name: s.name,
+                        owner: s.owner || '',
+                        supporting: s.supporting || '',
+                        date: parseLocalDate(s.date),
+                        time: s.time || '12:00 PM',
+                        endTime: s.endTime || '',
+                        location: s.location || '',
+                        category: s.category || '',
+                        primaryCategory: s.category ? s.category.split(',')[0].trim() : '',
+                        type: normalizeEventType(s.type),
+                        status: s.status || 'Planning',
+                        brief: s.brief || 'No',
+                        eventbrite: s.eventbrite || 'No',
+                        calendar: s.calendar || 'No',
+                        comms: s.comms || 'No',
+                        compost: s.compost || 'No',
+                        opsCheckin: s.opsCheckin || 'No',
+                        reminder: s.reminder || 'No',
+                        report: s.report || 'No',
+                        treeMap: s.treeMap || 'No',
+                        thankYou: s.thankYou || 'No',
+                        coordConfirm: s.coordConfirm || 'No',
+                        coordEmail: s.coordEmail || 'No',
+                        outreachReport: s.outreachReport || 'No'
                     });
 
-                    // Add new events from sheet that don't exist locally and haven't been deleted
-                    data.events.forEach(s => {
-                        if (existingNames.has(s.name.trim().toLowerCase())) return;
-                        if (deletedNames.has(s.name.trim().toLowerCase())) return;
-                        events.push({
-                            id: Math.max(...events.map(e => e.id), 0) + 1,
-                            name: s.name,
-                            owner: s.owner || '',
-                            supporting: s.supporting || '',
-                            date: parseLocalDate(s.date),
-                            time: s.time || '12:00 PM',
-                            location: s.location || '',
-                            category: s.category || '',
-                            primaryCategory: s.category ? s.category.split(',')[0].trim() : '',
-                            type: normalizeEventType(s.type),
-                            status: s.status || 'Planning',
-                            brief: s.brief || 'No',
-                            eventbrite: s.eventbrite || 'No',
-                            calendar: s.calendar || 'No',
-                            comms: s.comms || 'No',
-                            compost: s.compost || 'No',
-                            opsCheckin: s.opsCheckin || 'No',
-                            reminder: s.reminder || 'No',
-                            report: s.report || 'No',
-                            treeMap: s.treeMap || 'No',
-                            thankYou: s.thankYou || 'No',
-                            coordConfirm: s.coordConfirm || 'No',
-                            coordEmail: s.coordEmail || 'No',
-                            outreachReport: s.outreachReport || 'No'
+                    if (freshDevice && data.events.length > 0) {
+                        // Fresh device: discard sample data and use sheet as the sole source of truth
+                        events = data.events.map((s, i) => buildFromSheet(s, i + 1));
+                        freshDevice = false;
+                    } else {
+                        const sheetEventMap = {};
+                        data.events.forEach(e => { sheetEventMap[e.name] = e; sheetEventMap[e.name.trim()] = e; });
+
+                        const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
+                        const deletedNames = getDeletedNames();
+
+                        // Full mirror: update all fields from sheet for existing events
+                        events.forEach(localEvent => {
+                            const s = sheetEventMap[localEvent.name] || sheetEventMap[localEvent.name.trim()];
+                            if (!s) return;
+                            if (s.status !== undefined && s.status)   localEvent.status   = s.status;
+                            if (s.owner)    localEvent.owner    = s.owner;
+                            if (s.supporting !== undefined) localEvent.supporting = s.supporting;
+                            if (s.date)     localEvent.date     = parseLocalDate(s.date);
+                            if (s.time)     localEvent.time     = s.time;
+                            if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
+                            if (s.location !== undefined) localEvent.location = s.location;
+                            if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category.split(',')[0].trim(); }
+                            if (s.type)     localEvent.type     = normalizeEventType(s.type);
+                            // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
+                            // a race condition where a 30-second poll overwrites a locally-checked task
+                            // back to 'No' before the sheet write has been confirmed.
+                            const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
+                            taskKeys.forEach(key => {
+                                if (!(key in s)) return;
+                                if (s[key] === 'Yes') localEvent[key] = 'Yes';
+                                if (s[key] === 'N/A') localEvent[key] = 'N/A';
+                            });
                         });
-                    });
+
+                        // Add new events from sheet that don't exist locally and haven't been deleted
+                        data.events.forEach(s => {
+                            if (existingNames.has(s.name.trim().toLowerCase())) return;
+                            if (deletedNames.has(s.name.trim().toLowerCase())) return;
+                            events.push(buildFromSheet(s, Math.max(...events.map(e => e.id), 0) + 1));
+                        });
+                    }
 
                     events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
@@ -3181,11 +3192,14 @@
         // Start auto-sync on page load
         function startAutoSync() {
             setInterval(syncEventsFromSheet, SYNC_INTERVAL);
-            syncEventsFromSheet(); // Initial sync
-            // One-time bulk push so the sheet gets Status and all fields populated
-            if (!localStorage.getItem('bulkSyncDone')) {
-                setTimeout(syncAllToSheet, 3000);
-            }
+            // Wait for initial sync to finish before bulk-pushing, and never push on a fresh
+            // device (freshDevice is still true here) — that would send sample data to the sheet.
+            const wasFresh = freshDevice;
+            syncEventsFromSheet().then(() => {
+                if (!wasFresh && !localStorage.getItem('bulkSyncDone')) {
+                    syncAllToSheet();
+                }
+            });
         }
 
         async function fetchEventMetrics(event) {
