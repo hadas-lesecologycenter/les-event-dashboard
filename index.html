@@ -3020,6 +3020,7 @@
         const SYNC_INTERVAL = 30000; // Sync every 30 seconds
         // True when no localStorage existed at page load — sheet data should fully replace sample data
         let freshDevice = !localStorage.getItem('lesEvents');
+        console.log('[LES] app init — freshDevice:', freshDevice, 'localStorage events:', !!localStorage.getItem('lesEvents'));
 
         function normalizeTypeKey(type) {
             if (!type) return '';
@@ -3102,13 +3103,16 @@
         async function syncEventsFromSheet() {
             const now = Date.now();
             if (now - lastSheetSync < SYNC_INTERVAL) return;
+            console.log('[LES] syncEventsFromSheet: starting fetch, freshDevice=', freshDevice);
 
             try {
                 const controller = new AbortController();
                 const timeout = setTimeout(() => controller.abort(), 20000);
                 const response = await fetch(APPS_SCRIPT_URL, { signal: controller.signal });
                 clearTimeout(timeout);
+                console.log('[LES] fetch response status:', response.status, response.url);
                 const data = await response.json();
+                console.log('[LES] sheet response: success=', data.success, 'events=', data.events?.length, data.error || '');
 
                 if (data.success && data.events) {
                     const buildFromSheet = (s, id) => ({
@@ -3201,6 +3205,9 @@
         }
 
         function reloadFromSheet() {
+            const btn = event && event.target;
+            if (btn) { btn.textContent = '↺ Reloading…'; btn.disabled = true; }
+            console.log('[LES] reloadFromSheet: clearing cache and reloading');
             localStorage.removeItem('lesEvents');
             localStorage.removeItem('bulkSyncDone');
             location.reload();
