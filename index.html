@@ -3061,7 +3061,10 @@
                 });
                 const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const result = await response.json();
-                console.log('Sync to sheet result:', result);
+                if (!result.success) {
+                    console.warn('Sheet sync error for', event.name, ':', result.error);
+                    return false;
+                }
                 return true;
             } catch (error) {
                 console.warn('Sheet sync failed (offline):', error);
@@ -3204,12 +3207,20 @@
         async function pushAllToSheet() {
             const btn = document.getElementById('pushToSheetBtn');
             if (btn) { btn.disabled = true; btn.textContent = '⬆ Pushing...'; }
+            const failed = [];
             for (let i = 0; i < events.length; i++) {
-                await syncEventToSheet(events[i]);
+                if (btn) btn.textContent = `⬆ Pushing… (${i + 1}/${events.length})`;
+                const ok = await syncEventToSheet(events[i]);
+                if (!ok) failed.push(events[i].name);
                 if (i < events.length - 1) await new Promise(r => setTimeout(r, 300));
             }
             if (btn) { btn.disabled = false; btn.textContent = '⬆ Push to Sheet'; }
-            alert(`Pushed ${events.length} events to Sheet. You can now Reload from Sheet on your other device.`);
+            const succeeded = events.length - failed.length;
+            if (failed.length === 0) {
+                alert(`✅ All ${succeeded} events pushed to Google Sheets successfully.\n\nYour team members can now click "↺ Reload from Sheet" to see the latest data.`);
+            } else {
+                alert(`⚠️ ${succeeded} of ${events.length} events pushed.\n\nFailed (${failed.length}):\n${failed.join('\n')}\n\nCheck your internet connection and try again.`);
+            }
         }
 
         // Bulk sync all local events to sheet (staggered to avoid rate limits)
