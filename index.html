@@ -3104,7 +3104,10 @@
             if (now - lastSheetSync < SYNC_INTERVAL) return;
 
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 20000);
+                const response = await fetch(APPS_SCRIPT_URL, { signal: controller.signal });
+                clearTimeout(timeout);
                 const data = await response.json();
 
                 if (data.success && data.events) {
@@ -3198,7 +3201,6 @@
         }
 
         function reloadFromSheet() {
-            if (!confirm('This will clear your local cache and reload all events fresh from Google Sheets. Continue?')) return;
             localStorage.removeItem('lesEvents');
             localStorage.removeItem('bulkSyncDone');
             location.reload();
