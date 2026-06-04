@@ -1597,6 +1597,12 @@
             </div>
         </div>
 
+        <div id="sheetLoadingOverlay" style="display:none; text-align:center; padding:60px 20px; background:white; border-radius:12px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+            <div style="font-size:2em; margin-bottom:12px;">⏳</div>
+            <div style="font-size:1.1em; font-weight:600; color:#1d5432; margin-bottom:8px;">Loading events from Google Sheets…</div>
+            <div style="color:#6b7280; font-size:0.9em;">This only takes a moment on a new device.</div>
+        </div>
+
         <div id="calendarView" class="calendar-container">
             <div class="calendar-header">
                 <div>
@@ -3178,6 +3184,13 @@
                 }
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
+            } finally {
+                // If still in fresh-device loading state (fetch failed or returned empty),
+                // clear it so the UI doesn't stay on the loading screen.
+                if (freshDevice) {
+                    freshDevice = false;
+                    applyFilters();
+                }
             }
         }
 
@@ -3744,6 +3757,13 @@
         }
 
         function applyFilters() {
+            const overlay = document.getElementById('sheetLoadingOverlay');
+            if (freshDevice) {
+                if (overlay) overlay.style.display = 'block';
+                return;
+            }
+            if (overlay) overlay.style.display = 'none';
+
             let selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
             let selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
             let selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
