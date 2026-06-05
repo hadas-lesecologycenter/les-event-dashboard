@@ -3032,6 +3032,7 @@
             try {
                 const payload = {
                     event: {
+                        id: event.id,
                         name: event.name,
                         owner: event.owner,
                         supporting: event.supporting || '',
@@ -3115,8 +3116,24 @@
                 console.log('[LES] sheet response: success=', data.success, 'events=', data.events?.length, data.error || '');
 
                 if (data.success && data.events) {
-                    const buildFromSheet = (s, id) => ({
-                        id,
+                    // Deduplicate sheet events by id (preferred) then name+date, keeping the last occurrence
+                    const deduped = [];
+                    const seenIds = new Set();
+                    const seenNameDate = new Set();
+                    data.events.slice().reverse().forEach(s => {
+                        const key = s.id ? String(s.id) : null;
+                        const nameDate = (s.name || '').trim().toLowerCase() + '|' + (s.date || '');
+                        if (key && seenIds.has(key)) return;
+                        if (seenNameDate.has(nameDate)) return;
+                        if (key) seenIds.add(key);
+                        seenNameDate.add(nameDate);
+                        deduped.push(s);
+                    });
+                    const sheetEvents = deduped.reverse();
+
+                    let nextId = Math.max(...events.map(e => e.id), 0) + 1;
+                    const buildFromSheet = (s) => ({
+                        id: s.id ? Number(s.id) : nextId++,
                         name: s.name,
                         owner: s.owner || '',
                         supporting: s.supporting || '',
@@ -3143,20 +3160,24 @@
                         outreachReport: s.outreachReport || 'No'
                     });
 
-                    if (freshDevice && data.events.length > 0) {
+                    if (freshDevice && sheetEvents.length > 0) {
                         // Fresh device: discard sample data and use sheet as the sole source of truth
-                        events = data.events.map((s, i) => buildFromSheet(s, i + 1));
+                        events = sheetEvents.map(s => buildFromSheet(s));
                         freshDevice = false;
                     } else {
-                        const sheetEventMap = {};
-                        data.events.forEach(e => { sheetEventMap[e.name] = e; sheetEventMap[e.name.trim()] = e; });
+                        // Build lookup maps by id and by name for merging
+                        const sheetById = {};
+                        const sheetByName = {};
+                        sheetEvents.forEach(s => {
+                            if (s.id) sheetById[String(s.id)] = s;
+                            sheetByName[s.name.trim().toLowerCase()] = s;
+                        });
 
-                        const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
                         const deletedNames = getDeletedNames();
 
-                        // Full mirror: update all fields from sheet for existing events
+                        // Full mirror: update all fields from sheet for existing local events (match by id, then name)
                         events.forEach(localEvent => {
-                            const s = sheetEventMap[localEvent.name] || sheetEventMap[localEvent.name.trim()];
+                            const s = sheetById[String(localEvent.id)] || sheetByName[localEvent.name.trim().toLowerCase()];
                             if (!s) return;
                             if (s.status !== undefined && s.status)   localEvent.status   = s.status;
                             if (s.owner)    localEvent.owner    = s.owner;
@@ -3167,9 +3188,8 @@
                             if (s.location !== undefined) localEvent.location = s.location;
                             if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category.split(',')[0].trim(); }
                             if (s.type)     localEvent.type     = normalizeEventType(s.type);
-                            // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
-                            // a race condition where a 30-second poll overwrites a locally-checked task
-                            // back to 'No' before the sheet write has been confirmed.
+                            // Sync task fields: only promote to Yes/N/A to avoid overwriting a just-checked
+                            // task before the sheet write has been confirmed.
                             const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
                             taskKeys.forEach(key => {
                                 if (!(key in s)) return;
@@ -3178,11 +3198,14 @@
                             });
                         });
 
-                        // Add new events from sheet that don't exist locally and haven't been deleted
-                        data.events.forEach(s => {
+                        // Add sheet events that don't exist locally and haven't been deleted
+                        const existingIds = new Set(events.map(e => String(e.id)));
+                        const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
+                        sheetEvents.forEach(s => {
+                            if (s.id && existingIds.has(String(s.id))) return;
                             if (existingNames.has(s.name.trim().toLowerCase())) return;
                             if (deletedNames.has(s.name.trim().toLowerCase())) return;
-                            events.push(buildFromSheet(s, Math.max(...events.map(e => e.id), 0) + 1));
+                            events.push(buildFromSheet(s));
                         });
                     }
 

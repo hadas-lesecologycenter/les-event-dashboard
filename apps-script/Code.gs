@@ -316,12 +316,17 @@ function handleSyncEvent(eventData) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
-    // Find event row or create new one
+    // Find event row — prefer ID match, fall back to name match
+    const idColIdx = findColumnIndex(headers, 'Event ID');
     let eventRow = -1;
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === event.name) {
-        eventRow = i;
-        break;
+    if (idColIdx !== -1 && event.id) {
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idColIdx]) === String(event.id)) { eventRow = i; break; }
+      }
+    }
+    if (eventRow === -1) {
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === event.name) { eventRow = i; break; }
       }
     }
 
@@ -329,6 +334,7 @@ function handleSyncEvent(eventData) {
     if (eventRow === -1) {
       const newRow = new Array(headers.length).fill('');
       const basicMap = {
+        'Event ID': event.id || '',
         'Column 1': event.name,
         'Owner': event.owner || '',
         'Date': event.date || '',
@@ -379,6 +385,7 @@ function handleSyncEvent(eventData) {
     } else {
       // Update basic event fields
       const basicMap = {
+        'Event ID': event.id || '',
         'Column 1': event.name,
         'Owner': event.owner || '',
         'Date': event.date || '',
@@ -732,8 +739,9 @@ function parseEventRow(row, headers, tz) {
 
   tz = tz || 'America/New_York';
   const dateStrOut = date ? Utilities.formatDate(date, tz, 'yyyy-MM-dd') : null;
+  const storedId = getColumn('Event ID');
   return {
-    id: hashCode(name + (dateStrOut || '')),
+    id: storedId ? Number(storedId) : hashCode(name + (dateStrOut || '')),
     name: name,
     owner: getColumn('Owner') || 'Unassigned',
     date: dateStrOut,
