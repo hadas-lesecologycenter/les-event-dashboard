@@ -113,9 +113,11 @@ function doPost(e) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
+    const nameColIdx2 = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
+    const needle2 = String(eventName).trim().toLowerCase();
     for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === eventName) {
+      if (String(data[i][nameColIdx2]).trim().toLowerCase() === needle2) {
         eventRow = i;
         break;
       }
@@ -318,6 +320,7 @@ function handleSyncEvent(eventData) {
 
     // Find event row — prefer ID match, fall back to name match
     const idColIdx = findColumnIndex(headers, 'Event ID');
+    const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
     if (idColIdx !== -1 && event.id) {
       for (let i = 1; i < data.length; i++) {
@@ -325,8 +328,9 @@ function handleSyncEvent(eventData) {
       }
     }
     if (eventRow === -1) {
+      const needle = String(event.name).trim().toLowerCase();
       for (let i = 1; i < data.length; i++) {
-        if (data[i][0] === event.name) { eventRow = i; break; }
+        if (String(data[i][nameColIdx]).trim().toLowerCase() === needle) { eventRow = i; break; }
       }
     }
 
