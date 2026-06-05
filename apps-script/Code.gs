@@ -318,11 +318,16 @@ function handleSyncEvent(eventData) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
-    // Find event row — prefer ID match, fall back to name match
-    const idColIdx = findColumnIndex(headers, 'Event ID');
+    // Ensure Event ID column exists; create it if missing
+    let idColIdx = findColumnIndex(headers, 'Event ID');
+    if (idColIdx === -1) {
+      idColIdx = headers.length;
+      sheet.getRange(1, idColIdx + 1).setValue('Event ID');
+      headers.push('Event ID');
+    }
     const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
-    if (idColIdx !== -1 && event.id) {
+    if (event.id) {
       for (let i = 1; i < data.length; i++) {
         if (String(data[i][idColIdx]) === String(event.id)) { eventRow = i; break; }
       }
