@@ -52,6 +52,7 @@ function doGet(e) {
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
+    const tz = spreadsheet.getSpreadsheetTimeZone();
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
     const events = [];
@@ -59,7 +60,7 @@ function doGet(e) {
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (!row[0]) continue;
-      const event = parseEventRow(row, headers);
+      const event = parseEventRow(row, headers, tz);
       if (event) events.push(event);
     }
 
@@ -315,12 +316,17 @@ function handleSyncEvent(eventData) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
-    // Find event row or create new one
+    // Find event row — prefer ID match, fall back to name match
+    const idColIdx = findColumnIndex(headers, 'Event ID');
     let eventRow = -1;
-    for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === event.name) {
-        eventRow = i;
-        break;
+    if (idColIdx !== -1 && event.id) {
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][idColIdx]) === String(event.id)) { eventRow = i; break; }
+      }
+    }
+    if (eventRow === -1) {
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === event.name) { eventRow = i; break; }
       }
     }
 
@@ -328,6 +334,7 @@ function handleSyncEvent(eventData) {
     if (eventRow === -1) {
       const newRow = new Array(headers.length).fill('');
       const basicMap = {
+        'Event ID': event.id || '',
         'Column 1': event.name,
         'Owner': event.owner || '',
         'Date': event.date || '',
@@ -378,6 +385,7 @@ function handleSyncEvent(eventData) {
     } else {
       // Update basic event fields
       const basicMap = {
+        'Event ID': event.id || '',
         'Column 1': event.name,
         'Owner': event.owner || '',
         'Date': event.date || '',
@@ -714,7 +722,7 @@ function findColumnIndex(headers, searchTerm) {
 /**
  * Parse a tracker sheet row into an event object
  */
-function parseEventRow(row, headers) {
+function parseEventRow(row, headers, tz) {
   const getColumn = (name) => {
     const index = findColumnIndex(headers, name);
     return index >= 0 ? row[index] : null;
@@ -729,10 +737,11 @@ function parseEventRow(row, headers) {
     date = dateStr instanceof Date ? dateStr : new Date(dateStr);
   }
 
-  const tz = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  tz = tz || 'America/New_York';
   const dateStrOut = date ? Utilities.formatDate(date, tz, 'yyyy-MM-dd') : null;
+  const storedId = getColumn('Event ID');
   return {
-    id: hashCode(name + (dateStrOut || '')),
+    id: storedId ? Number(storedId) : hashCode(name + (dateStrOut || '')),
     name: name,
     owner: getColumn('Owner') || 'Unassigned',
     date: dateStrOut,

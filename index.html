@@ -1469,6 +1469,8 @@
             <button class="view-btn" data-view="stats">📈 Stats</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
+            <button id="pushToSheetBtn" onclick="pushAllToSheet()" title="Push all local events to Google Sheets (use on your primary device first)" style="padding: 12px 16px; background: none; color: #6b7280; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;" onmouseover="this.style.borderColor='#1d5432';this.style.color='#1d5432'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6b7280'">⬆ Push to Sheet</button>
+            <button onclick="reloadFromSheet()" title="Clear local cache and reload all events from Google Sheets" style="padding: 12px 16px; background: none; color: #6b7280; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;" onmouseover="this.style.borderColor='#1d5432';this.style.color='#1d5432'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6b7280'">↺ Reload from Sheet</button>
         </div>
 
         <div class="filter-bar" id="sharedFilterBar">
@@ -1593,6 +1595,12 @@
                     <div class="kanban-cards" data-status="Canceled" style="flex: 1; display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
             </div>
+        </div>
+
+        <div id="sheetLoadingOverlay" style="display:none; text-align:center; padding:60px 20px; background:white; border-radius:12px; margin:20px 0; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+            <div style="font-size:2em; margin-bottom:12px;">⏳</div>
+            <div style="font-size:1.1em; font-weight:600; color:#1d5432; margin-bottom:8px;">Loading events from Google Sheets…</div>
+            <div style="color:#6b7280; font-size:0.9em;">This only takes a moment on a new device.</div>
         </div>
 
         <div id="calendarView" class="calendar-container">
@@ -3012,6 +3020,7 @@
         const SYNC_INTERVAL = 30000; // Sync every 30 seconds
         // True when no localStorage existed at page load — sheet data should fully replace sample data
         let freshDevice = !localStorage.getItem('lesEvents');
+        console.log('[LES] app init — freshDevice:', freshDevice, 'localStorage events:', !!localStorage.getItem('lesEvents'));
 
         function normalizeTypeKey(type) {
             if (!type) return '';
@@ -3023,6 +3032,7 @@
             try {
                 const payload = {
                     event: {
+                        id: event.id,
                         name: event.name,
                         owner: event.owner,
                         supporting: event.supporting || '',
@@ -3053,7 +3063,10 @@
                 });
                 const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const result = await response.json();
-                console.log('Sync to sheet result:', result);
+                if (!result.success) {
+                    console.warn('Sheet sync error for', event.name, ':', result.error);
+                    return false;
+                }
                 return true;
             } catch (error) {
                 console.warn('Sheet sync failed (offline):', error);
@@ -3091,14 +3104,36 @@
         async function syncEventsFromSheet() {
             const now = Date.now();
             if (now - lastSheetSync < SYNC_INTERVAL) return;
+            console.log('[LES] syncEventsFromSheet: starting fetch, freshDevice=', freshDevice);
 
             try {
-                const response = await fetch(APPS_SCRIPT_URL);
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 20000);
+                const response = await fetch(APPS_SCRIPT_URL, { signal: controller.signal });
+                clearTimeout(timeout);
+                console.log('[LES] fetch response status:', response.status, response.url);
                 const data = await response.json();
+                console.log('[LES] sheet response: success=', data.success, 'events=', data.events?.length, data.error || '');
 
                 if (data.success && data.events) {
-                    const buildFromSheet = (s, id) => ({
-                        id,
+                    // Deduplicate sheet events by id (preferred) then name+date, keeping the last occurrence
+                    const deduped = [];
+                    const seenIds = new Set();
+                    const seenNameDate = new Set();
+                    data.events.slice().reverse().forEach(s => {
+                        const key = s.id ? String(s.id) : null;
+                        const nameDate = (s.name || '').trim().toLowerCase() + '|' + (s.date || '');
+                        if (key && seenIds.has(key)) return;
+                        if (seenNameDate.has(nameDate)) return;
+                        if (key) seenIds.add(key);
+                        seenNameDate.add(nameDate);
+                        deduped.push(s);
+                    });
+                    const sheetEvents = deduped.reverse();
+
+                    let nextId = Math.max(...events.map(e => e.id), 0) + 1;
+                    const buildFromSheet = (s) => ({
+                        id: s.id ? Number(s.id) : nextId++,
                         name: s.name,
                         owner: s.owner || '',
                         supporting: s.supporting || '',
@@ -3125,20 +3160,24 @@
                         outreachReport: s.outreachReport || 'No'
                     });
 
-                    if (freshDevice && data.events.length > 0) {
+                    if (freshDevice && sheetEvents.length > 0) {
                         // Fresh device: discard sample data and use sheet as the sole source of truth
-                        events = data.events.map((s, i) => buildFromSheet(s, i + 1));
+                        events = sheetEvents.map(s => buildFromSheet(s));
                         freshDevice = false;
                     } else {
-                        const sheetEventMap = {};
-                        data.events.forEach(e => { sheetEventMap[e.name] = e; sheetEventMap[e.name.trim()] = e; });
+                        // Build lookup maps by id and by name for merging
+                        const sheetById = {};
+                        const sheetByName = {};
+                        sheetEvents.forEach(s => {
+                            if (s.id) sheetById[String(s.id)] = s;
+                            sheetByName[s.name.trim().toLowerCase()] = s;
+                        });
 
-                        const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
                         const deletedNames = getDeletedNames();
 
-                        // Full mirror: update all fields from sheet for existing events
+                        // Full mirror: update all fields from sheet for existing local events (match by id, then name)
                         events.forEach(localEvent => {
-                            const s = sheetEventMap[localEvent.name] || sheetEventMap[localEvent.name.trim()];
+                            const s = sheetById[String(localEvent.id)] || sheetByName[localEvent.name.trim().toLowerCase()];
                             if (!s) return;
                             if (s.status !== undefined && s.status)   localEvent.status   = s.status;
                             if (s.owner)    localEvent.owner    = s.owner;
@@ -3149,9 +3188,8 @@
                             if (s.location !== undefined) localEvent.location = s.location;
                             if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category.split(',')[0].trim(); }
                             if (s.type)     localEvent.type     = normalizeEventType(s.type);
-                            // Sync task fields from sheet: only apply 'Yes'/'N/A' from sheet to avoid
-                            // a race condition where a 30-second poll overwrites a locally-checked task
-                            // back to 'No' before the sheet write has been confirmed.
+                            // Sync task fields: only promote to Yes/N/A to avoid overwriting a just-checked
+                            // task before the sheet write has been confirmed.
                             const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
                             taskKeys.forEach(key => {
                                 if (!(key in s)) return;
@@ -3160,11 +3198,14 @@
                             });
                         });
 
-                        // Add new events from sheet that don't exist locally and haven't been deleted
-                        data.events.forEach(s => {
+                        // Add sheet events that don't exist locally and haven't been deleted
+                        const existingIds = new Set(events.map(e => String(e.id)));
+                        const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
+                        sheetEvents.forEach(s => {
+                            if (s.id && existingIds.has(String(s.id))) return;
                             if (existingNames.has(s.name.trim().toLowerCase())) return;
                             if (deletedNames.has(s.name.trim().toLowerCase())) return;
-                            events.push(buildFromSheet(s, Math.max(...events.map(e => e.id), 0) + 1));
+                            events.push(buildFromSheet(s));
                         });
                     }
 
@@ -3176,6 +3217,41 @@
                 }
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
+            } finally {
+                // If still in fresh-device loading state (fetch failed or returned empty),
+                // clear it so the UI doesn't stay on the loading screen.
+                if (freshDevice) {
+                    freshDevice = false;
+                    applyFilters();
+                }
+            }
+        }
+
+        function reloadFromSheet() {
+            const btn = event && event.target;
+            if (btn) { btn.textContent = '↺ Reloading…'; btn.disabled = true; }
+            console.log('[LES] reloadFromSheet: clearing cache and reloading');
+            localStorage.removeItem('lesEvents');
+            localStorage.removeItem('bulkSyncDone');
+            location.reload();
+        }
+
+        async function pushAllToSheet() {
+            const btn = document.getElementById('pushToSheetBtn');
+            if (btn) { btn.disabled = true; btn.textContent = '⬆ Pushing...'; }
+            const failed = [];
+            for (let i = 0; i < events.length; i++) {
+                if (btn) btn.textContent = `⬆ Pushing… (${i + 1}/${events.length})`;
+                const ok = await syncEventToSheet(events[i]);
+                if (!ok) failed.push(events[i].name);
+                if (i < events.length - 1) await new Promise(r => setTimeout(r, 300));
+            }
+            if (btn) { btn.disabled = false; btn.textContent = '⬆ Push to Sheet'; }
+            const succeeded = events.length - failed.length;
+            if (failed.length === 0) {
+                alert(`✅ All ${succeeded} events pushed to Google Sheets successfully.\n\nYour team members can now click "↺ Reload from Sheet" to see the latest data.`);
+            } else {
+                alert(`⚠️ ${succeeded} of ${events.length} events pushed.\n\nFailed (${failed.length}):\n${failed.join('\n')}\n\nCheck your internet connection and try again.`);
             }
         }
 
@@ -3724,6 +3800,13 @@
         }
 
         function applyFilters() {
+            const overlay = document.getElementById('sheetLoadingOverlay');
+            if (freshDevice) {
+                if (overlay) overlay.style.display = 'block';
+                return;
+            }
+            if (overlay) overlay.style.display = 'none';
+
             let selectedOwners = Array.from(document.querySelectorAll('#filterOwner .filter-pill.active')).map(p => p.dataset.value);
             let selectedCategories = Array.from(document.querySelectorAll('#filterCategory .filter-pill.active')).map(p => p.dataset.value);
             let selectedStatuses = Array.from(document.querySelectorAll('#filterStatus .filter-pill.active')).map(p => p.dataset.value);
