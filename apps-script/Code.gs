@@ -53,10 +53,14 @@ function doGet(e) {
     }
 
     const tz = spreadsheet.getSpreadsheetTimeZone();
-    const data = sheet.getDataRange().getValues();
+    let data = sheet.getDataRange().getValues();
     const headers = data[0];
-    const events = [];
 
+    // Auto-remove duplicate rows before returning events
+    const deleted = dedupeSheetRows(sheet, data, headers);
+    if (deleted > 0) data = sheet.getDataRange().getValues();
+
+    const events = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
       if (!row[0]) continue;
@@ -113,9 +117,11 @@ function doPost(e) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
+    const nameColIdx2 = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
+    const needle2 = String(eventName).trim().toLowerCase();
     for (let i = 1; i < data.length; i++) {
-      if (data[i][0] === eventName) {
+      if (String(data[i][nameColIdx2]).trim().toLowerCase() === needle2) {
         eventRow = i;
         break;
       }
@@ -316,17 +322,24 @@ function handleSyncEvent(eventData) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
-    // Find event row — prefer ID match, fall back to name match
-    const idColIdx = findColumnIndex(headers, 'Event ID');
+    // Ensure Event ID column exists; create it if missing
+    let idColIdx = findColumnIndex(headers, 'Event ID');
+    if (idColIdx === -1) {
+      idColIdx = headers.length;
+      sheet.getRange(1, idColIdx + 1).setValue('Event ID');
+      headers.push('Event ID');
+    }
+    const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
-    if (idColIdx !== -1 && event.id) {
+    if (event.id) {
       for (let i = 1; i < data.length; i++) {
         if (String(data[i][idColIdx]) === String(event.id)) { eventRow = i; break; }
       }
     }
     if (eventRow === -1) {
+      const needle = String(event.name).trim().toLowerCase();
       for (let i = 1; i < data.length; i++) {
-        if (data[i][0] === event.name) { eventRow = i; break; }
+        if (String(data[i][nameColIdx]).trim().toLowerCase() === needle) { eventRow = i; break; }
       }
     }
 
@@ -804,6 +817,53 @@ function formatSheetTime(val) {
     return `${h}:${m} ${period}`;
   }
   return str;
+}
+
+/**
+ * Remove duplicate rows from the tracker sheet.
+ * Keeps the row that has an Event ID; if tied, keeps the last occurrence.
+ * Returns the number of rows deleted.
+ */
+function dedupeSheetRows(sheet, data, headers) {
+  const idColIdx = findColumnIndex(headers, 'Event ID');
+  const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+  const dateColIdx = findColumnIndex(headers, 'Date');
+
+  function rowKey(row) {
+    const name = String(row[nameColIdx] || '').trim().toLowerCase();
+    if (!name) return null;
+    const id = idColIdx !== -1 ? String(row[idColIdx] || '').trim() : '';
+    const date = dateColIdx !== -1 ? String(row[dateColIdx] || '') : '';
+    return id || (name + '|' + date);
+  }
+
+  // First pass: for each key, find the best row index to keep
+  const keepIdx = {}; // key -> data[] index
+  for (let i = 1; i < data.length; i++) {
+    const key = rowKey(data[i]);
+    if (!key) continue;
+    if (!(key in keepIdx)) {
+      keepIdx[key] = i;
+    } else {
+      const prevHasId = idColIdx !== -1 && String(data[keepIdx[key]][idColIdx] || '').trim() !== '';
+      const currHasId = idColIdx !== -1 && String(data[i][idColIdx] || '').trim() !== '';
+      if (!prevHasId && currHasId) keepIdx[key] = i; // prefer row with ID
+      else if (!prevHasId && !currHasId) keepIdx[key] = i; // else prefer later row
+    }
+  }
+
+  const keepSet = new Set(Object.values(keepIdx));
+
+  // Delete non-kept rows from bottom to top to preserve row indices
+  let deleted = 0;
+  for (let i = data.length - 1; i >= 1; i--) {
+    const key = rowKey(data[i]);
+    if (key && !keepSet.has(i)) {
+      sheet.deleteRow(i + 1);
+      deleted++;
+    }
+  }
+  return deleted;
 }
 
 function hashCode(str) {
