@@ -3252,11 +3252,14 @@
             const btn = document.getElementById('pushToSheetBtn');
             if (btn) { btn.disabled = true; btn.textContent = '⬆ Pushing...'; }
             const failed = [];
-            for (let i = 0; i < events.length; i++) {
-                if (btn) btn.textContent = `⬆ Pushing… (${i + 1}/${events.length})`;
-                const ok = await syncEventToSheet(events[i]);
-                if (!ok) failed.push(events[i].name);
-                if (i < events.length - 1) await new Promise(r => setTimeout(r, 300));
+            const batchSize = 5;
+            for (let i = 0; i < events.length; i += batchSize) {
+                const batch = events.slice(i, i + batchSize);
+                if (btn) btn.textContent = `⬆ Pushing… (${Math.min(i + batchSize, events.length)}/${events.length})`;
+                const results = await Promise.allSettled(batch.map(e => syncEventToSheet(e)));
+                results.forEach((r, j) => {
+                    if (r.status === 'rejected' || r.value === false) failed.push(batch[j].name);
+                });
             }
             if (btn) { btn.disabled = false; btn.textContent = '⬆ Push to Sheet'; }
             const succeeded = events.length - failed.length;
@@ -3267,11 +3270,10 @@
             }
         }
 
-        // Bulk sync all local events to sheet (staggered to avoid rate limits)
         async function syncAllToSheet() {
-            for (let i = 0; i < events.length; i++) {
-                await syncEventToSheet(events[i]);
-                if (i < events.length - 1) await new Promise(r => setTimeout(r, 300));
+            const batchSize = 5;
+            for (let i = 0; i < events.length; i += batchSize) {
+                await Promise.allSettled(events.slice(i, i + batchSize).map(e => syncEventToSheet(e)));
             }
             localStorage.setItem('bulkSyncDone', '1');
             console.log('Bulk sync complete:', events.length, 'events');
