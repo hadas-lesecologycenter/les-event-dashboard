@@ -3129,7 +3129,19 @@
                         seenNameDate.add(nameDate);
                         deduped.push(s);
                     });
-                    const sheetEvents = deduped.reverse();
+                    // Remove events whose name is a prefix of another event on the same date
+                    // (handles renamed events that created extra rows before the ID fix)
+                    const prefixFiltered = deduped.filter(s => {
+                        const n = (s.name || '').trim().toLowerCase();
+                        const d = s.date || '';
+                        return !deduped.some(other => {
+                            if (other === s) return false;
+                            if ((other.date || '') !== d) return false;
+                            const on = (other.name || '').trim().toLowerCase();
+                            return on.length > n.length && (on.startsWith(n + ' ') || on.startsWith(n + '-') || on.startsWith(n + '–') || on.startsWith(n + ','));
+                        });
+                    });
+                    const sheetEvents = prefixFiltered.reverse();
 
                     let nextId = Math.max(...events.map(e => e.id), 0) + 1;
                     const buildFromSheet = (s) => ({
