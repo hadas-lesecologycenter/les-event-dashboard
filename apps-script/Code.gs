@@ -71,12 +71,20 @@ function doGet(e) {
       if (event) events.push(event);
     }
 
-    return ContentService.createTextOutput(JSON.stringify({
+    const response = {
       success: true,
       count: events.length,
       events: events,
       lastSync: new Date().toISOString()
-    })).setMimeType(ContentService.MimeType.JSON);
+    };
+    if (events.length === 0) {
+      response.debug = {
+        rowCount: data.length - 1,
+        headers: headers,
+        firstDataRow: data.length > 1 ? data[1] : null
+      };
+    }
+    return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(ContentService.MimeType.JSON);
 
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({
