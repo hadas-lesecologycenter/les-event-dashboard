@@ -60,7 +60,7 @@ function doGet(e) {
     const deleted = dedupeSheetRows(sheet, data, headers);
     if (deleted > 0) data = sheet.getDataRange().getValues();
 
-    // Check the actual name column ("Column 1"), not column 0 — the name may
+    // Check the actual name column ("Column 1"), not column 0 -- the name may
     // not be the first column (e.g. after an Event ID column was inserted).
     const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     const events = [];
@@ -343,7 +343,7 @@ function handleSyncEvent(eventData) {
     const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
     // Only match by ID if the incoming ID looks like a real 26XXX sheet ID.
-    // Dashboard events without a sheet ID carry a temporary JS hash — don't
+    // Dashboard events without a sheet ID carry a temporary JS hash -- don't
     // try to look those up by ID or they'll never match.
     if (event.id && isSheetId(event.id)) {
       for (let i = 1; i < data.length; i++) {
@@ -415,7 +415,7 @@ function handleSyncEvent(eventData) {
       // sheet row just below it is lastEventRow + 2.
       if (insertBefore === -1) insertBefore = lastEventRow + 2;
 
-      // Insert a fresh row at that position and fill it — never overwrites data.
+      // Insert a fresh row at that position and fill it -- never overwrites data.
       if (insertBefore > sheet.getMaxRows()) sheet.insertRowAfter(sheet.getMaxRows());
       else sheet.insertRowBefore(insertBefore);
       sheet.getRange(insertBefore, 1, 1, newRow.length).setValues([newRow]);
@@ -496,7 +496,7 @@ function handleCreateEventbriteEvent(data) {
     if (!apiKey) {
       return ContentService.createTextOutput(JSON.stringify({
         success: false,
-        error: 'EVENTBRITE_API_KEY not set. Add it in Apps Script → Project Settings → Script Properties.'
+        error: 'EVENTBRITE_API_KEY not set. Add it in Apps Script -> Project Settings -> Script Properties.'
       })).setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -794,8 +794,8 @@ function generateNextEventId(data, headers) {
  * One-time migration: assigns 26XXX IDs to every sheet row that has a name
  * but no Event ID yet, in row order (top to bottom = chronological).
  *
- * How to run: Apps Script editor → choose "assignMissingIds" in the function
- * dropdown → click ▶ Run. Check the Execution log for a summary.
+ * How to run: Apps Script editor -> choose "assignMissingIds" in the function
+ * dropdown -> click >> Run. Check the Execution log for a summary.
  */
 function assignMissingIds() {
   const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
@@ -807,7 +807,7 @@ function assignMissingIds() {
   const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
 
   if (idColIdx === -1) {
-    Logger.log('No "Event ID" column found — add a column with header "Event ID" first.');
+    Logger.log('No "Event ID" column found -- add a column with header "Event ID" first.');
     return;
   }
 
@@ -830,7 +830,7 @@ function assignMissingIds() {
     const newId = '26' + max;
     sheet.getRange(i + 1, idColIdx + 1).setValue(newId);
     assigned++;
-    Logger.log('  ' + newId + '  →  ' + name);
+    Logger.log('  ' + newId + '  ->  ' + name);
   }
   Logger.log('Done. Assigned ' + assigned + ' IDs. Highest ID is now 26' + max + '.');
 }
@@ -915,7 +915,7 @@ function formatSheetTime(val) {
     else if (h > 12) h -= 12;
     return `${h}:${String(m).padStart(2, '0')} ${period}`;
   }
-  // Plain string like "14:00" or "2:00:00 AM" — convert to 12-hour without seconds
+  // Plain string like "14:00" or "2:00:00 AM" -- convert to 12-hour without seconds
   const str = String(val).trim();
   // Remove seconds if present (e.g., "2:00:00 AM" -> "2:00 AM")
   const withoutSeconds = str.replace(/:\d{2}(\s*(?:AM|PM))/i, '$1');
