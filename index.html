@@ -3825,7 +3825,7 @@
                 const holdBg = (event.status === 'Hold' || event.status === 'Canceled') ? '#f3f4f6' : 'white';
                 return `
                     <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s; background: ${holdBg};" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='${holdBg}'">
-                        <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}</td>
+                        <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}<br><span style="font-size:0.75em;color:#9ca3af;font-weight:400;">#${event.id}</span></td>
                         <td style="padding: 12px 20px; font-size: 0.9em;"><span class="owner-badge ${event.owner.toLowerCase()}">${event.owner}</span></td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${formatDate(event.date)}</td>
                         <td style="padding: 12px 20px; font-size: 0.9em;">${event.time ? to12HourTime(event.time) + (event.endTime ? ' - ' + to12HourTime(event.endTime) : '') : '—'}</td>
@@ -4124,6 +4124,7 @@
                                     ${event.supporting ? `<span class="meta-item" style="color:#6a5a4a;">+ ${event.supporting}</span>` : ''}
                                     <span class="meta-item">📅 ${formatDate(event.date)} ${to12HourTime(event.time)}${event.endTime ? ' - ' + to12HourTime(event.endTime) : ''}</span>
                                     ${event.location ? `<span class="meta-item">${locationIcon(event.location)} ${event.location}</span>` : ''}
+                                    <span class="meta-item" style="color:#9ca3af;font-size:0.8em;">#${event.id}</span>
                                 </div>
                                 <div id="metrics-${event.id}" class="metrics-placeholder"></div>
                             </div>
@@ -4985,6 +4986,10 @@
                         <div>
                             <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Date & Time</label>
                             <div style="color: #1d5432; font-weight: 500;">${formatDate(event.date)} at ${timeRange}</div>
+                        </div>
+                        <div>
+                            <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Event ID</label>
+                            <div style="color: #9ca3af; font-weight: 500; font-family: monospace;">#${event.id}</div>
                         </div>
                         <div>
                             <label style="font-weight: 600; color: #6a5a4a; font-size: 0.85em;">Category</label>
