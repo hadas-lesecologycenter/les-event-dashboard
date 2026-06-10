@@ -334,7 +334,10 @@ function handleSyncEvent(eventData) {
     }
     const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     let eventRow = -1;
-    if (event.id) {
+    // Only match by ID if the incoming ID looks like a real 26XXX sheet ID.
+    // Dashboard events without a sheet ID carry a temporary JS hash — don't
+    // try to look those up by ID or they'll never match.
+    if (event.id && isSheetId(event.id)) {
       for (let i = 1; i < data.length; i++) {
         if (String(data[i][idColIdx]) === String(event.id)) { eventRow = i; break; }
       }
@@ -349,8 +352,9 @@ function handleSyncEvent(eventData) {
     // If event doesn't exist, append it
     if (eventRow === -1) {
       const newRow = new Array(headers.length).fill('');
+      const assignedId = generateNextEventId(data, headers);
       const basicMap = {
-        'Event ID': event.id || '',
+        'Event ID': assignedId,
         'Column 1': event.name,
         'Owner': event.owner || '',
         'Supporting': event.supporting || '',
@@ -413,9 +417,16 @@ function handleSyncEvent(eventData) {
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
     } else {
+      // If this row has no ID yet, assign the next 26XXX ID now
+      const existingId = String(data[eventRow][idColIdx] || '').trim();
+      const rowId = existingId || generateNextEventId(data, headers);
+      if (!existingId && idColIdx !== -1) {
+        sheet.getRange(eventRow + 1, idColIdx + 1).setValue(rowId);
+      }
+
       // Update basic event fields
       const basicMap = {
-        'Event ID': event.id || '',
+        'Event ID': rowId,
         'Column 1': event.name,
         'Owner': event.owner || '',
         'Supporting': event.supporting || '',
@@ -741,6 +752,79 @@ function rowMatchesMonthYear(dateVal, month, year) {
   const monthMatch = !month || month === 'All' || rowMonth === month;
   const yearMatch = !year || year === 'All' || rowYear === year;
   return monthMatch && yearMatch;
+}
+
+/**
+ * Returns true for IDs in the 26XXX format (26 + 1-4 digits = up to event 9999).
+ * Used to distinguish real sheet IDs from temporary JS hash IDs the dashboard
+ * uses for events that haven't been assigned a sheet ID yet.
+ */
+function isSheetId(id) {
+  return /^26\d{1,4}$/.test(String(id || ''));
+}
+
+/**
+ * Finds the highest existing 26XXX ID in the sheet and returns the next one.
+ * If no 26XXX IDs exist yet, starts at 261 (event #1 of 2026).
+ */
+function generateNextEventId(data, headers) {
+  const idColIdx = findColumnIndex(headers, 'Event ID');
+  let max = 0;
+  if (idColIdx !== -1) {
+    for (let i = 1; i < data.length; i++) {
+      const val = String(data[i][idColIdx] || '').trim();
+      if (/^26\d{1,4}$/.test(val)) {
+        const n = parseInt(val.slice(2), 10);
+        if (n > max) max = n;
+      }
+    }
+  }
+  return '26' + (max + 1);
+}
+
+/**
+ * One-time migration: assigns 26XXX IDs to every sheet row that has a name
+ * but no Event ID yet, in row order (top to bottom = chronological).
+ *
+ * How to run: Apps Script editor → choose "assignMissingIds" in the function
+ * dropdown → click ▶ Run. Check the Execution log for a summary.
+ */
+function assignMissingIds() {
+  const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const idColIdx = findColumnIndex(headers, 'Event ID');
+  const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+
+  if (idColIdx === -1) {
+    Logger.log('No "Event ID" column found — add a column with header "Event ID" first.');
+    return;
+  }
+
+  let max = 0;
+  for (let i = 1; i < data.length; i++) {
+    const val = String(data[i][idColIdx] || '').trim();
+    if (/^26\d{1,4}$/.test(val)) {
+      const n = parseInt(val.slice(2), 10);
+      if (n > max) max = n;
+    }
+  }
+
+  let assigned = 0;
+  for (let i = 1; i < data.length; i++) {
+    const name = String(data[i][nameColIdx] || '').trim();
+    const existingId = String(data[i][idColIdx] || '').trim();
+    if (!name) continue;
+    if (existingId) continue;
+    max++;
+    const newId = '26' + max;
+    sheet.getRange(i + 1, idColIdx + 1).setValue(newId);
+    assigned++;
+    Logger.log('  ' + newId + '  →  ' + name);
+  }
+  Logger.log('Done. Assigned ' + assigned + ' IDs. Highest ID is now 26' + max + '.');
 }
 
 function findColumnIndex(headers, searchTerm) {
