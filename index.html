@@ -1600,6 +1600,7 @@
             <div style="font-size:2em; margin-bottom:12px;">⏳</div>
             <div style="font-size:1.1em; font-weight:600; color:#1d5432; margin-bottom:8px;">Loading events from Google Sheets…</div>
             <div style="color:#6b7280; font-size:0.9em;">This only takes a moment on a new device.</div>
+            <button id="overlayRetryBtn" onclick="reloadFromSheet()" style="display:none; margin-top:20px; padding:10px 24px; background:#1d5432; color:white; border:none; border-radius:8px; font-size:1em; font-weight:600; cursor:pointer;">↺ Load events now</button>
         </div>
 
         <div id="calendarView" class="calendar-container">
@@ -3191,11 +3192,21 @@
                 }
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
+                if (freshDevice) {
+                    // Show a visible error so the user knows what happened
+                    const toast = document.createElement('div');
+                    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:14px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:380px;line-height:1.5;';
+                    toast.innerHTML = `⚠️ Couldn't load from Google Sheets.<br><span style="font-size:0.9em;opacity:0.9;">Make sure the Apps Script is deployed as <strong>"Anyone"</strong> (not "Anyone with Google account"). Click ↺ Load events now to retry.</span>`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 10000);
+                }
             } finally {
                 // If still in fresh-device loading state (fetch failed or returned empty),
                 // clear it so the UI doesn't stay on the loading screen.
                 if (freshDevice) {
                     freshDevice = false;
+                    const retryBtn = document.getElementById('overlayRetryBtn');
+                    if (retryBtn) retryBtn.style.display = 'inline-block';
                     applyFilters();
                 }
             }
@@ -3214,6 +3225,13 @@
         function startAutoSync() {
             setInterval(syncEventsFromSheet, SYNC_INTERVAL);
             syncEventsFromSheet();
+            // Show a manual retry button in the overlay after 5s in case the fetch is slow
+            setTimeout(() => {
+                if (freshDevice) {
+                    const retryBtn = document.getElementById('overlayRetryBtn');
+                    if (retryBtn) retryBtn.style.display = 'inline-block';
+                }
+            }, 5000);
         }
 
         async function fetchEventMetrics(event) {
