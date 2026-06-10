@@ -60,10 +60,13 @@ function doGet(e) {
     const deleted = dedupeSheetRows(sheet, data, headers);
     if (deleted > 0) data = sheet.getDataRange().getValues();
 
+    // Check the actual name column ("Column 1"), not column 0 — the name may
+    // not be the first column (e.g. after an Event ID column was inserted).
+    const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
     const events = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (!row[0]) continue;
+      if (!row[nameColIdx]) continue;
       const event = parseEventRow(row, headers, tz);
       if (event) events.push(event);
     }
@@ -540,8 +543,9 @@ function handleDeleteEvent(name) {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
     const data = sheet.getDataRange().getValues();
+    const nameColIdx = Math.max(findColumnIndex(data[0], 'Column 1'), 0);
     for (let i = data.length - 1; i >= 1; i--) {
-      if (String(data[i][0]).trim().toLowerCase() === name.trim().toLowerCase()) {
+      if (String(data[i][nameColIdx]).trim().toLowerCase() === name.trim().toLowerCase()) {
         sheet.deleteRow(i + 1);
         return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
       }
