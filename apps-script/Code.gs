@@ -376,21 +376,34 @@ function handleSyncEvent(eventData) {
         if (idx !== -1) newRow[idx] = val;
       });
 
+      // Find the last row that actually holds an event, ignoring any trailing
+      // blank or stray rows further down the sheet. getLastRow() (data.length)
+      // can point far past the real events if a single stray cell exists below,
+      // which is what pushed new events to the bottom with a blank gap above.
+      let lastEventRow = 0;
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][nameColIdx] || '').trim() !== '') lastEventRow = i;
+      }
+
       // Insert in date order
       const dateColIdx = findColumnIndex(headers, 'Date');
       const newDate = event.date ? new Date(event.date) : new Date('9999-12-31');
       let insertBefore = -1;
-      for (let i = 1; i < data.length; i++) {
-        if (!data[i][0]) continue;
+      for (let i = 1; i <= lastEventRow; i++) {
+        if (String(data[i][nameColIdx] || '').trim() === '') continue;
         const rowDate = data[i][dateColIdx] ? new Date(data[i][dateColIdx]) : new Date('9999-12-31');
         if (!isNaN(rowDate) && newDate < rowDate) { insertBefore = i + 1; break; }
       }
-      if (insertBefore === -1) {
-        sheet.getRange(data.length + 1, 1, 1, newRow.length).setValues([newRow]);
-      } else {
-        sheet.insertRowBefore(insertBefore);
-        sheet.getRange(insertBefore, 1, 1, newRow.length).setValues([newRow]);
-      }
+
+      // Default: place it immediately after the last real event (not after the
+      // trailing blank rows). lastEventRow is a 0-based data[] index, so the
+      // sheet row just below it is lastEventRow + 2.
+      if (insertBefore === -1) insertBefore = lastEventRow + 2;
+
+      // Insert a fresh row at that position and fill it — never overwrites data.
+      if (insertBefore > sheet.getMaxRows()) sheet.insertRowAfter(sheet.getMaxRows());
+      else sheet.insertRowBefore(insertBefore);
+      sheet.getRange(insertBefore, 1, 1, newRow.length).setValues([newRow]);
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
         message: `Event "${event.name}" created in sheet`,
