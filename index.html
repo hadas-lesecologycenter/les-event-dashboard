@@ -3111,8 +3111,18 @@
                 const timeout = setTimeout(() => controller.abort(), 20000);
                 const response = await fetch(APPS_SCRIPT_URL, { signal: controller.signal });
                 clearTimeout(timeout);
-                console.log('[LES] fetch response status:', response.status, response.url);
-                const data = await response.json();
+                const text = await response.text();
+                console.log('[LES] fetch status:', response.status, 'final url:', response.url, 'body[0:120]:', text.slice(0, 120));
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (parseErr) {
+                    // Endpoint returned HTML instead of JSON — almost always a Google
+                    // sign-in / authorization page, which means the deployment is not
+                    // truly public (wrong "Execute as" / "Who has access" settings).
+                    const isLogin = /accounts\.google\.com|ServiceLogin|signin\/v|Sign in|authorization|requires you to/i.test((response.url || '') + ' ' + text.slice(0, 2000));
+                    throw new Error(isLogin ? 'LOGIN_REDIRECT' : 'NON_JSON');
+                }
                 console.log('[LES] sheet response: success=', data.success, 'events=', data.events?.length, data.error || '');
 
                 if (data.success && data.events) {
@@ -3193,12 +3203,19 @@
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
                 if (freshDevice) {
-                    // Show a visible error so the user knows what happened
+                    let msg;
+                    if (error.message === 'LOGIN_REDIRECT') {
+                        msg = `⚠️ The Apps Script is asking visitors to <strong>sign in</strong>, so it can't load publicly.<br><span style="font-size:0.9em;opacity:0.9;">In Apps Script → <strong>Deploy → Manage deployments → ✏️ Edit</strong>, set <strong>Execute as: Me</strong> AND <strong>Who has access: Anyone</strong>, then <strong>Deploy</strong>. Both settings matter.</span>`;
+                    } else if (error.name === 'AbortError') {
+                        msg = `⚠️ Google Sheets took too long to respond. Click ↺ Load events now to retry.`;
+                    } else {
+                        msg = `⚠️ Couldn't load from Google Sheets (${error.message}).<br><span style="font-size:0.9em;opacity:0.9;">Click ↺ Load events now to retry.</span>`;
+                    }
                     const toast = document.createElement('div');
-                    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:14px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:380px;line-height:1.5;';
-                    toast.innerHTML = `⚠️ Couldn't load from Google Sheets.<br><span style="font-size:0.9em;opacity:0.9;">Make sure the Apps Script is deployed as <strong>"Anyone"</strong> (not "Anyone with Google account"). Click ↺ Load events now to retry.</span>`;
+                    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:14px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:400px;line-height:1.5;';
+                    toast.innerHTML = msg;
                     document.body.appendChild(toast);
-                    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 10000);
+                    setTimeout(() => { if (toast.parentNode) toast.remove(); }, 15000);
                 }
             } finally {
                 // If still in fresh-device loading state (fetch failed or returned empty),
