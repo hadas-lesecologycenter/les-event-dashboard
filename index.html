@@ -1469,8 +1469,7 @@
             <button class="view-btn" data-view="stats">📈 Stats</button>
 
             <button id="addEventBtnMain" style="padding: 12px 30px; background: #1d5432; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-left: 10px; box-shadow: 0 2px 8px rgba(29, 84, 50, 0.3); transition: all 0.3s ease;">➕ Add an Event</button>
-            <button id="pushToSheetBtn" onclick="pushAllToSheet()" title="Push all local events to Google Sheets (use on your primary device first)" style="padding: 12px 16px; background: none; color: #6b7280; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;" onmouseover="this.style.borderColor='#1d5432';this.style.color='#1d5432'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6b7280'">⬆ Push to Sheet</button>
-            <button onclick="reloadFromSheet()" title="Clear local cache and reload all events from Google Sheets" style="padding: 12px 16px; background: none; color: #6b7280; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;" onmouseover="this.style.borderColor='#1d5432';this.style.color='#1d5432'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6b7280'">↺ Reload from Sheet</button>
+            <button onclick="reloadFromSheet()" title="Reload all events from Google Sheets" style="padding: 12px 16px; background: none; color: #6b7280; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; font-size: 0.9em; margin-left: 6px;" onmouseover="this.style.borderColor='#1d5432';this.style.color='#1d5432'" onmouseout="this.style.borderColor='#d1d5db';this.style.color='#6b7280'">↺ Reload from Sheet</button>
         </div>
 
         <div class="filter-bar" id="sharedFilterBar">
@@ -3130,7 +3129,6 @@
                         deduped.push(s);
                     });
                     // Remove events whose name is a prefix of another event on the same date
-                    // (handles renamed events that created extra rows before the ID fix)
                     const prefixFiltered = deduped.filter(s => {
                         const n = (s.name || '').trim().toLowerCase();
                         const d = s.date || '';
@@ -3150,7 +3148,7 @@
                         owner: s.owner || '',
                         supporting: s.supporting || '',
                         date: parseLocalDate(s.date),
-                        time: s.time || '12:00 PM',
+                        time: s.time || '',
                         endTime: s.endTime || '',
                         location: s.location || '',
                         category: s.category || '',
@@ -3172,60 +3170,24 @@
                         outreachReport: s.outreachReport || 'No'
                     });
 
-                    if (freshDevice && sheetEvents.length > 0) {
-                        // Fresh device: discard sample data and use sheet as the sole source of truth
-                        events = sheetEvents.map(s => buildFromSheet(s));
-                        freshDevice = false;
-                    } else {
-                        // Build lookup maps by id and by name for merging
-                        const sheetById = {};
-                        const sheetByName = {};
-                        sheetEvents.forEach(s => {
-                            if (s.id) sheetById[String(s.id)] = s;
-                            sheetByName[s.name.trim().toLowerCase()] = s;
-                        });
-
-                        const deletedNames = getDeletedNames();
-
-                        // Full mirror: update all fields from sheet for existing local events (match by id, then name)
-                        events.forEach(localEvent => {
-                            const s = sheetById[String(localEvent.id)] || sheetByName[localEvent.name.trim().toLowerCase()];
-                            if (!s) return;
-                            if (s.status !== undefined && s.status)   localEvent.status   = s.status;
-                            if (s.owner)    localEvent.owner    = s.owner;
-                            if (s.supporting !== undefined) localEvent.supporting = s.supporting;
-                            if (s.date)     localEvent.date     = parseLocalDate(s.date);
-                            if (s.time)     localEvent.time     = s.time;
-                            if (s.endTime !== undefined)  localEvent.endTime  = s.endTime;
-                            if (s.location !== undefined) localEvent.location = s.location;
-                            if (s.category) { localEvent.category = s.category; localEvent.primaryCategory = s.category.split(',')[0].trim(); }
-                            if (s.type)     localEvent.type     = normalizeEventType(s.type);
-                            // Sync task fields: only promote to Yes/N/A to avoid overwriting a just-checked
-                            // task before the sheet write has been confirmed.
-                            const taskKeys = ['brief','eventbrite','calendar','comms','compost','opsCheckin','reminder','report','treeMap','thankYou','coordConfirm','coordEmail','outreachReport'];
-                            taskKeys.forEach(key => {
-                                if (!(key in s)) return;
-                                if (s[key] === 'Yes') localEvent[key] = 'Yes';
-                                if (s[key] === 'N/A') localEvent[key] = 'N/A';
-                            });
-                        });
-
-                        // Add sheet events that don't exist locally and haven't been deleted
-                        const existingIds = new Set(events.map(e => String(e.id)));
-                        const existingNames = new Set(events.map(e => e.name.trim().toLowerCase()));
-                        sheetEvents.forEach(s => {
-                            if (s.id && existingIds.has(String(s.id))) return;
-                            if (existingNames.has(s.name.trim().toLowerCase())) return;
-                            if (deletedNames.has(s.name.trim().toLowerCase())) return;
-                            events.push(buildFromSheet(s));
-                        });
-                    }
+                    // Sheet is authoritative — replace all events with sheet data.
+                    // Preserve local-only events (just created, not yet reached the sheet).
+                    const sheetIds = new Set(sheetEvents.filter(s => s.id).map(s => String(s.id)));
+                    const sheetNames = new Set(sheetEvents.map(s => (s.name || '').trim().toLowerCase()));
+                    const deletedNames = getDeletedNames();
+                    const localOnly = events.filter(e =>
+                        !sheetIds.has(String(e.id)) &&
+                        !sheetNames.has((e.name || '').trim().toLowerCase()) &&
+                        !deletedNames.has((e.name || '').trim().toLowerCase())
+                    );
+                    events = [...sheetEvents.map(s => buildFromSheet(s)), ...localOnly];
+                    freshDevice = false;
 
                     events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
                     lastSheetSync = now;
                     applyFilters();
-                    console.log('Synced from sheet:', data.events.length, 'events');
+                    console.log('Synced from sheet:', sheetEvents.length, 'events');
                 }
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
@@ -3239,57 +3201,18 @@
             }
         }
 
-        function reloadFromSheet() {
+        async function reloadFromSheet() {
             const btn = event && event.target;
-            if (btn) { btn.textContent = '↺ Reloading…'; btn.disabled = true; }
-            console.log('[LES] reloadFromSheet: clearing cache and reloading');
-            localStorage.removeItem('lesEvents');
-            localStorage.removeItem('bulkSyncDone');
-            location.reload();
-        }
-
-        async function pushAllToSheet() {
-            const btn = document.getElementById('pushToSheetBtn');
-            if (btn) { btn.disabled = true; btn.textContent = '⬆ Pushing...'; }
-            const failed = [];
-            const batchSize = 5;
-            for (let i = 0; i < events.length; i += batchSize) {
-                const batch = events.slice(i, i + batchSize);
-                if (btn) btn.textContent = `⬆ Pushing… (${Math.min(i + batchSize, events.length)}/${events.length})`;
-                const results = await Promise.allSettled(batch.map(e => syncEventToSheet(e)));
-                results.forEach((r, j) => {
-                    if (r.status === 'rejected' || r.value === false) failed.push(batch[j].name);
-                });
-            }
-            if (btn) { btn.disabled = false; btn.textContent = '⬆ Push to Sheet'; }
-            const succeeded = events.length - failed.length;
-            if (failed.length === 0) {
-                alert(`✅ All ${succeeded} events pushed to Google Sheets successfully.\n\nYour team members can now click "↺ Reload from Sheet" to see the latest data.`);
-            } else {
-                alert(`⚠️ ${succeeded} of ${events.length} events pushed.\n\nFailed (${failed.length}):\n${failed.join('\n')}\n\nCheck your internet connection and try again.`);
-            }
-        }
-
-        async function syncAllToSheet() {
-            const batchSize = 5;
-            for (let i = 0; i < events.length; i += batchSize) {
-                await Promise.allSettled(events.slice(i, i + batchSize).map(e => syncEventToSheet(e)));
-            }
-            localStorage.setItem('bulkSyncDone', '1');
-            console.log('Bulk sync complete:', events.length, 'events');
+            if (btn) { btn.textContent = '↺ Syncing…'; btn.disabled = true; }
+            freshDevice = true;
+            await syncEventsFromSheet();
+            if (btn) { btn.textContent = '↺ Reload from Sheet'; btn.disabled = false; }
         }
 
         // Start auto-sync on page load
         function startAutoSync() {
             setInterval(syncEventsFromSheet, SYNC_INTERVAL);
-            // Wait for initial sync to finish before bulk-pushing, and never push on a fresh
-            // device (freshDevice is still true here) — that would send sample data to the sheet.
-            const wasFresh = freshDevice;
-            syncEventsFromSheet().then(() => {
-                if (!wasFresh && !localStorage.getItem('bulkSyncDone')) {
-                    syncAllToSheet();
-                }
-            });
+            syncEventsFromSheet();
         }
 
         async function fetchEventMetrics(event) {
