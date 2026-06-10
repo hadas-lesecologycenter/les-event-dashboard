@@ -3205,6 +3205,7 @@
             const btn = event && event.target;
             if (btn) { btn.textContent = '↺ Syncing…'; btn.disabled = true; }
             freshDevice = true;
+            lastSheetSync = 0; // bypass the 30s throttle so a manual reload always fetches
             await syncEventsFromSheet();
             if (btn) { btn.textContent = '↺ Reload from Sheet'; btn.disabled = false; }
         }
