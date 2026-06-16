@@ -3017,10 +3017,8 @@
 
         const metricsCache = {};
         let lastSheetSync = 0;
-        const SYNC_INTERVAL = 30000; // Sync every 30 seconds
-        // True when no localStorage existed at page load — sheet data should fully replace sample data
-        let freshDevice = !localStorage.getItem('lesEvents');
-        console.log('[LES] app init — freshDevice:', freshDevice, 'localStorage events:', !!localStorage.getItem('lesEvents'));
+        const SYNC_INTERVAL = 30000;
+        let sheetLoaded = false;
 
         function normalizeTypeKey(type) {
             if (!type) return '';
@@ -3104,7 +3102,7 @@
         async function syncEventsFromSheet() {
             const now = Date.now();
             if (now - lastSheetSync < SYNC_INTERVAL) return;
-            console.log('[LES] syncEventsFromSheet: starting fetch, freshDevice=', freshDevice);
+            console.log('[LES] syncEventsFromSheet: starting fetch, sheetLoaded=', sheetLoaded);
 
             try {
                 const controller = new AbortController();
@@ -3181,18 +3179,8 @@
                         outreachReport: s.outreachReport || 'No'
                     });
 
-                    // Sheet is authoritative — replace all events with sheet data.
-                    // Preserve local-only events (just created, not yet reached the sheet).
-                    const sheetIds = new Set(sheetEvents.filter(s => s.id).map(s => String(s.id)));
-                    const sheetNames = new Set(sheetEvents.map(s => (s.name || '').trim().toLowerCase()));
-                    const deletedNames = getDeletedNames();
-                    const localOnly = events.filter(e =>
-                        !sheetIds.has(String(e.id)) &&
-                        !sheetNames.has((e.name || '').trim().toLowerCase()) &&
-                        !deletedNames.has((e.name || '').trim().toLowerCase())
-                    );
-                    events = [...sheetEvents.map(s => buildFromSheet(s)), ...localOnly];
-                    freshDevice = false;
+                    events = sheetEvents.map(s => buildFromSheet(s));
+                    sheetLoaded = true;
 
                     events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
@@ -3202,7 +3190,7 @@
                 }
             } catch (error) {
                 console.warn('Failed to sync from sheet:', error);
-                if (freshDevice) {
+                if (!sheetLoaded) {
                     let msg;
                     if (error.message === 'LOGIN_REDIRECT') {
                         msg = `⚠️ The Apps Script is asking visitors to <strong>sign in</strong>, so it can't load publicly.<br><span style="font-size:0.9em;opacity:0.9;">In Apps Script → <strong>Deploy → Manage deployments → ✏️ Edit</strong>, set <strong>Execute as: Me</strong> AND <strong>Who has access: Anyone</strong>, then <strong>Deploy</strong>. Both settings matter.</span>`;
@@ -3218,10 +3206,7 @@
                     setTimeout(() => { if (toast.parentNode) toast.remove(); }, 15000);
                 }
             } finally {
-                // If still in fresh-device loading state (fetch failed or returned empty),
-                // clear it so the UI doesn't stay on the loading screen.
-                if (freshDevice) {
-                    freshDevice = false;
+                if (!sheetLoaded) {
                     const retryBtn = document.getElementById('overlayRetryBtn');
                     if (retryBtn) retryBtn.style.display = 'inline-block';
                     applyFilters();
@@ -3232,8 +3217,7 @@
         async function reloadFromSheet() {
             const btn = event && event.target;
             if (btn) { btn.textContent = '↺ Syncing…'; btn.disabled = true; }
-            freshDevice = true;
-            lastSheetSync = 0; // bypass the 30s throttle so a manual reload always fetches
+            lastSheetSync = 0;
             await syncEventsFromSheet();
             if (btn) { btn.textContent = '↺ Reload from Sheet'; btn.disabled = false; }
         }
@@ -3244,7 +3228,7 @@
             syncEventsFromSheet();
             // Show a manual retry button in the overlay after 5s in case the fetch is slow
             setTimeout(() => {
-                if (freshDevice) {
+                if (!sheetLoaded) {
                     const retryBtn = document.getElementById('overlayRetryBtn');
                     if (retryBtn) retryBtn.style.display = 'inline-block';
                 }
@@ -3701,48 +3685,16 @@
         }
 
         function loadEvents() {
-
-            const applyDefaults = (e) => {
-                const type = normalizeEventType(e.type);
-                const primaryCategory = e.primaryCategory ? e.primaryCategory.split(',')[0].trim() : (e.category ? e.category.split(',')[0].trim() : '');
-                const isPrivateStewardship = type === 'PRIVATE VOLUNTEER EVENT' && primaryCategory === 'Stewardship';
-                return {
-                    ...e,
-                    type,
-                    primaryCategory,
-                    date: parseLocalDate(e.date),
-                    volunteer: e.volunteer !== undefined ? e.volunteer : (isPrivateStewardship ? 'No' : 'N/A')
-                };
-            };
-
-            // Try to load from localStorage first
-            const saved = localStorage.getItem('lesEvents');
-            if (saved) {
-                try {
-                    events = JSON.parse(saved).map(applyDefaults);
-                    saveEvents();
-                    return;
-                } catch (e) {
-                    console.warn('Failed to load from localStorage:', e);
-                }
-            }
-
-            // Fall back to sample data if no saved events
-            events = getSampleData().map(e => applyDefaults({
-                coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No',
-                ...e
-            }));
+            events = [];
         }
 
         function saveEvents() {
-            // Deduplicate by ID only (not name — same-named events are valid)
             const seen = new Set();
             events = events.filter(e => {
                 if (seen.has(e.id)) return false;
                 seen.add(e.id);
                 return true;
             });
-            localStorage.setItem('lesEvents', JSON.stringify(events));
         }
 
         function setupEventListeners() {
@@ -3774,7 +3726,7 @@
 
         function applyFilters() {
             const overlay = document.getElementById('sheetLoadingOverlay');
-            if (freshDevice) {
+            if (!sheetLoaded) {
                 if (overlay) overlay.style.display = 'block';
                 return;
             }
@@ -4356,21 +4308,11 @@
             document.getElementById('eventForm').dataset.editingId = eventId;
         }
 
-        function getDeletedNames() {
-            try { return new Set(JSON.parse(localStorage.getItem('lesDeletedEvents') || '[]')); } catch { return new Set(); }
-        }
-        function markDeleted(name) {
-            const s = getDeletedNames(); s.add(name.trim().toLowerCase());
-            localStorage.setItem('lesDeletedEvents', JSON.stringify([...s]));
-        }
-
         async function deleteEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
             if (!confirm(`Are you sure you want to delete "${event.name}"? This cannot be undone.`)) return;
 
-            // Remove locally first so the UI feels instant
-            markDeleted(event.name);
             events = events.filter(e => e.id !== eventId);
             saveEvents();
             applyFilters();
