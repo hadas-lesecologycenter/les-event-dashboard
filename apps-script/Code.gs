@@ -62,7 +62,7 @@ function doGet(e) {
 
     // Check the actual name column ("Column 1"), not column 0 -- the name may
     // not be the first column (e.g. after an Event ID column was inserted).
-    const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+    const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
     const events = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
@@ -128,7 +128,7 @@ function doPost(e) {
     const data = sheet.getDataRange().getValues();
     const headers = data[0];
 
-    const nameColIdx2 = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+    const nameColIdx2 = Math.max(findColumnIndex(headers, 'Event Name'), 0);
     let eventRow = -1;
     const needle2 = String(eventName).trim().toLowerCase();
     for (let i = 1; i < data.length; i++) {
@@ -340,7 +340,7 @@ function handleSyncEvent(eventData) {
       sheet.getRange(1, idColIdx + 1).setValue('Event ID');
       headers.push('Event ID');
     }
-    const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+    const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
     let eventRow = -1;
     // Only match by ID if the incoming ID looks like a real 26XXX sheet ID.
     // Dashboard events without a sheet ID carry a temporary JS hash -- don't
@@ -363,12 +363,12 @@ function handleSyncEvent(eventData) {
       const assignedId = generateNextEventId(data, headers);
       const basicMap = {
         'Event ID': assignedId,
-        'Column 1': event.name,
+        'Event Name': event.name,
         'Owner': event.owner || '',
         'Supporting': event.supporting || '',
         'Date': event.date || '',
-        'Time': event.time || '',
-        'End Time': event.endTime || '',
+        'Start Time': event.time || '',
+        'End time': event.endTime || '',
         'Location': event.location || '',
         'Event Category': event.category || '',
         'Event Type': event.type || '',
@@ -435,12 +435,12 @@ function handleSyncEvent(eventData) {
       // Update basic event fields
       const basicMap = {
         'Event ID': rowId,
-        'Column 1': event.name,
+        'Event Name': event.name,
         'Owner': event.owner || '',
         'Supporting': event.supporting || '',
         'Date': event.date || '',
-        'Time': event.time || '',
-        'End Time': event.endTime || '',
+        'Start Time': event.time || '',
+        'End time': event.endTime || '',
         'Location': event.location || '',
         'Event Category': event.category || '',
         'Event Type': event.type || '',
@@ -562,7 +562,7 @@ function handleDeleteEvent(name) {
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
     const data = sheet.getDataRange().getValues();
-    const nameColIdx = Math.max(findColumnIndex(data[0], 'Column 1'), 0);
+    const nameColIdx = Math.max(findColumnIndex(data[0], 'Event Name'), 0);
     for (let i = data.length - 1; i >= 1; i--) {
       if (String(data[i][nameColIdx]).trim().toLowerCase() === name.trim().toLowerCase()) {
         sheet.deleteRow(i + 1);
@@ -804,7 +804,7 @@ function assignMissingIds() {
   const headers = data[0];
 
   const idColIdx = findColumnIndex(headers, 'Event ID');
-  const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+  const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
 
   if (idColIdx === -1) {
     Logger.log('No "Event ID" column found -- add a column with header "Event ID" first.');
@@ -852,7 +852,7 @@ function parseEventRow(row, headers, tz) {
     return index >= 0 ? row[index] : null;
   };
 
-  const name = getColumn('Column 1');
+  const name = getColumn('Event Name');
   if (!name) return null;
 
   const dateStr = getColumn('Date');
@@ -870,8 +870,8 @@ function parseEventRow(row, headers, tz) {
     owner: getColumn('Owner') || 'Unassigned',
     supporting: getColumn('Supporting') || '',
     date: dateStrOut,
-    time: formatSheetTime(getColumn('Time')),
-    endTime: formatSheetTime(getColumn('End Time')),
+    time: formatSheetTime(getColumn('Start Time')),
+    endTime: formatSheetTime(getColumn('End time')),
     location: getColumn('Location') || '',
     category: getColumn('Event Category') || '',
     type: getColumn('Event Type') || '',
@@ -938,7 +938,7 @@ function formatSheetTime(val) {
  */
 function dedupeSheetRows(sheet, data, headers) {
   const idColIdx = findColumnIndex(headers, 'Event ID');
-  const nameColIdx = Math.max(findColumnIndex(headers, 'Column 1'), 0);
+  const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
   const dateColIdx = findColumnIndex(headers, 'Date');
 
   function rowKey(row) {
