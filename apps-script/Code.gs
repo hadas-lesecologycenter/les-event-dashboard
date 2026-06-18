@@ -342,15 +342,14 @@ function handleSyncEvent(eventData) {
     }
     const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
     let eventRow = -1;
-    // Only match by ID if the incoming ID looks like a real 26XXX sheet ID.
-    // Dashboard events without a sheet ID carry a temporary JS hash -- don't
-    // try to look those up by ID or they'll never match.
-    if (event.id && isSheetId(event.id)) {
+    // Match by ID column first (any numeric ID, not just 26XXX)
+    if (event.id && idColIdx !== -1) {
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][idColIdx]) === String(event.id)) { eventRow = i; break; }
+        if (String(data[i][idColIdx]).trim() === String(event.id)) { eventRow = i; break; }
       }
     }
-    if (eventRow === -1) {
+    // Fall back to name match
+    if (eventRow === -1 && event.name) {
       const needle = String(event.name).trim().toLowerCase();
       for (let i = 1; i < data.length; i++) {
         if (String(data[i][nameColIdx]).trim().toLowerCase() === needle) { eventRow = i; break; }
@@ -365,7 +364,7 @@ function handleSyncEvent(eventData) {
         'Event ID': assignedId,
         'Event Name': event.name,
         'Owner': event.owner || '',
-        'Supporting': event.supporting || '',
+        'Collaboration': event.supporting || '',
         'Date': event.date || '',
         'Start Time': event.time || '',
         'End time': event.endTime || '',
@@ -437,7 +436,7 @@ function handleSyncEvent(eventData) {
         'Event ID': rowId,
         'Event Name': event.name,
         'Owner': event.owner || '',
-        'Supporting': event.supporting || '',
+        'Collaboration': event.supporting || '',
         'Date': event.date || '',
         'Start Time': event.time || '',
         'End time': event.endTime || '',
@@ -868,7 +867,7 @@ function parseEventRow(row, headers, tz) {
     id: storedId ? Number(storedId) : hashCode(name + (dateStrOut || '')),
     name: name,
     owner: getColumn('Owner') || 'Unassigned',
-    supporting: getColumn('Supporting') || '',
+    supporting: getColumn('Collaboration') || '',
     date: dateStrOut,
     time: formatSheetTime(getColumn('Start Time')),
     endTime: formatSheetTime(getColumn('End time')),
