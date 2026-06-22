@@ -991,3 +991,53 @@ function testGetEvents() {
   const response = doGet({});
   Logger.log(response.getContent());
 }
+
+/**
+ * Logs all rows where Event Name is blank or "Event Name" placeholder.
+ * Run this, then send the Execution Log output so we can identify the real names.
+ */
+function reportBadEvents() {
+  const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
+  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+
+  const get = (row, col) => col !== -1 ? String(row[col] || '').trim() : '';
+
+  const nameIdx    = findColumnIndex(headers, 'Event Name');
+  const idIdx      = findColumnIndex(headers, 'Event ID');
+  const ownerIdx   = findColumnIndex(headers, 'Owner');
+  const dateIdx    = findColumnIndex(headers, 'Date');
+  const locationIdx= findColumnIndex(headers, 'Location');
+  const categoryIdx= findColumnIndex(headers, 'Event Category');
+  const typeIdx    = findColumnIndex(headers, 'Event Type');
+  const notesIdx   = findColumnIndex(headers, 'Notes');
+  const collabIdx  = findColumnIndex(headers, 'Collaboration Notes/ General Notes');
+  const statusIdx  = findColumnIndex(headers, 'Status');
+
+  let count = 0;
+  for (let i = 1; i < data.length; i++) {
+    const name = get(data[i], nameIdx);
+    if (name === '' || name.toLowerCase() === 'event name') {
+      count++;
+      const tz = spreadsheet.getSpreadsheetTimeZone();
+      const dateVal = data[i][dateIdx];
+      const dateStr = dateVal instanceof Date
+        ? Utilities.formatDate(dateVal, tz, 'yyyy-MM-dd')
+        : String(dateVal || '');
+      Logger.log([
+        'Row ' + (i + 1),
+        'ID='       + get(data[i], idIdx),
+        'Owner='    + get(data[i], ownerIdx),
+        'Date='     + dateStr,
+        'Status='   + get(data[i], statusIdx),
+        'Location=' + get(data[i], locationIdx),
+        'Category=' + get(data[i], categoryIdx),
+        'Type='     + get(data[i], typeIdx),
+        'Notes='    + get(data[i], notesIdx),
+        'CollabNotes=' + get(data[i], collabIdx)
+      ].join(' | '));
+    }
+  }
+  Logger.log('Total problematic rows: ' + count);
+}
