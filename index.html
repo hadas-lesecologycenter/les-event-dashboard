@@ -3020,6 +3020,39 @@
         const SYNC_INTERVAL = 30000;
         let sheetLoaded = false;
 
+        // Tracks task checkbox edits made locally that the sheet may not yet
+        // reflect. Without this, the 30s background sync (syncEventsFromSheet)
+        // rebuilds the events array straight from the sheet and any box the user
+        // just checked — but whose write hasn't landed yet, or whose column the
+        // sheet/Apps Script doesn't store (coordConfirm, scouting, equipment) —
+        // silently reverts ("disappears"). Keyed by event id -> { taskKey: value }.
+        const pendingTaskEdits = new Map();
+
+        function recordTaskEdit(event, taskKey) {
+            if (!event) return;
+            let edits = pendingTaskEdits.get(event.id);
+            if (!edits) { edits = {}; pendingTaskEdits.set(event.id, edits); }
+            edits[taskKey] = event[taskKey];
+        }
+
+        // Re-apply unconfirmed local task edits on top of a freshly-fetched sheet
+        // snapshot so a background sync never wipes a box the user just checked.
+        // An edit is dropped once the sheet comes back with the same value.
+        function applyPendingTaskEdits() {
+            pendingTaskEdits.forEach((edits, id) => {
+                const event = events.find(e => e.id === id);
+                if (!event) return; // not in this snapshot yet — keep waiting
+                Object.keys(edits).forEach(key => {
+                    if (event[key] === edits[key]) {
+                        delete edits[key];       // sheet confirms our value
+                    } else {
+                        event[key] = edits[key]; // sheet is stale/unsupported — keep ours
+                    }
+                });
+                if (Object.keys(edits).length === 0) pendingTaskEdits.delete(id);
+            });
+        }
+
         function normalizeTypeKey(type) {
             if (!type) return '';
             return String(type).toUpperCase().replace(/\s+/g, '_');
@@ -3045,9 +3078,12 @@
                         eventbrite: event.eventbrite || 'No',
                         calendar: event.calendar || 'No',
                         comms: event.comms || 'No',
+                        coordConfirm: event.coordConfirm || 'No',
                         compost: event.compost || 'No',
                         opsCheckin: event.opsCheckin || 'No',
                         reminder: event.reminder || 'No',
+                        scouting: event.scouting || 'No',
+                        equipment: event.equipment || 'No',
                         report: event.report || 'No',
                         treeMap: event.treeMap || 'No',
                         thankYou: event.thankYou || 'No'
@@ -3175,12 +3211,18 @@
                         treeMap: s.treeMap || 'No',
                         thankYou: s.thankYou || 'No',
                         coordConfirm: s.coordConfirm || 'No',
+                        scouting: s.scouting || 'No',
+                        equipment: s.equipment || 'No',
                         coordEmail: s.coordEmail || 'No',
                         outreachReport: s.outreachReport || 'No'
                     });
 
                     events = sheetEvents.map(s => buildFromSheet(s));
                     sheetLoaded = true;
+
+                    // Restore any boxes checked locally that this snapshot doesn't
+                    // reflect yet, before deriving status from task completion.
+                    applyPendingTaskEdits();
 
                     events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
@@ -3605,7 +3647,8 @@
                         brief: 'No', eventbrite: 'No', calendar: 'No', comms: 'No',
                         compost: 'No', opsCheckin: 'No', reminder: 'No',
                         report: 'No', treeMap: 'No', thankYou: 'No',
-                        coordConfirm: 'No', coordEmail: 'No', outreachReport: 'No'
+                        coordConfirm: 'No', scouting: 'No', equipment: 'No',
+                        coordEmail: 'No', outreachReport: 'No'
                     };
                     events.push(newEvent);
                     syncEventToSheet(newEvent);
@@ -3848,6 +3891,7 @@
             const event = events.find(e => e.id === eventId);
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
+                recordTaskEdit(event, taskKey);
                 saveEvents();
                 syncEventToSheet(event);
 
@@ -4368,6 +4412,7 @@
             const event = events.find(e => e.id === eventId);
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
+                recordTaskEdit(event, taskKey);
                 saveEvents();
                 syncEventToSheet(event);
 
@@ -4718,6 +4763,7 @@
                     const event = events.find(ev => ev.id === eventId);
                     if (event) {
                         event[taskKey] = e.target.checked ? 'Yes' : 'No';
+                        recordTaskEdit(event, taskKey);
                         saveEvents();
                         syncEventToSheet(event);
                         autoProgressEvent(event);
@@ -5053,6 +5099,7 @@
             const event = events.find(e => e.id === eventId);
             if (event) {
                 event[taskKey] = isChecked ? 'Yes' : 'No';
+                recordTaskEdit(event, taskKey);
                 saveEvents();
                 syncEventToSheet(event);
                 autoProgressEvent(event);
