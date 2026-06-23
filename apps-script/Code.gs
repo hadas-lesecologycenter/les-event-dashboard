@@ -340,6 +340,17 @@ function handleSyncEvent(eventData) {
       sheet.getRange(1, idColIdx + 1).setValue('Event ID');
       headers.push('Event ID');
     }
+
+    // Ensure the newer task columns exist so their checkboxes actually persist.
+    // Without these, coordConfirm/scouting/equipment had no home in the sheet and
+    // reverted to "No" on every refresh. Names must match those read in parseEventRow.
+    ['Coordinator Confirmed', 'Scouting Completed', 'Equipment Reserved'].forEach(colName => {
+      if (findColumnIndex(headers, colName) === -1) {
+        sheet.getRange(1, headers.length + 1).setValue(colName);
+        headers.push(colName);
+      }
+    });
+
     const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
     let eventRow = -1;
     // Match by ID column first (any numeric ID, not just 26XXX)
@@ -378,9 +389,12 @@ function handleSyncEvent(eventData) {
         'EventBrite Created': event.eventbrite || 'No',
         'LES Calendar Event Created': event.calendar || 'No',
         'Comms Form Submitted': event.comms || 'No',
+        'Coordinator Confirmed': event.coordConfirm || 'No',
         'Order Placed on Compost Tracker': event.compost || 'No',
         'Compost Ops Check-In': event.opsCheckin || 'No',
         'Reminder Email Sent': event.reminder || 'No',
+        'Scouting Completed': event.scouting || 'No',
+        'Equipment Reserved': event.equipment || 'No',
         'Activity Report Completed': event.report || 'No',
         'Tree Map Data Completed': event.treeMap || 'No',
         'Thank You Email Sent': event.thankYou || 'No'
@@ -456,9 +470,12 @@ function handleSyncEvent(eventData) {
         'EventBrite Created': event.eventbrite,
         'LES Calendar Event Created': event.calendar,
         'Comms Form Submitted': event.comms,
+        'Coordinator Confirmed': event.coordConfirm,
         'Order Placed on Compost Tracker': event.compost,
         'Compost Ops Check-In': event.opsCheckin,
         'Reminder Email Sent': event.reminder,
+        'Scouting Completed': event.scouting,
+        'Equipment Reserved': event.equipment,
         'Activity Report Completed': event.report,
         'Tree Map Data Completed': event.treeMap,
         'Thank You Email Sent': event.thankYou
@@ -882,10 +899,13 @@ function parseEventRow(row, headers, tz) {
     eventbrite: normalizeValue(getColumn('EventBrite Created')),
     calendar: normalizeValue(getColumn('LES Calendar Event Created')),
     comms: normalizeValue(getColumn('Comms Form Submitted')),
+    coordConfirm: normalizeValue(getColumn('Coordinator Confirmed')),
 
     compost: normalizeValue(getColumn('Order Placed on Compost Tracker')),
     opsCheckin: normalizeValue(getColumn('Compost Ops Check-In')),
     reminder: normalizeValue(getColumn('Reminder Email Sent')),
+    scouting: normalizeValue(getColumn('Scouting Completed')),
+    equipment: normalizeValue(getColumn('Equipment Reserved')),
 
     report: normalizeValue(getColumn('Activity Report Completed')),
     treeMap: normalizeValue(getColumn('Tree Map Data Completed')),
