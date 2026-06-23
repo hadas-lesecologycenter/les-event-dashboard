@@ -289,6 +289,7 @@
         .filter-pill[data-color="planning"].active { background: #fbbf24; border-color: #fbbf24; color: #1a1a1a; }
         .filter-pill[data-color="hold"].active { background: #6b7280; border-color: #6b7280; }
         .filter-pill[data-color="confirmed"].active { background: #10b981; border-color: #10b981; }
+        .filter-pill[data-color="complete"].active { background: #059669; border-color: #059669; }
         .filter-pill[data-color="canceled"].active { background: #6b7280; border-color: #6b7280; }
 
         .filter-select {
@@ -470,6 +471,50 @@
         .status-canceled {
             background: #f3f4f6;
             color: #4b5563;
+        }
+
+        .status-complete,
+        .status-done {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        /* Event-complete celebration */
+        .celebrate-banner {
+            position: fixed;
+            top: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-160%);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            background: linear-gradient(135deg, #1d5432, #10b981);
+            color: white;
+            padding: 16px 26px;
+            border-radius: 14px;
+            box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+            z-index: 10002;
+            opacity: 0;
+            transition: transform 0.45s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.45s ease;
+        }
+        .celebrate-banner.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        .celebrate-emoji {
+            font-size: 2em;
+            line-height: 1;
+            animation: celebrate-pop 0.6s ease both;
+        }
+        .celebrate-title { font-weight: 700; font-size: 1.05em; }
+        .celebrate-sub { font-size: 0.85em; opacity: 0.92; }
+        @keyframes celebrate-pop {
+            0% { transform: scale(0.2) rotate(-20deg); }
+            60% { transform: scale(1.3) rotate(10deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .celebrate-banner, .celebrate-emoji { transition: opacity 0.3s ease; animation: none; }
         }
 
         .progress-bar {
@@ -1504,6 +1549,7 @@
                         <button class="filter-pill" data-value="Planning" data-color="planning">Planning</button>
                         <button class="filter-pill" data-value="Hold" data-color="hold">Hold</button>
                         <button class="filter-pill" data-value="In Progress" data-color="confirmed">In Progress</button>
+                        <button class="filter-pill" data-value="Complete" data-color="complete">Complete</button>
                         <button class="filter-pill" data-value="Canceled" data-color="canceled">Canceled</button>
                     </div>
                 </div>
@@ -1705,6 +1751,8 @@
                     <select id="eventStatus" required>
                         <option value="Planning">Planning</option>
                         <option value="In Progress">In Progress</option>
+                        <option value="Complete">Complete</option>
+                        <option value="Done">Done</option>
                         <option value="Hold">Hold</option>
                         <option value="Canceled">Canceled</option>
                     </select>
@@ -3801,7 +3849,12 @@
                     if (!selectedCategories.some(c => cats.includes(c))) return false;
                 }
 
-                if (selectedStatuses.length > 0 && !selectedStatuses.includes(event.status || 'Planning')) return false;
+                if (selectedStatuses.length > 0) {
+                    const st = event.status || 'Planning';
+                    const statusMatch = selectedStatuses.includes(st) ||
+                        (selectedStatuses.includes('Complete') && isCompleteStatus(st));
+                    if (!statusMatch) return false;
+                }
 
                 if (timing === 'all') {
                     // Show all events
@@ -3905,8 +3958,9 @@
                 }
 
                 autoProgressEvent(event);
-                autoCompleteEvent(event);
+                const justCompleted = autoCompleteEvent(event);
                 applyFilters();
+                if (justCompleted) celebrateEventComplete(event);
             }
         }
 
@@ -4378,6 +4432,80 @@
             }
         }
 
+        // Treat both "Complete" and the legacy "Done" label as finished.
+        function isCompleteStatus(status) {
+            const v = String(status || '').toLowerCase();
+            return v === 'complete' || v === 'done';
+        }
+
+        function celebrateEventComplete(event) {
+            launchConfetti();
+            const banner = document.createElement('div');
+            banner.className = 'celebrate-banner';
+            banner.innerHTML = `
+                <div class="celebrate-emoji">🎉</div>
+                <div>
+                    <div class="celebrate-title">Event Complete!</div>
+                    <div class="celebrate-sub">${event.name} — all tasks done</div>
+                </div>`;
+            document.body.appendChild(banner);
+            requestAnimationFrame(() => banner.classList.add('show'));
+            setTimeout(() => {
+                banner.classList.remove('show');
+                setTimeout(() => banner.remove(), 500);
+            }, 3400);
+        }
+
+        function launchConfetti() {
+            // Respect reduced-motion: skip the confetti, the banner still shows.
+            if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:10001;';
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            document.body.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+            const colors = ['#1d5432', '#2d7a52', '#10b981', '#a7f3d0', '#fbbf24', '#f59e0b', '#ef4444', '#3b82f6'];
+            const parts = [];
+            for (let i = 0; i < 150; i++) {
+                parts.push({
+                    x: canvas.width / 2 + (Math.random() - 0.5) * 160,
+                    y: canvas.height / 3 + (Math.random() - 0.5) * 80,
+                    vx: (Math.random() - 0.5) * 14,
+                    vy: Math.random() * -13 - 3,
+                    size: 5 + Math.random() * 7,
+                    color: colors[(Math.random() * colors.length) | 0],
+                    rot: Math.random() * Math.PI,
+                    vr: (Math.random() - 0.5) * 0.35,
+                    shape: Math.random() < 0.5 ? 'rect' : 'circ'
+                });
+            }
+            const DURATION = 2600;
+            const start = performance.now();
+            (function frame(now) {
+                const t = now - start;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                parts.forEach(p => {
+                    p.vy += 0.35;       // gravity
+                    p.vx *= 0.99;
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    p.rot += p.vr;
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot);
+                    ctx.globalAlpha = Math.max(0, 1 - t / DURATION);
+                    ctx.fillStyle = p.color;
+                    if (p.shape === 'rect') ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+                    else { ctx.beginPath(); ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2); ctx.fill(); }
+                    ctx.restore();
+                });
+                if (t < DURATION) requestAnimationFrame(frame);
+                else canvas.remove();
+            })(start);
+        }
+
         function autoProgressEvent(event) {
             if (!event || event.status !== 'Planning') return;
 
@@ -4391,17 +4519,24 @@
             }
         }
 
+        // Returns true only when this call flips the event to Complete, so the
+        // caller can fire the celebration exactly once (and never during a
+        // background sync, which ignores the return value).
         function autoCompleteEvent(event) {
-            if (!event || event.status === 'Complete' || event.status === 'Canceled' || event.status === 'Hold') return;
+            if (!event || isCompleteStatus(event.status) ||
+                String(event.status).toLowerCase() === 'canceled' || event.status === 'Hold') return false;
 
             const workflow = getEventWorkflow(event);
             const allTasks = [...workflow.setup, ...workflow.execution, ...workflow.completion];
-            const allComplete = allTasks.every(task => event[task.key] === 'Yes' || event[task.key] === 'N/A');
+            const allComplete = allTasks.length > 0 &&
+                allTasks.every(task => event[task.key] === 'Yes' || event[task.key] === 'N/A');
 
             if (allComplete) {
                 event.status = 'Complete';
                 syncEventToSheet(event);
+                return true;
             }
+            return false;
         }
 
         function handleTaskToggle(e) {
@@ -4426,8 +4561,9 @@
                 }
 
                 autoProgressEvent(event);
-                autoCompleteEvent(event);
+                const justCompleted = autoCompleteEvent(event);
                 applyFilters();
+                if (justCompleted) celebrateEventComplete(event);
             }
         }
 
@@ -4767,7 +4903,8 @@
                         saveEvents();
                         syncEventToSheet(event);
                         autoProgressEvent(event);
-                autoCompleteEvent(event);
+                        const justCompleted = autoCompleteEvent(event);
+                        if (justCompleted) celebrateEventComplete(event);
 
                         if (e.target.checked) {
                             // Show completion feedback
@@ -4808,23 +4945,26 @@
                 phase.forEach(task => {
                     if (event[task.key] !== 'N/A') {
                         event[task.key] = 'Yes';
+                        recordTaskEdit(event, task.key);
                     }
                 });
             });
 
-            event.report = 'Yes';
-            event.treeMap = 'Yes';
-            event.status = 'In Progress';
-
             saveEvents();
+            autoProgressEvent(event);
+            const justCompleted = autoCompleteEvent(event);
             syncEventToSheet(event);
             applyFilters();
 
-            const toast = document.createElement('div');
-            toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
-            toast.textContent = `✓ All tasks checked and moved to In Progress`;
-            document.body.appendChild(toast);
-            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+            if (justCompleted) {
+                celebrateEventComplete(event);
+            } else {
+                const toast = document.createElement('div');
+                toast.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; font-weight: 500; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);';
+                toast.textContent = `✓ All tasks checked`;
+                document.body.appendChild(toast);
+                setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3000);
+            }
         }
 
         function renderKanban() {
@@ -4839,7 +4979,9 @@
             Object.values(columns).forEach(col => col.innerHTML = '');
 
             filteredEvents.forEach(event => {
-                const status = event.status || 'Planning';
+                let status = event.status || 'Planning';
+                if (isCompleteStatus(status)) status = 'Complete';
+                else if (status.toLowerCase() === 'canceled') status = 'Canceled';
                 const column = columns[status];
                 if (!column) return;
 
@@ -5103,9 +5245,10 @@
                 saveEvents();
                 syncEventToSheet(event);
                 autoProgressEvent(event);
-                autoCompleteEvent(event);
+                const justCompleted = autoCompleteEvent(event);
                 applyFilters();
                 openEventDetailsModal(eventId);
+                if (justCompleted) celebrateEventComplete(event);
 
                 if (isChecked) {
                     if (taskKey === 'calendar') openGoogleCalendar(event);
