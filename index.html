@@ -597,6 +597,43 @@
             cursor: not-allowed;
         }
 
+        /* Tri-state task control: click cycles Not done -> Done -> N/A -> Not done */
+        .task-box {
+            width: 18px;
+            height: 18px;
+            flex: 0 0 auto;
+            box-sizing: border-box;
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .task-box:hover { border-color: #1d5432; }
+        .task-box:focus-visible { outline: 2px solid #1d5432; outline-offset: 2px; }
+        .task-box.is-yes { background: #1d5432; border-color: #1d5432; }
+        .task-box.is-na { background: #9ca3af; border-color: #9ca3af; }
+        .task.is-yes > label { color: #999; text-decoration: line-through; }
+        .task.is-na > label { opacity: 0.6; }
+        .na-tag {
+            font-size: 0.7em;
+            font-weight: 700;
+            color: #6b7280;
+            background: #e5e7eb;
+            padding: 1px 5px;
+            border-radius: 6px;
+            margin-left: 5px;
+            vertical-align: middle;
+            letter-spacing: 0.02em;
+        }
+
         #openTasksContainer {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -3896,13 +3933,12 @@
                 const progress = allTasks.length > 0 ? Math.round((completedCount / allTasks.length) * 100) : 0;
 
                 const taskCheckboxes = allTasks.map(task => {
-                    const isChecked = event[task.key] === 'Yes';
-                    const isNA = event[task.key] === 'N/A';
+                    const state = taskState(event, task.key);
                     return `
-                        <label style="display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; margin-bottom: 6px; padding: 4px 8px; background: ${isNA ? '#f3f4f6' : 'transparent'}; border-radius: 4px; font-size: 0.85em; cursor: pointer;">
-                            <input type="checkbox" ${isChecked ? 'checked' : ''} ${isNA ? 'disabled' : ''} data-event-id="${event.id}" data-task-key="${task.key}" style="cursor: ${isNA ? 'not-allowed' : 'pointer'};"/>
-                            <span style="text-decoration: ${isChecked ? 'line-through' : 'none'}; opacity: ${isNA ? 0.5 : 1};">${task.label}</span>
-                        </label>
+                        <span style="display: inline-flex; align-items: center; gap: 6px; margin-right: 12px; margin-bottom: 6px; padding: 4px 8px; background: ${state === 'N/A' ? '#f3f4f6' : 'transparent'}; border-radius: 4px; font-size: 0.85em;">
+                            ${renderTaskBox(event.id, task.key, state, false)}
+                            <span style="text-decoration: ${state === 'Yes' ? 'line-through' : 'none'}; opacity: ${state === 'N/A' ? 0.5 : 1};">${task.label}${state === 'N/A' ? ' <span class="na-tag">N/A</span>' : ''}</span>
+                        </span>
                     `;
                 }).join('');
 
@@ -3929,39 +3965,6 @@
             }).join('');
 
             tbody.innerHTML = rows || '<tr><td colspan="9" style="padding: 40px; text-align: center; color: #999;">No events match your filters</td></tr>';
-
-            // Add event listeners to task checkboxes
-            document.querySelectorAll('#tableViewBody input[type="checkbox"][data-task-key]').forEach(checkbox => {
-                checkbox.addEventListener('change', handleTableTaskToggle);
-            });
-        }
-
-        function handleTableTaskToggle(e) {
-            const eventId = parseInt(e.target.dataset.eventId);
-            const taskKey = e.target.dataset.taskKey;
-            const isChecked = e.target.checked;
-
-            const event = events.find(e => e.id === eventId);
-            if (event) {
-                event[taskKey] = isChecked ? 'Yes' : 'No';
-                recordTaskEdit(event, taskKey);
-                saveEvents();
-                syncEventToSheet(event);
-
-                if (isChecked) {
-                    if (taskKey === 'calendar') openGoogleCalendar(event);
-                    if (taskKey === 'brief') openBriefModal(event);
-                    if (taskKey === 'eventbrite') openEventbriteForm(event);
-                    if (taskKey === 'comms') openCommsForm(event);
-                    if (taskKey === 'compost') openCompostSheet(event);
-                    if (taskKey === 'report') openEventReportingForm(event);
-                }
-
-                autoProgressEvent(event);
-                const justCompleted = autoCompleteEvent(event);
-                applyFilters();
-                if (justCompleted) celebrateEventComplete(event);
-            }
         }
 
         function createPieChart(data, colors, containerWidth = 200) {
@@ -4254,10 +4257,6 @@
                 `;
             }).join('');
 
-            document.querySelectorAll('.task input[type="checkbox"]').forEach(checkbox => {
-                checkbox.addEventListener('change', handleTaskToggle);
-            });
-
             // Load metrics from localStorage for each event
             filteredEvents.forEach(event => {
                 setTimeout(() => {
@@ -4299,17 +4298,11 @@
                     externalLinkHTML = `<a href="${task.link}" target="_blank" class="draft-link" style="color: #3b82f6;">🔗 Open Form</a>`;
                 }
 
+                const state = isChecked ? 'Yes' : isNA ? 'N/A' : 'No';
                 return `
-                    <div class="task ${isNA ? 'na' : ''}" onclick="event.stopPropagation()">
-                        <input
-                            type="checkbox"
-                            id="task-${event.id}-${task.key}"
-                            data-event-id="${event.id}"
-                            data-task-key="${task.key}"
-                            ${isChecked ? 'checked' : ''}
-                            ${isNA ? 'disabled' : ''}
-                        >
-                        <label for="task-${event.id}-${task.key}">${task.label}</label>
+                    <div class="task ${isNA ? 'na is-na' : ''}${isChecked ? ' is-yes' : ''}" onclick="event.stopPropagation()">
+                        ${renderTaskBox(event.id, task.key, state, false)}
+                        <label>${task.label}${isNA ? ' <span class="na-tag">N/A</span>' : ''}</label>
                         ${draftLinkHTML}
                         ${externalLinkHTML}
                     </div>
@@ -4539,31 +4532,58 @@
             return false;
         }
 
-        function handleTaskToggle(e) {
-            const eventId = parseInt(e.target.dataset.eventId);
-            const taskKey = e.target.dataset.taskKey;
-            const isChecked = e.target.checked;
+        // Task checkboxes are tri-state: Not done -> Done -> N/A -> Not done.
+        // "N/A" means the step doesn't apply to this event, so it no longer
+        // blocks the event from auto-completing.
+        const NEXT_TASK_STATE = { 'No': 'Yes', 'Yes': 'N/A', 'N/A': 'No' };
 
+        function taskState(event, taskKey) {
+            const v = event[taskKey];
+            if (v === 'Yes' || v === true) return 'Yes';
+            if (v === 'N/A') return 'N/A';
+            return 'No';
+        }
+
+        // Returns the clickable tri-state box markup for a task. reopenModal is
+        // true when rendered inside the event-details modal so it re-renders.
+        function renderTaskBox(eventId, taskKey, state, reopenModal) {
+            const sym = state === 'Yes' ? '✓' : state === 'N/A' ? '–' : '';
+            const cls = state === 'Yes' ? 'is-yes' : state === 'N/A' ? 'is-na' : 'is-no';
+            const title = state === 'No' ? 'Not done — click to mark done'
+                        : state === 'Yes' ? 'Done — click to mark N/A'
+                        : 'N/A — click to clear';
+            const call = `cycleTask(${eventId}, '${taskKey}', ${reopenModal ? 'true' : 'false'})`;
+            return `<span class="task-box ${cls}" role="checkbox" tabindex="0"
+                aria-checked="${state === 'Yes' ? 'true' : state === 'N/A' ? 'mixed' : 'false'}" title="${title}"
+                data-event-id="${eventId}" data-task-key="${taskKey}"
+                onclick="event.preventDefault(); event.stopPropagation(); ${call};"
+                onkeydown="if(event.key===' '||event.key==='Enter'){event.preventDefault(); ${call};}">${sym}</span>`;
+        }
+
+        function cycleTask(eventId, taskKey, reopenModal) {
             const event = events.find(e => e.id === eventId);
-            if (event) {
-                event[taskKey] = isChecked ? 'Yes' : 'No';
-                recordTaskEdit(event, taskKey);
-                saveEvents();
-                syncEventToSheet(event);
+            if (!event) return;
 
-                if (isChecked) {
-                    if (taskKey === 'calendar') openGoogleCalendar(event);
-                    if (taskKey === 'brief') openBriefModal(event);
-                    if (taskKey === 'eventbrite') openEventbriteForm(event);
-                    if (taskKey === 'comms') openCommsForm(event);
-                    if (taskKey === 'compost') openCompostSheet(event);
-                    if (taskKey === 'report') openEventReportingForm(event);
-                }
+            const next = NEXT_TASK_STATE[taskState(event, taskKey)];
+            event[taskKey] = next;
+            recordTaskEdit(event, taskKey);
+            saveEvents();
+            syncEventToSheet(event);
 
-                autoProgressEvent(event);
-                const justCompleted = autoCompleteEvent(event);
-                applyFilters();
-                if (justCompleted) celebrateEventComplete(event);
+            autoProgressEvent(event);
+            const justCompleted = autoCompleteEvent(event);
+            applyFilters();
+            if (reopenModal) openEventDetailsModal(eventId);
+            if (justCompleted) celebrateEventComplete(event);
+
+            // Open the matching helper form only when a task becomes Done.
+            if (next === 'Yes') {
+                if (taskKey === 'calendar') openGoogleCalendar(event);
+                if (taskKey === 'brief') openBriefModal(event);
+                if (taskKey === 'eventbrite') openEventbriteForm(event);
+                if (taskKey === 'comms') openCommsForm(event);
+                if (taskKey === 'compost') openCompostSheet(event);
+                if (taskKey === 'report') openEventReportingForm(event);
             }
         }
 
@@ -5195,20 +5215,12 @@
                             </h5>
                             <div style="display: flex; flex-direction: column; gap: 8px;">
                                 ${tasks.map(task => {
-                                    const value = event[task.key];
-                                    const isNA = value === 'N/A';
-                                    const isChecked = value === 'Yes' || value === true;
+                                    const state = taskState(event, task.key);
                                     return `
-                                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; opacity: ${isNA ? 0.5 : 1};">
-                                            <input type="checkbox"
-                                                data-event-id="${event.id}"
-                                                data-task-key="${task.key}"
-                                                ${isChecked ? 'checked' : ''}
-                                                ${isNA ? 'disabled' : ''}
-                                                onchange="handleTaskToggleFromModal(this)"
-                                                style="cursor: ${isNA ? 'not-allowed' : 'pointer'};">
-                                            <span style="color: #2c2416; font-size: 0.9em;">${task.label}</span>
-                                        </label>
+                                        <div style="display: flex; align-items: center; gap: 8px; opacity: ${state === 'N/A' ? 0.6 : 1};">
+                                            ${renderTaskBox(event.id, task.key, state, true)}
+                                            <span style="color: #2c2416; font-size: 0.9em; text-decoration: ${state === 'Yes' ? 'line-through' : 'none'};">${task.label}${state === 'N/A' ? ' <span class="na-tag">N/A</span>' : ''}</span>
+                                        </div>
                                     `;
                                 }).join('')}
                             </div>
@@ -5231,34 +5243,6 @@
             const modal = document.getElementById('eventDetailsModal');
             modal.style.display = 'none';
             modal.classList.remove('active');
-        }
-
-        function handleTaskToggleFromModal(checkbox) {
-            const eventId = parseInt(checkbox.dataset.eventId);
-            const taskKey = checkbox.dataset.taskKey;
-            const isChecked = checkbox.checked;
-
-            const event = events.find(e => e.id === eventId);
-            if (event) {
-                event[taskKey] = isChecked ? 'Yes' : 'No';
-                recordTaskEdit(event, taskKey);
-                saveEvents();
-                syncEventToSheet(event);
-                autoProgressEvent(event);
-                const justCompleted = autoCompleteEvent(event);
-                applyFilters();
-                openEventDetailsModal(eventId);
-                if (justCompleted) celebrateEventComplete(event);
-
-                if (isChecked) {
-                    if (taskKey === 'calendar') openGoogleCalendar(event);
-                    if (taskKey === 'brief') openBriefModal(event);
-                    if (taskKey === 'eventbrite') openEventbriteForm(event);
-                    if (taskKey === 'comms') openCommsForm(event);
-                    if (taskKey === 'compost') openCompostSheet(event);
-                    if (taskKey === 'report') openEventReportingForm(event);
-                }
-            }
         }
 
         init();
