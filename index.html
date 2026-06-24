@@ -3245,28 +3245,21 @@
                 console.log('[LES] sheet response: success=', data.success, 'events=', data.events?.length, data.error || '');
 
                 if (data.success && data.events) {
-                    // Deduplicate ONLY by Event ID, the unique key. Rows that share
-                    // an ID are the same event; rows with DIFFERENT IDs are different
-                    // events and must all be kept, even if their names/dates look
-                    // similar. A name-prefix + name+date heuristic used to live here
-                    // and was hiding legitimately distinct events on the same date
-                    // (e.g. "STC w/ Goldman" vs "STC w/ Goldman Sachs") — that made
-                    // real events appear to "delete" themselves on a sync.
+                    // Collapse only rows that are a TRUE duplicate — identical in
+                    // Event ID AND name AND date. Two different events that wrongly
+                    // share an Event ID (a data glitch) still differ in name/date, so
+                    // both are kept instead of one being hidden. Earlier versions
+                    // deduped by id alone (hid a distinct event sharing an id) or by
+                    // name prefix (hid a distinct event sharing a date) — both made
+                    // real events vanish on a sync.
                     const deduped = [];
-                    const seenIds = new Set();
-                    const seenNameDate = new Set();
+                    const seen = new Set();
                     data.events.slice().reverse().forEach(s => {
-                        const key = s.id ? String(s.id) : null;
-                        if (key) {
-                            if (seenIds.has(key)) return; // same ID -> true duplicate
-                            seenIds.add(key);
-                            deduped.push(s);
-                            return;
-                        }
-                        // Only rows with no ID at all fall back to name+date dedup.
+                        const id = s.id ? String(s.id).trim() : '';
                         const nameDate = (s.name || '').trim().toLowerCase() + '|' + (s.date || '');
-                        if (seenNameDate.has(nameDate)) return;
-                        seenNameDate.add(nameDate);
+                        const key = id ? id + '|' + nameDate : nameDate;
+                        if (seen.has(key)) return;
+                        seen.add(key);
                         deduped.push(s);
                     });
                     const sheetEvents = deduped.reverse();
