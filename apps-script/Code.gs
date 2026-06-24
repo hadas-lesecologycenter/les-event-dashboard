@@ -965,7 +965,10 @@ function dedupeSheetRows(sheet, data, headers) {
     if (!name) return null;
     const id = idColIdx !== -1 ? String(row[idColIdx] || '').trim() : '';
     const date = dateColIdx !== -1 ? String(row[dateColIdx] || '') : '';
-    return id || (name + '|' + date);
+    // Only collapse rows that are a TRUE duplicate -- identical id AND name AND
+    // date. Keying by id alone would permanently delete a distinct event that
+    // happens to share an Event ID with another (even on a different date).
+    return (id ? id + '|' : '') + name + '|' + date;
   }
 
   // First pass: for each key, find the best row index to keep
