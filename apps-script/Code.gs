@@ -63,10 +63,25 @@ function doGet(e) {
     // Check the actual name column ("Column 1"), not column 0 -- the name may
     // not be the first column (e.g. after an Event ID column was inserted).
     const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
+    const idColIdx = findColumnIndex(headers, 'Event ID');
+    const ownerColIdx = findColumnIndex(headers, 'Owner');
+    const dateColIdx = findColumnIndex(headers, 'Date');
     const events = [];
     for (let i = 1; i < data.length; i++) {
       const row = data[i];
-      if (!row[nameColIdx]) continue;
+      if (!String(row[nameColIdx] || '').trim()) {
+        // Blank Event Name. Previously EVERY such row was skipped, so a real
+        // event whose name simply wasn't filled in vanished from the dashboard
+        // completely. Surface the ones that are clearly real events -- they have
+        // an Event ID plus an owner or a date -- under a placeholder name so they
+        // show up and can be named, instead of silently disappearing. Truly empty
+        // or stray rows (no ID, or no owner and no date) are still skipped.
+        const idVal = idColIdx !== -1 ? String(row[idColIdx] || '').trim() : '';
+        const ownerVal = ownerColIdx !== -1 ? String(row[ownerColIdx] || '').trim() : '';
+        const dateVal = dateColIdx !== -1 ? String(row[dateColIdx] || '').trim() : '';
+        if (!idVal || (!ownerVal && !dateVal)) continue;
+        row[nameColIdx] = '(Unnamed event ' + idVal + ')';
+      }
       const event = parseEventRow(row, headers, tz);
       if (event) events.push(event);
     }
@@ -352,6 +367,7 @@ function handleSyncEvent(eventData) {
     });
 
     const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
+    const dateColIdx = findColumnIndex(headers, 'Date');
     let eventRow = -1;
     // Match by ID column first (any numeric ID, not just 26XXX)
     if (event.id && idColIdx !== -1) {
@@ -359,11 +375,23 @@ function handleSyncEvent(eventData) {
         if (String(data[i][idColIdx]).trim() === String(event.id)) { eventRow = i; break; }
       }
     }
-    // Fall back to name match
+    // Fall back to matching by name AND date. We only reach here when the
+    // event's ID matched no existing row -- a brand-new event (whose client-side
+    // temp id the sheet hasn't replaced yet) or a legacy row with no Event ID.
+    // The OLD code matched ANY same-named row, which let a new event silently
+    // overwrite a DIFFERENT event that merely shared its name: a new "Summer
+    // Canopy Care" on 7/25 clobbered the existing one on 7/6 -- keeping its
+    // row/ID but replacing the date -- so the 7/6 event vanished. Requiring the
+    // date to match too means a same-name event on a different date is appended
+    // as its own row instead of destroying the other one.
     if (eventRow === -1 && event.name) {
       const needle = String(event.name).trim().toLowerCase();
+      const tz = spreadsheet.getSpreadsheetTimeZone();
+      const wantDate = toDateKey(event.date, tz);
       for (let i = 1; i < data.length; i++) {
-        if (String(data[i][nameColIdx]).trim().toLowerCase() === needle) { eventRow = i; break; }
+        if (String(data[i][nameColIdx]).trim().toLowerCase() !== needle) continue;
+        const rowDate = dateColIdx !== -1 ? toDateKey(data[i][dateColIdx], tz) : '';
+        if (wantDate && rowDate === wantDate) { eventRow = i; break; }
       }
     }
 
@@ -413,8 +441,7 @@ function handleSyncEvent(eventData) {
         if (String(data[i][nameColIdx] || '').trim() !== '') lastEventRow = i;
       }
 
-      // Insert in date order
-      const dateColIdx = findColumnIndex(headers, 'Date');
+      // Insert in date order (dateColIdx is resolved once near the top)
       const newDate = event.date ? new Date(event.date) : new Date('9999-12-31');
       let insertBefore = -1;
       for (let i = 1; i <= lastEventRow; i++) {
@@ -434,6 +461,7 @@ function handleSyncEvent(eventData) {
       sheet.getRange(insertBefore, 1, 1, newRow.length).setValues([newRow]);
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
+        id: assignedId,
         message: `Event "${event.name}" created in sheet`,
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
@@ -488,6 +516,7 @@ function handleSyncEvent(eventData) {
 
       return ContentService.createTextOutput(JSON.stringify({
         success: true,
+        id: rowId,
         message: `Event "${event.name}" updated in sheet`,
         timestamp: new Date().toISOString()
       })).setMimeType(ContentService.MimeType.JSON);
@@ -948,6 +977,33 @@ function formatSheetTime(val) {
     return `${h}:${m} ${period}`;
   }
   return str;
+}
+
+/**
+ * Normalize a date value (Date object or string) to a 'yyyy-MM-dd' key for
+ * comparison. Mirrors parseEventRow's date handling so the sync matcher and the
+ * reader agree on what "the same date" means. ISO ('2026-07-25') and US
+ * ('7/25/2026') strings are reformatted directly -- never routed through
+ * `new Date(string)`, which would interpret them as UTC and can shift the day
+ * by one once a timezone is applied.
+ */
+function toDateKey(value, tz) {
+  if (value === null || value === undefined || value === '') return '';
+  if (Object.prototype.toString.call(value) === '[object Date]') {
+    return isNaN(value.getTime()) ? '' : Utilities.formatDate(value, tz || 'America/New_York', 'yyyy-MM-dd');
+  }
+  const s = String(value).trim();
+  if (!s) return '';
+  const iso = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (iso) return iso[1] + '-' + pad2(iso[2]) + '-' + pad2(iso[3]);
+  const us = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (us) return us[3] + '-' + pad2(us[1]) + '-' + pad2(us[2]);
+  return s;
+}
+
+function pad2(n) {
+  n = String(n);
+  return n.length < 2 ? '0' + n : n;
 }
 
 /**
