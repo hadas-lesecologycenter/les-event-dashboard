@@ -3245,31 +3245,31 @@
                 console.log('[LES] sheet response: success=', data.success, 'events=', data.events?.length, data.error || '');
 
                 if (data.success && data.events) {
-                    // Deduplicate sheet events by id (preferred) then name+date, keeping the last occurrence
+                    // Deduplicate ONLY by Event ID, the unique key. Rows that share
+                    // an ID are the same event; rows with DIFFERENT IDs are different
+                    // events and must all be kept, even if their names/dates look
+                    // similar. A name-prefix + name+date heuristic used to live here
+                    // and was hiding legitimately distinct events on the same date
+                    // (e.g. "STC w/ Goldman" vs "STC w/ Goldman Sachs") — that made
+                    // real events appear to "delete" themselves on a sync.
                     const deduped = [];
                     const seenIds = new Set();
                     const seenNameDate = new Set();
                     data.events.slice().reverse().forEach(s => {
                         const key = s.id ? String(s.id) : null;
+                        if (key) {
+                            if (seenIds.has(key)) return; // same ID -> true duplicate
+                            seenIds.add(key);
+                            deduped.push(s);
+                            return;
+                        }
+                        // Only rows with no ID at all fall back to name+date dedup.
                         const nameDate = (s.name || '').trim().toLowerCase() + '|' + (s.date || '');
-                        if (key && seenIds.has(key)) return;
                         if (seenNameDate.has(nameDate)) return;
-                        if (key) seenIds.add(key);
                         seenNameDate.add(nameDate);
                         deduped.push(s);
                     });
-                    // Remove events whose name is a prefix of another event on the same date
-                    const prefixFiltered = deduped.filter(s => {
-                        const n = (s.name || '').trim().toLowerCase();
-                        const d = s.date || '';
-                        return !deduped.some(other => {
-                            if (other === s) return false;
-                            if ((other.date || '') !== d) return false;
-                            const on = (other.name || '').trim().toLowerCase();
-                            return on.length > n.length && (on.startsWith(n + ' ') || on.startsWith(n + '-') || on.startsWith(n + '–') || on.startsWith(n + ','));
-                        });
-                    });
-                    const sheetEvents = prefixFiltered.reverse();
+                    const sheetEvents = deduped.reverse();
 
                     let nextId = Math.max(...events.map(e => e.id), 0) + 1;
                     const buildFromSheet = (s) => ({
