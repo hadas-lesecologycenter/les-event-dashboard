@@ -3172,6 +3172,66 @@
             });
         }
 
+        // --- Pending event writes: protect local field edits & new events ------
+        // applyPendingTaskEdits (above) only guards task checkboxes. The same race
+        // hits ordinary fields and new events: the 30s sync rebuilds `events`
+        // straight from the sheet, so if it runs before a local write has landed it
+        // reverts a just-edited time/date or drops a just-added event until a later
+        // sync. We remember each locally-written event and re-apply it on top of the
+        // next snapshot, dropping it once the sheet echoes it back (or after a
+        // timeout, so a write that genuinely failed can't stick forever).
+        const pendingEventWrites = new Map(); // id -> { snap, isNew, ts }
+        const PENDING_WRITE_TTL = 5 * 60 * 1000;
+
+        function recordEventWrite(event, isNew) {
+            if (!event) return;
+            const prev = pendingEventWrites.get(event.id);
+            pendingEventWrites.set(event.id, {
+                snap: { ...event },
+                isNew: !!isNew || (prev ? prev.isNew : false),
+                ts: Date.now()
+            });
+        }
+
+        function sameDateKey(a, b) {
+            const k = (d) => d instanceof Date ? formatDateForInput(d) : (d || '');
+            return k(a) === k(b);
+        }
+
+        function applyPendingEventWrites() {
+            const now = Date.now();
+            pendingEventWrites.forEach((p, id) => {
+                if (now - p.ts > PENDING_WRITE_TTL) { pendingEventWrites.delete(id); return; }
+                const s = p.snap;
+                // Match by id; a brand-new event is assigned a different id by the
+                // sheet, so fall back to name + date.
+                let target = events.find(e => e.id === id)
+                    || events.find(e => (e.name || '').trim().toLowerCase() === (s.name || '').trim().toLowerCase() && sameDateKey(e.date, s.date));
+                if (target) {
+                    const echoed = (target.time || '') === (s.time || '')
+                        && (target.endTime || '') === (s.endTime || '')
+                        && (target.name || '') === (s.name || '')
+                        && (target.owner || '') === (s.owner || '')
+                        && (target.location || '') === (s.location || '')
+                        && (target.status || '') === (s.status || '')
+                        && (target.type || '') === (s.type || '')
+                        && sameDateKey(target.date, s.date);
+                    if (echoed) {
+                        pendingEventWrites.delete(id); // sheet now reflects our write
+                    } else {
+                        // Sheet snapshot is stale — keep our edited values.
+                        target.name = s.name; target.owner = s.owner; target.supporting = s.supporting;
+                        target.date = s.date; target.time = s.time; target.endTime = s.endTime;
+                        target.location = s.location; target.category = s.category;
+                        target.primaryCategory = s.primaryCategory; target.type = s.type; target.status = s.status;
+                    }
+                } else if (p.isNew) {
+                    events.push({ ...s }); // new event not in the sheet snapshot yet — keep it visible
+                }
+                // else: an edited existing event temporarily missing — wait for next sync
+            });
+        }
+
         function normalizeTypeKey(type) {
             if (!type) return '';
             return String(type).toUpperCase().replace(/\s+/g, '_');
@@ -3179,6 +3239,7 @@
 
         // Two-way sync functions
         async function syncEventToSheet(event) {
+            recordEventWrite(event, false);
             try {
                 const payload = {
                     event: {
@@ -3335,6 +3396,9 @@
                     // Restore any boxes checked locally that this snapshot doesn't
                     // reflect yet, before deriving status from task completion.
                     applyPendingTaskEdits();
+                    // Same protection for edited fields (time/date/etc.) and events
+                    // added locally that the sheet snapshot doesn't yet include.
+                    applyPendingEventWrites();
 
                     events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
@@ -3763,6 +3827,7 @@
                         coordEmail: 'No', outreachReport: 'No'
                     };
                     events.push(newEvent);
+                    recordEventWrite(newEvent, true);
                     syncEventToSheet(newEvent);
 
                     saveEvents();
