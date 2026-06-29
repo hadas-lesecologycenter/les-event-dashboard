@@ -4437,7 +4437,7 @@
 
             // Delete from Google Sheet and confirm it worked
             try {
-                const params = new URLSearchParams({ action: 'deleteEvent', name: event.name });
+                const params = new URLSearchParams({ action: 'deleteEvent', id: event.id, name: event.name });
                 const response = await fetch(`${APPS_SCRIPT_URL}?${params}`);
                 const result = await response.json();
                 if (!result.success) throw new Error(result.error || 'Sheet returned failure');

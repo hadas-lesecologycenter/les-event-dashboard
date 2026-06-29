@@ -34,7 +34,8 @@ function doGet(e) {
 
   if (e && e.parameter && e.parameter.action === 'deleteEvent') {
     const name = e.parameter.name || '';
-    return handleDeleteEvent(name);
+    const id = e.parameter.id || '';
+    return handleDeleteEvent(name, id);
   }
 
   if (e && e.parameter && e.parameter.action === 'createEventbriteEvent') {
@@ -599,22 +600,45 @@ function handleCreateEventbriteEvent(data) {
 }
 
 /**
- * Delete an event row from the tracker sheet by name
+ * Delete an event row from the tracker sheet.
+ *
+ * Prefer the unique Event ID. Matching by name (the old behavior) could never
+ * find rows with a blank Event Name -- the "(Unnamed event ...)" rows -- so
+ * deleting them from the dashboard did nothing and they reappeared on the next
+ * sync. Deleting by ID fixes that. Every row carrying the id is removed, in case
+ * a past glitch produced duplicate-id rows. Name is only a fallback when no id
+ * is supplied (or no id row matched).
  */
-function handleDeleteEvent(name) {
+function handleDeleteEvent(name, id) {
   try {
-    if (!name) throw new Error('Missing event name');
     const spreadsheet = SpreadsheetApp.openById(TRACKER_SHEET_ID);
     const sheet = spreadsheet.getSheetByName(SHEET_NAME);
     const data = sheet.getDataRange().getValues();
-    const nameColIdx = Math.max(findColumnIndex(data[0], 'Event Name'), 0);
-    for (let i = data.length - 1; i >= 1; i--) {
-      if (String(data[i][nameColIdx]).trim().toLowerCase() === name.trim().toLowerCase()) {
-        sheet.deleteRow(i + 1);
-        return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+    const headers = data[0];
+    const nameColIdx = Math.max(findColumnIndex(headers, 'Event Name'), 0);
+    const idColIdx = findColumnIndex(headers, 'Event ID');
+
+    const wantId = String(id || '').trim();
+    const wantName = String(name || '').trim().toLowerCase();
+    if (!wantId && !wantName) throw new Error('Missing event id and name');
+
+    let deleted = 0;
+    if (wantId && idColIdx !== -1) {
+      for (let i = data.length - 1; i >= 1; i--) {
+        if (String(data[i][idColIdx] || '').trim() === wantId) { sheet.deleteRow(i + 1); deleted++; }
       }
     }
-    return ContentService.createTextOutput(JSON.stringify({ success: true, note: 'row not found' })).setMimeType(ContentService.MimeType.JSON);
+    // Fall back to a single name match only if the id matched nothing.
+    if (deleted === 0 && wantName) {
+      for (let i = data.length - 1; i >= 1; i--) {
+        if (String(data[i][nameColIdx] || '').trim().toLowerCase() === wantName) { sheet.deleteRow(i + 1); deleted++; break; }
+      }
+    }
+
+    // success stays true even when nothing matched: a row that isn't in the
+    // sheet can't reappear, so the delete goal is already met. Real failures
+    // (exceptions) are reported below.
+    return ContentService.createTextOutput(JSON.stringify({ success: true, deleted: deleted })).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
