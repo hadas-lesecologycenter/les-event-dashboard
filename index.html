@@ -2590,9 +2590,10 @@
         }
 
         let _statsAllEvents = [];
+        let _statsCanceledEvents = [];
 
-        function showStatEvents(field, value, clickEvent) {
-            const matching = _statsAllEvents
+        function showStatEvents(field, value, clickEvent, sourceList) {
+            const matching = (sourceList || _statsAllEvents)
                 .filter(e => e[field] === value)
                 .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -2662,39 +2663,48 @@
             const allEvents = selectedMonth === 'all'
                 ? yearFiltered
                 : yearFiltered.filter(e => getStatsDate(e).getMonth() === parseInt(selectedMonth));
-            _statsAllEvents = allEvents;
+
+            // Canceled events get their own section and are excluded from every
+            // other stat below. Matches "Canceled", "canceled", "Cancelled", etc.
+            const isCanceled = (e) => String(e.status || '').trim().toLowerCase().startsWith('cancel');
+            const canceledEvents = allEvents.filter(isCanceled);
+            const liveEvents = allEvents.filter(e => !isCanceled(e));
+            _statsAllEvents = liveEvents;          // main drill-downs exclude canceled
+            _statsCanceledEvents = canceledEvents; // canceled section drills into these
 
             const now = new Date(); now.setHours(0,0,0,0);
             const weekFromNow = new Date(now); weekFromNow.setDate(weekFromNow.getDate() + 7);
 
-            const upcoming = allEvents.filter(e => getStatsDate(e) >= now);
-            const past     = allEvents.filter(e => getStatsDate(e) < now);
-            const thisWeek = allEvents.filter(e => { const d = getStatsDate(e); return d >= now && d <= weekFromNow; });
-            const thisMonth = allEvents.filter(e => { const d = getStatsDate(e); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
+            const upcoming = liveEvents.filter(e => getStatsDate(e) >= now);
+            const past     = liveEvents.filter(e => getStatsDate(e) < now);
+            const thisWeek = liveEvents.filter(e => { const d = getStatsDate(e); return d >= now && d <= weekFromNow; });
+            const thisMonth = liveEvents.filter(e => { const d = getStatsDate(e); return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); });
             const nextEvent = [...upcoming].sort((a,b) => getStatsDate(a) - getStatsDate(b))[0];
             const nextEventDays = nextEvent ? Math.ceil((getStatsDate(nextEvent) - now) / 86400000) : null;
 
             const countBy = (arr, key) => arr.reduce((acc, e) => { const v = e[key] || 'Unknown'; acc[v] = (acc[v]||0)+1; return acc; }, {});
-            const byOwner    = countBy(allEvents, 'owner');
-            const byCategory = countBy(allEvents, 'primaryCategory');
-            const byType     = countBy(allEvents, 'type');
-            const byStatus   = countBy(allEvents, 'status');
+            const byOwner    = countBy(liveEvents, 'owner');
+            const byCategory = countBy(liveEvents, 'primaryCategory');
+            const byType     = countBy(liveEvents, 'type');
+            const byStatus   = countBy(liveEvents, 'status');
+            const byCanceledType = countBy(canceledEvents, 'type');
+            const cancelRate = allEvents.length ? Math.round((canceledEvents.length / allEvents.length) * 100) : 0;
 
             const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
             // Monthly chart ignores month filter so the year shape is visible; selected month is highlighted instead
             const byMonth = Object.fromEntries(monthNames.map(m => [m, 0]));
-            yearFiltered.forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
+            yearFiltered.filter(e => !isCanceled(e)).forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
             const maxMonth = Math.max(...Object.values(byMonth), 1);
             const curMonthName = monthNames[now.getMonth()];
 
             // Day of week distribution
             const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
             const byDow = Object.fromEntries(dowNames.map(d => [d, 0]));
-            allEvents.forEach(e => { byDow[dowNames[getStatsDate(e).getDay()]]++; });
+            liveEvents.forEach(e => { byDow[dowNames[getStatsDate(e).getDay()]]++; });
             const maxDow = Math.max(...Object.values(byDow), 1);
 
             // Active events & task completion
-            const activeEvents = allEvents.filter(e => e.status === 'In Progress' || e.status === 'Planning');
+            const activeEvents = liveEvents.filter(e => e.status === 'In Progress' || e.status === 'Planning');
             let totalT = 0, doneT = 0;
             activeEvents.forEach(e => {
                 const wf = getEventWorkflow(e);
@@ -2706,7 +2716,7 @@
 
             // Per-task completion
             const taskStats = Object.entries(STATS_TASK_LABELS).map(([key, label]) => {
-                const applicable = allEvents.filter(e => e[key] !== undefined && e[key] !== 'N/A');
+                const applicable = liveEvents.filter(e => e[key] !== undefined && e[key] !== 'N/A');
                 if (!applicable.length) return null;
                 const completed = applicable.filter(e => e[key] === 'Yes').length;
                 return { label, completed, applicable: applicable.length, pct: Math.round((completed / applicable.length) * 100) };
@@ -2722,7 +2732,7 @@
 
             // Owner workload
             const ownerWorkload = Object.keys(byOwner).map(owner => {
-                const ownerEvents = allEvents.filter(e => e.owner === owner);
+                const ownerEvents = liveEvents.filter(e => e.owner === owner);
                 const ownerUpcoming = ownerEvents.filter(e => getStatsDate(e) >= now && e.status !== 'Canceled' && e.status !== 'Complete');
                 const ownerOverdue = ownerUpcoming.reduce((sum, e) => sum + countOverdueTasks(e, now), 0);
                 return { owner, total: ownerEvents.length, upcoming: ownerUpcoming.length, overdue: ownerOverdue };
@@ -2769,7 +2779,7 @@
                         </div>
                     </div>
                     <div class="stats-summary-line">
-                        Showing <strong>${allEvents.length}</strong> event${allEvents.length===1?'':'s'}
+                        Showing <strong>${liveEvents.length}</strong> event${liveEvents.length===1?'':'s'}${canceledEvents.length ? ` <span style="color:#9ca3af;">(excludes ${canceledEvents.length} canceled)</span>` : ''}
                         ${selectedMonth==='all' && selectedYear==='all' ? 'across all time' :
                           selectedMonth==='all' ? 'in ' + selectedYear :
                           selectedYear==='all' ? 'in ' + monthNamesFull[parseInt(selectedMonth)] + ' (all years)' :
@@ -2791,7 +2801,7 @@
 
                 <div class="stats-kpi-row">
                     <div class="kpi-card kpi-total">
-                        <div class="kpi-value">${allEvents.length}</div>
+                        <div class="kpi-value">${liveEvents.length}</div>
                         <div class="kpi-label">Total Events</div>
                     </div>
                     <div class="kpi-card kpi-upcoming">
@@ -2895,7 +2905,7 @@
                             ${buildDonut(byCategory, STATS_CAT_COLORS, 140)}
                             <div class="donut-legend">
                                 ${Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,n]) => {
-                                    const pct = Math.round((n / allEvents.length) * 100);
+                                    const pct = Math.round((n / liveEvents.length) * 100);
                                     return `<div class="donut-legend-item stat-drillable" data-stat-field="primaryCategory" data-stat-value="${cat}" style="cursor:pointer;" title="Click to see events">
                                         <span class="donut-swatch" style="background:${STATS_CAT_COLORS[cat]||'#1d5432'}"></span>
                                         <span class="donut-name">${cat}</span>
@@ -2932,6 +2942,24 @@
                             ).join('')}
                         </div>
                     </div>
+                </div>
+
+                <div class="stats-section">
+                    <h2>❌ Canceled Events</h2>
+                    ${canceledEvents.length === 0 ? `
+                        <p style="color:#9ca3af;padding:8px 0;margin:0;">No canceled events in this view. 🎉</p>
+                    ` : `
+                        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+                            <span style="font-size:2em;font-weight:800;color:#6b7280;line-height:1;">${canceledEvents.length}</span>
+                            <span style="color:#6a5a4a;">canceled &middot; <strong>${cancelRate}%</strong> of all ${allEvents.length} event${allEvents.length===1?'':'s'} in this view</span>
+                        </div>
+                        <div class="chart-container">
+                            ${Object.entries(byCanceledType).sort((a,b)=>b[1]-a[1]).map(([type,n]) => {
+                                const pct = Math.round((n / canceledEvents.length) * 100);
+                                return `<div class="chart-row stat-drillable-canceled" data-stat-field="type" data-stat-value="${type}" style="cursor:pointer;" title="Click to see canceled events"><div class="chart-label" style="font-size:0.8em;width:145px;min-width:145px">${type}</div>${bar(n, Math.max(...Object.values(byCanceledType)), '#9ca3af')}<div style="min-width:46px;text-align:right;font-size:0.8em;color:#9ca3af;">${pct}%</div></div>`;
+                            }).join('')}
+                        </div>
+                    `}
                 </div>
 
                 <div class="stats-section">
@@ -2975,6 +3003,12 @@
                 el.addEventListener('click', (e) => {
                     e.stopPropagation();
                     showStatEvents(el.dataset.statField, el.dataset.statValue, e);
+                });
+            });
+            statsView.querySelectorAll('.stat-drillable-canceled').forEach(el => {
+                el.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showStatEvents(el.dataset.statField, el.dataset.statValue, e, _statsCanceledEvents);
                 });
             });
         }
