@@ -91,6 +91,7 @@ function doGet(e) {
       success: true,
       count: events.length,
       events: events,
+      briefs: readBriefs(spreadsheet),
       lastSync: new Date().toISOString()
     };
     if (events.length === 0) {
@@ -411,7 +412,8 @@ function handleSyncEvent(eventData) {
         'Location': event.location || '',
         'Event Category': event.category || '',
         'Event Type': event.type || '',
-        'Status': event.status || 'Planning'
+        'Status': event.status || 'Planning',
+        'Notes': event.notes || ''
       };
       const taskMap = {
         'Event Brief Created': event.brief || 'No',
@@ -486,7 +488,8 @@ function handleSyncEvent(eventData) {
         'Location': event.location || '',
         'Event Category': event.category || '',
         'Event Type': event.type || '',
-        'Status': event.status || 'Planning'
+        'Status': event.status || 'Planning',
+        'Notes': event.notes || ''
       };
       Object.entries(basicMap).forEach(([colName, value]) => {
         const colIdx = findColumnIndex(headers, colName);
@@ -642,6 +645,33 @@ function handleDeleteEvent(name, id) {
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: error.toString() })).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+/**
+ * Read the Briefs sheet into a map keyed by lower-cased event name, so the
+ * dashboard can re-attach saved brief drafts on every sync. Without this the
+ * "View Draft"/"View Brief" link reverted to "Create Brief" after a refresh,
+ * because briefs were written but never read back. Columns: 0 Event Name,
+ * 2 Status, 4 Brief Data (JSON).
+ */
+function readBriefs(spreadsheet) {
+  const out = {};
+  try {
+    const sheet = spreadsheet.getSheetByName('Briefs');
+    if (!sheet) return out;
+    const data = sheet.getDataRange().getValues();
+    for (let i = 1; i < data.length; i++) {
+      const name = String(data[i][0] || '').trim();
+      if (!name) continue;
+      let draft = {};
+      try { draft = JSON.parse(data[i][4] || '{}'); } catch (e) { draft = {}; }
+      out[name.toLowerCase()] = {
+        draft: draft,
+        completed: String(data[i][2] || '').trim().toLowerCase() === 'completed'
+      };
+    }
+  } catch (e) {}
+  return out;
 }
 
 /**

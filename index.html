@@ -2538,7 +2538,6 @@
             comms: 'Comms Request', compost: 'Compost Order', opsCheckin: 'Ops Check-in',
             reminder: 'Reminder Email', report: 'Event Report', treeMap: 'Tree Map Update',
             thankYou: 'Thank-You Email', coordConfirm: 'Coordinator Confirm',
-            coordEmail: 'Coordinator Email', outreachReport: 'Outreach Report',
             scouting: 'Block Walk', equipment: 'Equipment Reserved'
         };
 
@@ -3215,6 +3214,8 @@
                         && (target.location || '') === (s.location || '')
                         && (target.status || '') === (s.status || '')
                         && (target.type || '') === (s.type || '')
+                        && (target.category || '') === (s.category || '')
+                        && (target.notes || '') === (s.notes || '')
                         && sameDateKey(target.date, s.date);
                     if (echoed) {
                         pendingEventWrites.delete(id); // sheet now reflects our write
@@ -3223,12 +3224,60 @@
                         target.name = s.name; target.owner = s.owner; target.supporting = s.supporting;
                         target.date = s.date; target.time = s.time; target.endTime = s.endTime;
                         target.location = s.location; target.category = s.category;
-                        target.primaryCategory = s.primaryCategory; target.type = s.type; target.status = s.status;
+                        target.primaryCategory = s.primaryCategory; target.secondaryCategory = s.secondaryCategory;
+                        target.type = s.type; target.status = s.status; target.notes = s.notes;
                     }
                 } else if (p.isNew) {
                     events.push({ ...s }); // new event not in the sheet snapshot yet — keep it visible
                 }
                 // else: an edited existing event temporarily missing — wait for next sync
+            });
+        }
+
+        // Brief drafts live in a separate "Briefs" sheet. The dashboard now reads
+        // them back on every sync (doGet returns a `briefs` map), so the View
+        // Draft/Brief link survives a refresh. pendingBriefs protects a just-saved
+        // draft until that read reflects it.
+        const pendingBriefs = new Map(); // nameLower -> { draft, completed, ts }
+
+        function recordBriefWrite(event) {
+            if (!event || !event.name) return;
+            pendingBriefs.set(event.name.trim().toLowerCase(), {
+                draft: event.eventbriefDraft,
+                completed: !!event.eventbriefCompleted,
+                ts: Date.now()
+            });
+        }
+
+        function applyBriefs(sheetBriefs) {
+            sheetBriefs = sheetBriefs || {};
+            events.forEach(e => {
+                const key = (e.name || '').trim().toLowerCase();
+                const pb = pendingBriefs.get(key);
+                const sb = sheetBriefs[key];
+                if (pb && Date.now() - pb.ts <= PENDING_WRITE_TTL) {
+                    e.eventbriefDraft = pb.draft;          // keep our just-saved draft
+                    e.eventbriefCompleted = pb.completed;
+                    if (sb) pendingBriefs.delete(key);     // sheet now has it
+                } else if (sb) {
+                    pendingBriefs.delete(key);
+                    if (sb.draft && Object.keys(sb.draft).length) e.eventbriefDraft = sb.draft;
+                    e.eventbriefCompleted = sb.completed;
+                }
+            });
+        }
+
+        // Events deleted locally: hide them from a sync snapshot until the sheet
+        // delete has landed, so a freshly-deleted event can't flicker back.
+        const pendingDeletes = new Map(); // id -> ts
+
+        function applyPendingDeletes() {
+            const now = Date.now();
+            pendingDeletes.forEach((ts, id) => {
+                if (now - ts > PENDING_WRITE_TTL) { pendingDeletes.delete(id); return; }
+                const idx = events.findIndex(e => e.id === id);
+                if (idx !== -1) events.splice(idx, 1); // still in sheet — keep it hidden
+                else pendingDeletes.delete(id);        // gone from sheet — delete confirmed
             });
         }
 
@@ -3254,6 +3303,7 @@
                         category: event.primaryCategory || event.category || '',
                         type: event.type || 'FIELD TRIP',
                         status: event.status || 'Planning',
+                        notes: event.notes || '',
                         brief: event.brief || 'No',
                         eventbrite: event.eventbrite || 'No',
                         calendar: event.calendar || 'No',
@@ -3290,6 +3340,7 @@
 
         async function syncBriefToSheet(event) {
             if (!event.eventbriefDraft) return;
+            recordBriefWrite(event);
 
             try {
                 const payload = {
@@ -3371,6 +3422,7 @@
                         location: s.location || '',
                         category: s.category || '',
                         primaryCategory: s.category ? s.category.split(',')[0].trim() : '',
+                        secondaryCategory: s.category && s.category.indexOf(',') !== -1 ? s.category.split(',').slice(1).join(',').trim() : '',
                         type: normalizeEventType(s.type),
                         status: s.status || 'Planning',
                         brief: s.brief || 'No',
@@ -3387,7 +3439,8 @@
                         scouting: s.scouting || 'No',
                         equipment: s.equipment || 'No',
                         coordEmail: s.coordEmail || 'No',
-                        outreachReport: s.outreachReport || 'No'
+                        outreachReport: s.outreachReport || 'No',
+                        notes: s.notes || ''
                     });
 
                     events = sheetEvents.map(s => buildFromSheet(s));
@@ -3399,6 +3452,10 @@
                     // Same protection for edited fields (time/date/etc.) and events
                     // added locally that the sheet snapshot doesn't yet include.
                     applyPendingEventWrites();
+                    // Re-attach saved brief drafts, and keep a just-deleted event
+                    // hidden until the sheet delete lands.
+                    applyBriefs(data.briefs);
+                    applyPendingDeletes();
 
                     events.forEach(e => { autoProgressEvent(e); autoCompleteEvent(e); });
                     saveEvents();
@@ -4497,6 +4554,7 @@
             if (!confirm(`Are you sure you want to delete "${event.name}"? This cannot be undone.`)) return;
 
             events = events.filter(e => e.id !== eventId);
+            pendingDeletes.set(eventId, Date.now());
             saveEvents();
             applyFilters();
 
