@@ -2062,6 +2062,7 @@
         let events = [];
         let filteredEvents = [];
         let currentView = 'list';
+        let sortOrderManuallySet = false;
         let currentMonth = new Date();
         let selectedDate = null;
         let currentBriefEvent = null;
@@ -3996,8 +3997,17 @@
                     applyFilters();
                 });
             });
-            document.getElementById('filterTiming').addEventListener('change', applyFilters);
-            document.getElementById('sortOrder').addEventListener('change', applyFilters);
+            document.getElementById('filterTiming').addEventListener('change', () => {
+                if (!sortOrderManuallySet) {
+                    document.getElementById('sortOrder').value =
+                        document.getElementById('filterTiming').value === 'all' ? 'latest' : 'earliest';
+                }
+                applyFilters();
+            });
+            document.getElementById('sortOrder').addEventListener('change', () => {
+                sortOrderManuallySet = true;
+                applyFilters();
+            });
             document.getElementById('searchEvents').addEventListener('input', applyFilters);
         }
 
@@ -4023,6 +4033,8 @@
 
             const now = new Date();
             now.setHours(0, 0, 0, 0);
+            const upcomingCutoff = new Date(now);
+            upcomingCutoff.setDate(upcomingCutoff.getDate() - 7);
 
             filteredEvents = events.filter(event => {
                 const eventDate = new Date(event.date);
@@ -4048,7 +4060,7 @@
                     const tenDaysFromNow = new Date(now);
                     tenDaysFromNow.setDate(tenDaysFromNow.getDate() + 10);
                     if (eventDate < now || eventDate > tenDaysFromNow) return false;
-                } else if (timing === 'upcoming' && eventDate < now) return false;
+                } else if (timing === 'upcoming' && eventDate < upcomingCutoff) return false;
                 else if (timing === 'past' && eventDate >= now) return false;
 
                 if (search) {
