@@ -287,7 +287,7 @@
         .filter-pill[data-color="hadas"].active { background: #3a5a8b; border-color: #3a5a8b; }
         .filter-pill[data-color="gretel"].active { background: #5a3a8b; border-color: #5a3a8b; }
         .filter-pill[data-color="planning"].active { background: #fbbf24; border-color: #fbbf24; color: #1a1a1a; }
-        .filter-pill[data-color="hold"].active { background: #6b7280; border-color: #6b7280; }
+        .filter-pill[data-color="hold"].active { background: #ef4444; border-color: #ef4444; }
         .filter-pill[data-color="confirmed"].active { background: #10b981; border-color: #10b981; }
         .filter-pill[data-color="complete"].active { background: #059669; border-color: #059669; }
         .filter-pill[data-color="canceled"].active { background: #6b7280; border-color: #6b7280; }
@@ -353,7 +353,12 @@
             opacity: 0.8;
         }
 
-        .event-card.on-hold, .event-card.canceled {
+        .event-card.on-hold {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .event-card.canceled {
             border-left-color: #9ca3af;
             background: #f9fafb;
         }
@@ -454,8 +459,8 @@
         }
 
         .status-hold {
-            background: #f3f4f6;
-            color: #4b5563;
+            background: #fee2e2;
+            color: #b91c1c;
         }
 
         .status-confirmed {
@@ -1660,8 +1665,8 @@
                     <h3 style="font-weight: 700; color: #92400e; margin-bottom: 15px; font-size: 1em; margin-top: 0;">📋 Planning</h3>
                     <div class="kanban-cards" data-status="Planning" style="flex: 1; display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
-                <div class="kanban-column" data-column="hold" style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); border-radius: 12px; padding: 15px; overflow-y: auto; border: 2px solid #9ca3af; display: flex; flex-direction: column;">
-                    <h3 style="font-weight: 700; color: #4b5563; margin-bottom: 15px; font-size: 1em; margin-top: 0;">⏸ Hold</h3>
+                <div class="kanban-column" data-column="hold" style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px; padding: 15px; overflow-y: auto; border: 2px solid #ef4444; display: flex; flex-direction: column;">
+                    <h3 style="font-weight: 700; color: #b91c1c; margin-bottom: 15px; font-size: 1em; margin-top: 0;">⏸ Hold</h3>
                     <div class="kanban-cards" data-status="Hold" style="flex: 1; display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
                 <div class="kanban-column" data-column="in-progress" style="background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); border-radius: 12px; padding: 15px; overflow-y: auto; border: 2px solid #10b981; display: flex; flex-direction: column;">
@@ -2306,9 +2311,10 @@
                     return true;
                 });
                 const eventsList = dayEvents.map(e => {
-                    const isHold = e.status === 'Hold' || e.status === 'Canceled';
-                    const bg = isHold ? '#f3f4f6' : (CATEGORY_BG[e.primaryCategory] || '#e8f0e4');
-                    const txt = isHold ? '#4b5563' : (CATEGORY_TEXT[e.primaryCategory] || '#1d5432');
+                    const isHold = e.status === 'Hold';
+                    const isCanceled = e.status === 'Canceled';
+                    const bg = isHold ? '#fee2e2' : isCanceled ? '#f3f4f6' : (CATEGORY_BG[e.primaryCategory] || '#e8f0e4');
+                    const txt = isHold ? '#b91c1c' : isCanceled ? '#4b5563' : (CATEGORY_TEXT[e.primaryCategory] || '#1d5432');
                     const ownerColor = OWNER_COLORS[e.owner] || '#1d5432';
                     const time = e.time ? to12HourTime(e.time) : '';
                     const locIcon = e.location ? locationIcon(e.location) : '';
@@ -2447,7 +2453,7 @@
 
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#6b7280', 'In Progress': '#34d399', Canceled: '#9ca3af' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', 'In Progress': '#34d399', Canceled: '#9ca3af' };
 
             // Impact from reporting spreadsheet
             const impactMetrics = await fetchImpactMetrics(selectedMonth, selectedYear);
@@ -2533,7 +2539,7 @@
         const STATS_OWNER_COLORS  = { 'Maddy': '#10b981', 'Hadas': '#3b82f6', 'Gretel': '#f59e0b' };
         const STATS_CAT_COLORS    = { 'Outreach': '#f59e0b', 'Education': '#3b82f6', 'Stewardship': '#10b981' };
         const STATS_TYPE_COLORS   = { 'PUBLIC PROGRAM': '#8b5cf6', 'PUBLIC VOLUNTEER EVENT': '#10b981', 'PRIVATE VOLUNTEER EVENT': '#3b82f6', 'FIELD TRIP': '#f59e0b', 'TABLING': '#ef4444' };
-        const STATS_STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#6b7280', 'Canceled': '#9ca3af' };
+        const STATS_STATUS_COLORS = { 'In Progress': '#10b981', 'Planning': '#f59e0b', 'Complete': '#059669', 'Hold': '#ef4444', 'Canceled': '#9ca3af' };
         const STATS_TASK_LABELS = {
             brief: 'Event Brief', eventbrite: 'Eventbrite Page', calendar: 'Calendar Entry',
             comms: 'Comms Request', compost: 'Compost Order', opsCheckin: 'Ops Check-in',
@@ -4103,7 +4109,7 @@
                     `;
                 }).join('');
 
-                const holdBg = (event.status === 'Hold' || event.status === 'Canceled') ? '#f3f4f6' : 'white';
+                const holdBg = event.status === 'Hold' ? '#fee2e2' : (event.status === 'Canceled' ? '#f3f4f6' : 'white');
                 return `
                     <tr style="border-bottom: 1px solid #e5e7eb; transition: background 0.2s; background: ${holdBg};" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='${holdBg}'">
                         <td style="padding: 12px 20px; font-weight: 500; cursor: pointer;" onclick="openEventDetailsModal(${event.id})">${event.name}<br><span style="font-size:0.75em;color:#9ca3af;font-weight:400;">#${event.id}</span></td>
@@ -4241,7 +4247,7 @@
             const monthEntries = Object.entries(byMonth).sort((a, b) => new Date(a[0]) - new Date(b[0]));
             const ownerColors = { Maddy: '#f59e0b', Hadas: '#3b82f6', Gretel: '#10b981' };
             const categoryColors = { Outreach: '#f59e0b', Education: '#3b82f6', Stewardship: '#10b981' };
-            const statusColors = { Planning: '#fbbf24', Hold: '#6b7280', 'In Progress': '#34d399', Canceled: '#9ca3af' };
+            const statusColors = { Planning: '#fbbf24', Hold: '#ef4444', 'In Progress': '#34d399', Canceled: '#9ca3af' };
 
             statsBar.innerHTML = `
                 <div style="background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; display: flex; gap: 20px; align-items: flex-end;">
@@ -5173,13 +5179,14 @@
 
                 const card = document.createElement('div');
                 card.draggable = true;
-                const isHold = status === 'Hold' || status === 'Canceled';
+                const isHold = status === 'Hold';
+                const isCanceled = status === 'Canceled';
                 card.style.cssText = `
-                    background: ${isHold ? '#f3f4f6' : 'white'};
+                    background: ${isHold ? '#fee2e2' : isCanceled ? '#f3f4f6' : 'white'};
                     border-radius: 8px;
                     padding: 12px;
                     cursor: grab;
-                    border: 1px solid ${isHold ? '#9ca3af' : '#e5e7eb'};
+                    border: 1px solid ${isHold ? '#ef4444' : isCanceled ? '#9ca3af' : '#e5e7eb'};
                     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
                     transition: all 0.2s ease;
                 `;
