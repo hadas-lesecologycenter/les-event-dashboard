@@ -7,7 +7,7 @@ A streamlined dashboard for managing event planning workflows across the LES Eco
 This dashboard helps Maddy, Hadas, and Gretel track event workflows from planning through completion. It breaks down each event into three phases:
 
 - **Setup Phase**: Event brief, EventBrite listing, calendar event, comms form
-- **Execution Phase**: Compost ordering, ops check-in, reminder emails
+- **Execution Phase**: Ops check-in, reminder emails
 - **Completion Phase**: Activity reports, tree map data, thank you emails
 
 ## Features
@@ -86,7 +86,6 @@ Tasks to prepare before the event:
 
 ### 🚀 Execution Phase
 Tasks during event planning and promotion:
-- **Order Placed on Compost Tracker** - Materials ordered if needed
 - **Compost Ops Check-In** - Confirmed with operations team
 - **Reminder Email Sent** - Attendees/volunteers reminded
 
