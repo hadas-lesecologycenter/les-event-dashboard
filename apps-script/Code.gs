@@ -421,7 +421,6 @@ function handleSyncEvent(eventData) {
         'LES Calendar Event Created': event.calendar || 'No',
         'Comms Form Submitted': event.comms || 'No',
         'Coordinator Confirmed': event.coordConfirm || 'No',
-        'Order Placed on Compost Tracker': event.compost || 'No',
         'Compost Ops Check-In': event.opsCheckin || 'No',
         'Reminder Email Sent': event.reminder || 'No',
         'Scouting Completed': event.scouting || 'No',
@@ -503,7 +502,6 @@ function handleSyncEvent(eventData) {
         'LES Calendar Event Created': event.calendar,
         'Comms Form Submitted': event.comms,
         'Coordinator Confirmed': event.coordConfirm,
-        'Order Placed on Compost Tracker': event.compost,
         'Compost Ops Check-In': event.opsCheckin,
         'Reminder Email Sent': event.reminder,
         'Scouting Completed': event.scouting,
@@ -984,7 +982,6 @@ function parseEventRow(row, headers, tz) {
     comms: normalizeValue(getColumn('Comms Form Submitted')),
     coordConfirm: normalizeValue(getColumn('Coordinator Confirmed')),
 
-    compost: normalizeValue(getColumn('Order Placed on Compost Tracker')),
     opsCheckin: normalizeValue(getColumn('Compost Ops Check-In')),
     reminder: normalizeValue(getColumn('Reminder Email Sent')),
     scouting: normalizeValue(getColumn('Scouting Completed')),
