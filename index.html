@@ -1794,7 +1794,6 @@
                         <option value="Planning">Planning</option>
                         <option value="In Progress">In Progress</option>
                         <option value="Complete">Complete</option>
-                        <option value="Done">Done</option>
                         <option value="Hold">Hold</option>
                         <option value="Canceled">Canceled</option>
                     </select>
@@ -2137,8 +2136,8 @@
             { date: '2025-09-30', staff: 'Maddy', participant: 'School Group', location: '', notes: '', fall: { name: 'East Side Community High School', collab: 'Schools', notes: 'Bulbs + seeds planted: no, too warm; Mulch: compost from leftover stc, mulhc from earth matter', tasks: { opsCheckin: 0, reminder: 0, report: 1, treeMap: 0, thankYou: 0 } } },
             { date: '2025-10-13', staff: 'Maddy', location: '', notes: '', fall: { name: "Indigenous People's Day STC", collab: 'CD 2', status: 'Canceled', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 0, report: 0, treeMap: 0, thankYou: 0 } } },
             { date: '2025-10-21', staff: 'Maddy', fieldTrip: true, location: '', notes: '', fall: { name: 'Horticulture Training Program', collab: 'Community Partner', notes: 'Daffodil Bulbs planted (around 55?); Mulch: compost from 10/13 canceled event', tasks: { opsCheckin: 0, reminder: 0, report: 1, treeMap: 1, thankYou: 0 } } },
-            { date: '2025-11-08', staff: 'Maddy', location: '', notes: '', fall: { name: 'Prune & Chat', collab: 'Other', status: 'In Progress', sheetStatus: 'Post Event Tasks', tasks: { eventbrite: 0, calendar: 1, comms: 0, opsCheckin: 0, reminder: 0, report: 0, treeMap: 1, thankYou: 0 } } },
-            { date: '2025-11-11', staff: 'Maddy', location: '', notes: '', fall: { name: 'Veterans Day STC', collab: 'Curbside Collab, CD 1', status: 'Hold', sheetStatus: 'Rescheduled', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 0, report: 1, treeMap: 0, thankYou: 0 } } }
+            { date: '2025-11-08', staff: 'Maddy', location: '', notes: '', fall: { name: 'Prune & Chat', collab: 'Other', status: 'Canceled', sheetStatus: 'Post Event Tasks', tasks: { eventbrite: 0, calendar: 1, comms: 0, opsCheckin: 0, reminder: 0, report: 0, treeMap: 1, thankYou: 0 } } },
+            { date: '2025-11-11', staff: 'Maddy', location: '', notes: '', fall: { name: 'Veterans Day STC', collab: 'Curbside Collab, CD 1', status: 'Canceled', sheetStatus: 'Rescheduled', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 0, report: 1, treeMap: 0, thankYou: 0 } } }
         ];
 
         // IDs live in their own 25001+ range so they never collide with the
@@ -3524,7 +3523,8 @@
                         primaryCategory: s.category ? s.category.split(',')[0].trim() : '',
                         secondaryCategory: s.category && s.category.indexOf(',') !== -1 ? s.category.split(',').slice(1).join(',').trim() : '',
                         type: normalizeEventType(s.type),
-                        status: s.status || 'Planning',
+                        // The 2026 tab mixes "Done" (legacy) and "Complete"; show one label.
+                        status: isCompleteStatus(s.status) ? 'Complete' : (s.status || 'Planning'),
                         brief: s.brief || 'No',
                         eventbrite: s.eventbrite || 'No',
                         calendar: s.calendar || 'No',
