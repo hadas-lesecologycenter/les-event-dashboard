@@ -2098,6 +2098,122 @@
             { name: 'STC w. NYU Class', owner: 'Maddy', date: '9/10/2026', time: '12:00 PM', location: '', category: 'Stewardship, Education', type: 'FIELD_TRIP' }
         ];
 
+        // 2025 street tree care events, transcribed from the Drive sheet
+        // "2025 tree care volunteer events" (Sheet1). Read-only archive: these are
+        // never written to the 2026 tracker. Two source fixes applied here only:
+        // the 12/9 row's date read "12/9/0005", and the 7/29 row's zip read "1".
+        // mc = "Master Composter" event type; school = "School Group" participants.
+        // fall = the matching row of the "Fall 2025 STC" sheet (both tabs): its
+        // event name, status and task checkboxes (1 = done, 0 = not done; tasks
+        // it doesn't track stay N/A). comms = Newsletter AND Socials forms;
+        // opsCheckin = "Jermaine Check In"; report = Activity Report has a name.
+        const ARCHIVED_2025_STC_EVENTS = [
+            { date: '2025-03-22', staff: 'Maddy, Echo, Lena', trees: 11, volunteers: 10, hours: 2, compost: 240, zip: '10009', mc: true, location: '210 E 7th St, New York, NY 10009', notes: '' },
+            { date: '2025-04-12', staff: 'Maddy', trees: 12, volunteers: 10, hours: 2, compost: 240, zip: '10009', group: 'NYU Environmental Justice Alliance', location: '258 East 4th street', notes: 'NYU Environmental Justice Alliance volunteered alongside the general public' },
+            { date: '2025-04-19', staff: 'Maddy, Echo, Lena', trees: 21, volunteers: 29, hours: 2, compost: 320, zip: '10011', group: 'Chelsea Garden Club, Master Composters', participant: 'Community Group', location: '10th Avenue &, W 22nd St', notes: '5 attendees were Master Composters who received volunteer credit for their time' },
+            { date: '2025-04-22', staff: 'Maddy, Echo, Lena, Lia', trees: 11, volunteers: 18, hours: 2, compost: 240, zip: '10002', location: '189 Madison Street, New York, NY', notes: '7 attendees were master composters (10 slots were available for MCs on regpack) and received service hour credit for their time' },
+            { date: '2025-05-03', staff: 'Maddy', trees: 5, volunteers: 8, hours: 1, compost: 0, zip: '10038', location: '8 Henry Street, New York, NY', notes: 'Used mulch instead! Was an outreach event for CBLES in the LES and partnered with Chatham Square Library' },
+            { date: '2025-05-15', staff: 'Lena, Lia, Echo, Maddy', trees: 25, volunteers: 16, hours: 2, compost: 280, zip: '10036', location: '440 W 46th St, New York, NY 10036', notes: "STC with MCs and Erik Botcher's office near Mathews-Palmer Park" },
+            { date: '2025-05-18', staff: 'Lena, Lia, Echo', trees: 6, volunteers: 3, hours: 2, compost: 240, zip: '10035', mc: true, location: '342 Pleasant Ave, New York, NY 10035', notes: '' },
+            { date: '2025-05-29', staff: 'Lia, Echo, Lena', trees: 5, volunteers: 5, hours: 2, compost: 240, zip: '10009', mc: true, location: '402 E 8th St, New York, NY 10009', notes: 'MC event' },
+            { date: '2025-06-11', staff: 'Maddy', trees: 7, volunteers: 12, hours: 2, compost: 200, zip: '10002', location: '55 Montgomery Street', notes: '4/12 participants were MC Volunteers' },
+            { date: '2025-06-21', staff: 'Lena and Maddy', trees: 15, volunteers: 13, hours: 3, compost: 280, zip: '10002', location: 'Stanton St. &, Pitt St, New York, NY 10002', notes: 'Street Tree Care at Hamilton Fish Park in collaboration with Partnership for Parks' },
+            { date: '2025-07-12', staff: 'Maddy', trees: 14, volunteers: 12, hours: 2.5, compost: 320, zip: '10002', location: 'Staton St & Pitt St, New York, NY', notes: '8/12 volunteers were from Con Edison but event was originally just open to general public' },
+            { date: '2025-07-27', staff: 'Echo & Lena', trees: 11, volunteers: 5, hours: 2, compost: 320, zip: '10029', mc: true, location: 'Rodale Pleasant Park; 437 E 114th St, New York, NY 10029', notes: 'Street tree care with Rodale Community Garden and MC volunteers. We also applied mulch' },
+            { date: '2025-07-29', staff: 'Maddy', trees: 1, volunteers: 1, hours: 1, compost: 0, zip: '', location: 'Clyde Romero Memorial Garden', notes: 'One volunteer person and they wanted to steward the tree in front of their building. Cut short due to heat.' },
+            { date: '2025-08-12', staff: 'Maddy', trees: 3, volunteers: 1, hours: 2, compost: 0, zip: '10009', location: '112 Avenue A, New York, NY', notes: 'Watering for younger trees only' },
+            { date: '2025-08-16', staff: 'Maddy', trees: 7, volunteers: 11, hours: 2.5, compost: 280, zip: '10002', location: '32 Jackson Street, New York, NY', notes: "2/11 volunteers were MC's" },
+            { date: '2025-08-27', staff: 'Maddy', trees: 6, volunteers: 10, hours: 2, compost: 280, zip: '10009', location: '76 Avenue B, New York, NY', notes: '2 master composter volunteers', fall: { name: 'EV STC', collab: 'P0, CD 2', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 0, reminder: 0, report: 1, treeMap: 1, thankYou: 1 } } },
+            { date: '2025-09-09', staff: 'Maddy', trees: 5, volunteers: 6, hours: 2, compost: 240, zip: '10002', location: '129 Ridge Street, New York, NY', notes: '1 MC attended. Collab with Community Compost', fall: { name: 'L.E.S. STC', collab: 'P1, CD 1, MC Collab', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 1, report: 1, treeMap: 1, thankYou: 1 } } },
+            { date: '2025-09-21', staff: 'Maddy + Lena', trees: 5, volunteers: 5, hours: 2.5, compost: 160, zip: '10009', location: '254 E 2nd Street, New York, NY', notes: 'DripTech LLC staff present', fall: { name: 'EV STC', collab: 'P2, CD 2, MC Collab', notes: 'Daffodil Bulbs planted (around 55?)', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 1, report: 1, treeMap: 1, thankYou: 1 } } },
+            { date: '2025-10-04', staff: 'Maddy + Echo', trees: 17, volunteers: 10, hours: 2.5, compost: 520, zip: '10002', location: 'Canal Street & Essex Street, New York, NY', notes: 'City of Forest Day! 3 MCs', fall: { name: 'City of Forest Day STC', collab: 'P3, Other, CD 1', notes: 'Distributed bulbs + wildflower seed packets; Mulch: ordered', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 0, reminder: 1, report: 1, treeMap: 1, thankYou: 0 } } },
+            { date: '2025-10-23', staff: 'Maddy', trees: 6, volunteers: 6, hours: 2, compost: 320, zip: '10002', location: 'Cherry St. & Clinton St. New York, NY', notes: 'Partner event with EarthMatter w/ 3 MC volunteers. Daffodil Bulbs were planted', fall: { name: '10/23 Street Tree Care', collab: 'EarthMatter Collab, CD 1', notes: 'Daffodil bulbs planted; Mulch: Earth Matter brigning compost + mulch', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 0, reminder: 1, report: 1, treeMap: 1, thankYou: 1 } } },
+            { date: '2025-11-04', staff: 'Maddy + Lena + Echo', trees: 9, volunteers: 12, hours: 2, compost: 280, zip: '10009', location: '114 East 3rd, New York, NY', notes: 'Henry Street Community Response Team, Master Composter participated' },
+            { date: '2025-11-04', staff: 'Maddy, Echo & Lena', trees: 9, volunteers: 7, hours: 2, compost: 280, zip: '10009', mc: true, location: 'E. 3rd St. &, Avenue A, New York, NY', notes: 'We also planted daffodil bulbs in the tree beds', fall: { name: 'Election Day STC', collab: 'MC Collab, CD 2', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 0, reminder: 1, report: 1, treeMap: 1, thankYou: 1 } } },
+            { date: '2025-11-18', staff: 'Maddy + Azra', trees: 7, volunteers: 5, hours: 2, compost: 360, zip: '10002', group: 'Henry St CRT', groupNote: 'Henry St CRT had 3 Volunteers', location: '1 Ludlow Street', notes: 'Planted Daffodil Bulbs', fall: { name: '11/18 STC', collab: 'Curbside Collab', tasks: { eventbrite: 1, calendar: 1, comms: 0, opsCheckin: 1, reminder: 1, report: 1, treeMap: 1, thankYou: 1 } } },
+            { date: '2025-11-24', staff: 'Maddy', trees: 4, volunteers: 16, hours: 1.25, compost: 200, zip: '10009', group: 'George Jackson Academy', participant: 'School Group', location: '104 St Marks Pl, New York, NY', notes: 'Group was late we began 30 min later than anticipated', fall: { name: 'George Jackson Academy', collab: 'Schools', notes: 'Bulbs + seeds planted: yes, daffodils; Mulch: *going to use remaining from events', tasks: { opsCheckin: 1, reminder: 1, report: 1, treeMap: 0, thankYou: 0 } } },
+            { date: '2025-12-09', staff: 'Maddy', trees: 20, volunteers: 14, hours: 2, compost: 320, zip: '10002', group: 'Henry Street CRT', groupNote: 'Henry Street CRT (4 volunteers)', location: '271-285 Henry St, New York, NY', notes: 'Collab w/ Earth Matter + Master Composter', fall: { name: '12/9 STC', collab: 'EarthMatter Collab', notes: 'Mulch: earth matter to bring compost', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 0, reminder: 1, report: 1, treeMap: 0, thankYou: 1 } } },
+            // Only in "Fall 2025 STC" (not in the volunteer log, so no location/metrics).
+            { date: '2025-09-30', staff: 'Maddy', participant: 'School Group', location: '', notes: '', fall: { name: 'East Side Community High School', collab: 'Schools', notes: 'Bulbs + seeds planted: no, too warm; Mulch: compost from leftover stc, mulhc from earth matter', tasks: { opsCheckin: 0, reminder: 0, report: 1, treeMap: 0, thankYou: 0 } } },
+            { date: '2025-10-13', staff: 'Maddy', location: '', notes: '', fall: { name: "Indigenous People's Day STC", collab: 'CD 2', status: 'Canceled', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 0, report: 0, treeMap: 0, thankYou: 0 } } },
+            { date: '2025-10-21', staff: 'Maddy', fieldTrip: true, location: '', notes: '', fall: { name: 'Horticulture Training Program', collab: 'Community Partner', notes: 'Daffodil Bulbs planted (around 55?); Mulch: compost from 10/13 canceled event', tasks: { opsCheckin: 0, reminder: 0, report: 1, treeMap: 1, thankYou: 0 } } },
+            { date: '2025-11-08', staff: 'Maddy', location: '', notes: '', fall: { name: 'Prune & Chat', collab: 'Other', status: 'In Progress', sheetStatus: 'Post Event Tasks', tasks: { eventbrite: 0, calendar: 1, comms: 0, opsCheckin: 0, reminder: 0, report: 0, treeMap: 1, thankYou: 0 } } },
+            { date: '2025-11-11', staff: 'Maddy', location: '', notes: '', fall: { name: 'Veterans Day STC', collab: 'Curbside Collab, CD 1', status: 'Hold', sheetStatus: 'Rescheduled', tasks: { eventbrite: 1, calendar: 1, comms: 1, opsCheckin: 1, reminder: 0, report: 1, treeMap: 0, thankYou: 0 } } }
+        ];
+
+        // IDs live in their own 25001+ range so they never collide with the
+        // tracker's IDs (261, 2610, ...).
+        function buildArchived2025Events() {
+            return ARCHIVED_2025_STC_EVENTS.map((r, idx) => {
+                const fall = r.fall || {};
+                const place = r.location.split(';')[0]
+                    .split(/,?\s*New York\b/i)[0]
+                    .replace(/\s*&,\s*/g, ' & ')
+                    .trim();
+                const firstStaff = r.staff.split(/,|&|\+|\band\b/)[0].trim();
+                const owner = firstStaff.charAt(0).toUpperCase() + firstStaff.slice(1).toLowerCase();
+                const school = r.participant === 'School Group';
+                const fieldTrip = school || !!r.fieldTrip;
+                const noteParts = [
+                    `Staff: ${r.staff}`,
+                    r.notes,
+                    fall.notes,
+                    fall.collab ? `Fall 2025 sheet type: ${fall.collab}` : '',
+                    fall.sheetStatus ? `Fall 2025 sheet status: ${fall.sheetStatus}` : '',
+                    r.groupNote || (r.group ? `Group: ${r.group}` : ''),
+                    `Participants: ${r.participant || 'General Public'}`,
+                    r.zip ? `Zip: ${r.zip}` : '',
+                    r.fall
+                        ? (r.trees !== undefined
+                            ? 'Imported from "2025 tree care volunteer events" + "Fall 2025 STC" sheets (read-only).'
+                            : 'Imported from "Fall 2025 STC" sheet (read-only).')
+                        : 'Imported from "2025 tree care volunteer events" sheet (read-only).'
+                ].filter(Boolean);
+                const fromSheet = k => fall.tasks && k in fall.tasks ? (fall.tasks[k] ? 'Yes' : 'No') : 'N/A';
+                return {
+                    id: 25001 + idx,
+                    archived: true,
+                    name: fall.name || `${r.mc ? 'MC STC' : 'STC'} – ${r.group || place}`,
+                    owner: owner,
+                    supporting: '',
+                    date: parseLocalDate(r.date),
+                    time: '',
+                    endTime: '',
+                    location: r.location.trim(),
+                    category: school ? 'Stewardship, Education' : 'Stewardship',
+                    primaryCategory: 'Stewardship',
+                    secondaryCategory: school ? 'Education' : '',
+                    type: fieldTrip ? 'FIELD TRIP' : 'PUBLIC VOLUNTEER EVENT',
+                    status: fall.status || 'Complete',
+                    brief: 'N/A', eventbrite: fromSheet('eventbrite'), calendar: fromSheet('calendar'),
+                    comms: fromSheet('comms'), coordConfirm: 'N/A', opsCheckin: fromSheet('opsCheckin'),
+                    reminder: fromSheet('reminder'), scouting: 'N/A', equipment: 'N/A',
+                    report: fromSheet('report'), treeMap: fromSheet('treeMap'),
+                    thankYou: fromSheet('thankYou'), coordEmail: 'N/A', outreachReport: 'N/A',
+                    notes: noteParts.join(' · '),
+                    metrics: r.trees === undefined ? null : {
+                        volunteers: r.volunteers,
+                        trees: r.trees,
+                        compost: r.compost,
+                        hours: r.hours,
+                        source: '2025 log'
+                    }
+                };
+            });
+        }
+
+        function isArchivedEvent(event) {
+            return !!(event && event.archived);
+        }
+
+        function showArchivedReadOnlyToast() {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#6b7280;color:white;padding:14px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:360px;line-height:1.5;';
+            toast.textContent = '2025 events are a read-only archive. Edit the "2025 tree care volunteer events" sheet and update the dashboard code instead.';
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 6000);
+        }
+
         function initializeEventsFromSpreadsheet() {
             spreadsheetEvents.forEach((e, idx) => {
                 const [month, day, year] = e.date.split('/');
@@ -2116,6 +2232,7 @@
                     status: new Date(eventDate) < new Date() ? 'Complete' : 'Planning'
                 });
             });
+            events.push(...buildArchived2025Events());
         }
 
         function normalizeEventType(type) {
@@ -3271,6 +3388,7 @@
 
         // Two-way sync functions
         async function syncEventToSheet(event) {
+            if (isArchivedEvent(event)) return;
             recordEventWrite(event, false);
             try {
                 const payload = {
@@ -3321,7 +3439,7 @@
         }
 
         async function syncBriefToSheet(event) {
-            if (!event.eventbriefDraft) return;
+            if (!event.eventbriefDraft || isArchivedEvent(event)) return;
             recordBriefWrite(event);
 
             try {
@@ -3424,7 +3542,8 @@
                         notes: s.notes || ''
                     });
 
-                    events = sheetEvents.map(s => buildFromSheet(s));
+                    // The sheet only holds the 2026 tab; re-attach the static 2025 archive.
+                    events = sheetEvents.map(s => buildFromSheet(s)).concat(buildArchived2025Events());
                     sheetLoaded = true;
 
                     // Restore any boxes checked locally that this snapshot doesn't
@@ -3492,6 +3611,7 @@
         }
 
         async function fetchEventMetrics(event) {
+            if (isArchivedEvent(event)) return event.metrics;
             // Manually entered metrics take priority over form responses
             const manual = getManualMetrics(event.id);
             if (manual) return manual;
@@ -3548,7 +3668,7 @@
             const normalizedType = normalizeTypeKey(event.type);
             const isManual = !metrics.source;
             let html = '<div class="metrics-display" style="margin: 12px 0; padding: 10px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #10b981; font-size: 0.9em;">';
-            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><div style="font-weight: 600; color: #1d5432;">📊 Metrics' + (isManual ? ' (Manual)' : ' (Form)') + '</div>';
+            html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;"><div style="font-weight: 600; color: #1d5432;">📊 Metrics' + (isManual ? ' (Manual)' : metrics.source === '2025 log' ? ' (2025 log)' : ' (Form)') + '</div>';
             html += `<button onclick="openMetricsEditor(${event.id}, '${normalizedType}')" style="background: #1d5432; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8em;">Edit</button></div>`;
 
             if (normalizedType === 'PUBLIC_PROGRAM' || normalizedType === 'TABLING') {
@@ -3573,6 +3693,7 @@
         function openMetricsEditor(eventId, eventType) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
+            if (isArchivedEvent(event)) { showArchivedReadOnlyToast(); return; }
 
             const manualMetrics = getManualMetrics(eventId) || {};
 
@@ -3654,6 +3775,7 @@
         }
 
         function syncMetricsToAppsScript(event, metrics, eventType) {
+            if (isArchivedEvent(event)) return;
             const payload = {
                 eventName: event.name,
                 eventDate: event.date instanceof Date ? formatDateForInput(event.date) : event.date,
@@ -4514,6 +4636,7 @@
         function editEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
+            if (isArchivedEvent(event)) { showArchivedReadOnlyToast(); return; }
 
             const eventDate = event.date instanceof Date ? event.date : new Date(event.date);
             selectedDate = eventDate;
@@ -4543,6 +4666,7 @@
         async function deleteEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
+            if (isArchivedEvent(event)) { showArchivedReadOnlyToast(); return; }
             if (!confirm(`Are you sure you want to delete "${event.name}"? This cannot be undone.`)) return;
 
             events = events.filter(e => e.id !== eventId);
@@ -4717,6 +4841,7 @@
         function cycleTask(eventId, taskKey, reopenModal) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
+            if (isArchivedEvent(event)) { showArchivedReadOnlyToast(); return; }
 
             const next = NEXT_TASK_STATE[taskState(event, taskKey)];
             const justCompleted = setTaskState(event, taskKey, next);
