@@ -1754,6 +1754,7 @@
                             <input type="checkbox" id="supportGretel" value="Gretel"> Gretel
                         </label>
                     </div>
+                    <input type="text" id="supportOther" placeholder="Others, comma-separated (e.g., Lena, Echo)" style="margin-top:8px;">
                 </div>
                 <div class="form-group">
                     <label for="eventLocation">Location</label>
@@ -3954,7 +3955,7 @@
                 const updatedEvent = {
                     name: document.getElementById('eventName').value,
                     owner: document.getElementById('eventOwner').value,
-                    supporting: ['Maddy','Hadas','Gretel'].filter(n => document.getElementById(`support${n}`)?.checked).join(', '),
+                    supporting: getSupportingFromForm(),
                     date: eventDate,
                     time: to12HourTime(document.getElementById('eventTime').value) || '12:00 PM',
                     endTime: to12HourTime(document.getElementById('eventEndTime').value) || '',
@@ -4633,6 +4634,32 @@
             return `${String(hours).padStart(2, '0')}:${minutes}`;
         }
 
+        // Supporting staff: core-team checkboxes plus a free-text box for anyone else.
+        const CORE_SUPPORT_STAFF = ['Maddy', 'Hadas', 'Gretel'];
+
+        function splitSupporting(str) {
+            return String(str || '').split(',').map(n => n.trim()).filter(Boolean);
+        }
+
+        function getSupportingFromForm() {
+            const names = CORE_SUPPORT_STAFF.filter(n => document.getElementById(`support${n}`)?.checked);
+            splitSupporting(document.getElementById('supportOther')?.value).forEach(n => {
+                if (!names.some(x => x.toLowerCase() === n.toLowerCase())) names.push(n);
+            });
+            return names.join(', ');
+        }
+
+        function setSupportingInForm(supporting) {
+            const names = splitSupporting(supporting);
+            const isCore = n => CORE_SUPPORT_STAFF.some(c => c.toLowerCase() === n.toLowerCase());
+            CORE_SUPPORT_STAFF.forEach(c => {
+                const el = document.getElementById(`support${c}`);
+                if (el) el.checked = names.some(n => n.toLowerCase() === c.toLowerCase());
+            });
+            const other = document.getElementById('supportOther');
+            if (other) other.value = names.filter(n => !isCore(n)).join(', ');
+        }
+
         function editEvent(eventId) {
             const event = events.find(e => e.id === eventId);
             if (!event) return;
@@ -4647,10 +4674,7 @@
             document.getElementById('eventEndTime').value = to24HourTime(event.endTime);
             document.getElementById('eventLocation').value = event.location || '';
             document.getElementById('eventOwner').value = event.owner;
-            ['Maddy','Hadas','Gretel'].forEach(n => {
-                const el = document.getElementById(`support${n}`);
-                if (el) el.checked = (event.supporting || '').includes(n);
-            });
+            setSupportingInForm(event.supporting);
             document.getElementById('eventStatus').value = event.status || 'Planning';
             document.getElementById('eventPrimaryCategory').value = event.primaryCategory;
             document.getElementById('eventSecondaryCategory').value = event.secondaryCategory || '';
