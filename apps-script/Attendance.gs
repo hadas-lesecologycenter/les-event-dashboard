@@ -55,7 +55,7 @@ function getAttendance(evs) {
     return {
       ev: ev,
       eb: onEventbrite(ev) ? rank_(ev, ebEvents, item => item.name, () => true) : { candidates: [], autoKey: '', autoScore: 0, unsure: false },
-      report: rank_(ev, reports, item => item.title + ' ' + item.place, item => !kind || item.kind === kind)
+      report: rank_(ev, reports, item => item.title + ' ' + item.place + ' ' + item.detail, item => !kind || item.kind === kind)
     };
   });
   resolveSharedMatches_(ranked.map(r => r.eb));
@@ -89,9 +89,10 @@ function reportKindFor_(type) {
 }
 
 // Items within WINDOW_DAYS of the event, closest date first, then most
-// shared words. The automatic pick is a same-day item that `fits`, but only
-// when it is the only one or clearly shares more words than the rest;
-// otherwise "unsure" asks a person to pick.
+// shared words. The automatic pick is a same-day item that `fits` (or, when
+// none that day fits, one sharing words with the event), but only when it is
+// the only one or clearly shares more words than the rest; otherwise
+// "unsure" asks a person to pick.
 function rank_(ev, items, textOf, fits) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ev.date || '')) return { candidates: [], autoKey: '', autoScore: 0, unsure: false };
   const evT = Date.parse(ev.date);
@@ -104,13 +105,15 @@ function rank_(ev, items, textOf, fits) {
     scored.push({ item: item, diff: diff, score: score });
   });
   scored.sort((a, b) => a.diff - b.diff || b.score - a.score);
-  const sameDay = scored.filter(s => s.diff === 0 && fits(s.item));
-  const clear = sameDay.length === 1 || (sameDay.length > 1 && sameDay[0].score > sameDay[1].score);
+  const sameDay = scored.filter(s => s.diff === 0);
+  const fitting = sameDay.filter(s => fits(s.item));
+  const pool = fitting.length ? fitting : sameDay.filter(s => s.score > 0);
+  const clear = pool.length === 1 || (pool.length > 1 && pool[0].score > pool[1].score);
   return {
     candidates: scored.map(s => s.item),
-    autoKey: clear ? sameDay[0].item.key : '',
-    autoScore: clear ? sameDay[0].score : 0,
-    unsure: sameDay.length > 1 && !clear
+    autoKey: clear ? pool[0].item.key : '',
+    autoScore: clear ? pool[0].score : 0,
+    unsure: pool.length > 1 && !clear
   };
 }
 
@@ -160,7 +163,7 @@ function readStcReports_() {
   };
   const C = {
     ts: col('Timestamp'), staff: col('Name of staff carrying out activity'), type: col('Type of Activity'),
-    wDate: col('Date of Activity'), wTitle: col('Workshop/Event Title'), wPlace: col('Workshop/Event Location'),
+    wDate: col('Date of Activity'), wType: col('Type of Workshop'), wTitle: col('Workshop/Event Title'), wPlace: col('Workshop/Event Location'),
     wCount: col('Number of Participants'),
     vDate: col('Date of activity'), vType: col('Type of Volunteer Activity'), vCount: col('Number of tree care volunteers'),
     vPlace: col('Event Location', true), vGroup: col('Volunteer Group Name (if applicable)')
@@ -176,10 +179,10 @@ function readStcReports_() {
     if (!staffRe.test(String(v[C.staff]))) continue;
     let row;
     if (v[C.type] === 'Workshop/Outreach') {
-      row = { date: day(v[C.wDate]), title: v[C.wTitle], place: v[C.wPlace], count: v[C.wCount], kind: 'Workshop' };
+      row = { date: day(v[C.wDate]), title: v[C.wTitle], place: v[C.wPlace], detail: v[C.wType], count: v[C.wCount], kind: 'Workshop' };
     } else if (v[C.type] === 'Volunteer Activities' && v[C.vType] === 'Tree Care') {
       row = { date: day(v[C.vDate]), title: v[C.vGroup] ? 'Tree care: ' + v[C.vGroup] : 'Tree care',
-              place: v[C.vPlace], count: v[C.vCount], kind: 'Tree care' };
+              place: v[C.vPlace], detail: '', count: v[C.vCount], kind: 'Tree care' };
     } else {
       continue;
     }
@@ -187,6 +190,7 @@ function readStcReports_() {
     row.key = v[C.ts] instanceof Date ? String(v[C.ts].getTime()) : 'row' + (r + 1);
     row.title = String(row.title || '').trim();
     row.place = String(row.place || '').trim();
+    row.detail = String(row.detail || '').trim();
     row.count = row.count === '' || row.count === null || isNaN(Number(row.count)) ? null : Number(row.count);
     out.push(row);
   }
