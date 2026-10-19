@@ -1285,7 +1285,8 @@
         .attendance-match summary { cursor: pointer; color: #6a5a4a; font-size: 0.9em; }
         .attendance-match label { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; font-size: 0.85em; font-weight: 600; color: #6a5a4a; }
         .attendance-match select { max-width: 100%; padding: 5px 8px; border: 1px solid #d4cec0; border-radius: 6px; background: white; font-family: inherit; font-size: 1em; font-weight: 400; }
-        .attendance-table-wrap { overflow-x: auto; margin-top: 16px; background: #f9f6f1; border: 1px solid #e5ddd1; border-radius: 10px; }
+        .attendance-list summary { margin-top: 16px; cursor: pointer; font-weight: 600; color: #1d5432; }
+        .attendance-table-wrap { overflow-x: auto; margin-top: 10px; background: #f9f6f1; border: 1px solid #e5ddd1; border-radius: 10px; }
         .attendance-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
         .attendance-table th { text-align: left; padding: 10px 12px; color: #6a5a4a; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5ddd1; }
         .attendance-table td { padding: 9px 12px; border-bottom: 1px solid #efe8dd; }
@@ -2946,7 +2947,7 @@
                 </div>
 
                 <div class="stats-section">
-                    <h2>🎟️ Registered vs. Attended</h2>
+                    <h2>👥 Attendance Rate</h2>
                     ${renderAttendanceStats(liveEvents)}
                 </div>
 
@@ -3257,11 +3258,12 @@
 
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj6pWwN3WqtQgQklHHvIexVXqkQpSehR3sqWfhXVcDiWjeSGrcwhS2s7vUBz5k6U7z/exec';
 
-        // ===== REGISTERED VS. ATTENDED =====
-        // For events marked "EventBrite Created", shows Eventbrite registrations
-        // next to the headcount from the Activity Reporting form. The numbers come
-        // from a separate, read-only Apps Script (apps-script/Attendance.gs) that
-        // matches by date and name. A match picked by hand is kept in this browser.
+        // ===== ATTENDANCE =====
+        // Shows the headcount from the Activity Reporting form for past events and,
+        // for events marked "EventBrite Created", Eventbrite registrations and the
+        // show-up rate. The numbers come from a separate, read-only Apps Script
+        // (apps-script/Attendance.gs) that matches by date and name. A match picked
+        // by hand is kept in this browser.
         const ATTENDANCE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz377YkgD0OQPVgQhPXo1knLOHRACL3lFVSzsu4bBNYJoNLoHCE31LkjRC7H__pBTgH0Q/exec';
         const ATTENDANCE_MAX_AGE = 60 * 60 * 1000;
         const ATTENDANCE_RETRY_AFTER = 5 * 60 * 1000;
@@ -3283,20 +3285,27 @@
             return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
         }
 
+        function hasEventbrite(e) {
+            return String(e.eventbrite || '').trim().toLowerCase() === 'yes';
+        }
+
+        // Past events, plus upcoming ones on Eventbrite for their registrations.
         function isAttendanceEvent(e) {
-            return !isArchivedEvent(e) && !!e.date
-                && String(e.eventbrite || '').trim().toLowerCase() === 'yes'
-                && !String(e.status || '').trim().toLowerCase().startsWith('cancel');
+            if (isArchivedEvent(e) || !e.date || String(e.status || '').trim().toLowerCase().startsWith('cancel')) return false;
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            return hasEventbrite(e) || getStatsDate(e) <= today;
         }
 
         async function loadAttendance(force) {
             const list = events.filter(isAttendanceEvent).map(e => ({
-                id: e.id, name: e.name, location: e.location || '', type: e.type || '', date: formatDateForInput(getStatsDate(e))
+                id: e.id, name: e.name, location: e.location || '', type: e.type || '',
+                date: formatDateForInput(getStatsDate(e)), eventbrite: hasEventbrite(e)
             }));
             if (!list.length || attendanceLoading) return;
             if (!force) {
                 const fresh = attendanceData && Date.now() - attendanceData.loadedAt < ATTENDANCE_MAX_AGE
-                    && list.every(e => attendanceData.byId[e.id] && attendanceData.byId[e.id].date === e.date);
+                    && list.every(e => attendanceData.byId[e.id] && attendanceData.byId[e.id].date === e.date
+                        && attendanceData.byId[e.id].sentWithEventbrite === e.eventbrite);
                 if (fresh || Date.now() - attendanceFailedAt < ATTENDANCE_RETRY_AFTER) return;
             }
             attendanceLoading = true;
@@ -3311,12 +3320,14 @@
                 });
                 const data = await response.json();
                 if (!data.success) throw new Error(data.error || 'unknown error');
-                const dates = Object.fromEntries(list.map(e => [e.id, e.date]));
+                const sent = Object.fromEntries(list.map(e => [e.id, e]));
                 attendanceData = { loadedAt: Date.now(), byId: {} };
-                data.events.forEach(r => { attendanceData.byId[r.id] = Object.assign(r, { date: dates[r.id] }); });
+                data.events.forEach(r => {
+                    attendanceData.byId[r.id] = Object.assign(r, { date: sent[r.id].date, sentWithEventbrite: sent[r.id].eventbrite });
+                });
                 writeStoredJson('attendanceData', attendanceData);
             } catch (error) {
-                console.warn('Failed to load registrations/attendance:', error);
+                console.warn('Failed to load attendance:', error);
                 attendanceError = error.message;
                 attendanceFailedAt = Date.now();
             } finally {
@@ -3329,13 +3340,14 @@
             const a = attendanceData && attendanceData.byId[event.id];
             if (!a) return null;
             const o = attendanceOverrides[event.id] || {};
-            const eb = a.eventbrite.candidates.find(c => c.key === (o.eb || a.eventbrite.autoKey)) || null;
+            const onEb = hasEventbrite(event);
+            const eb = onEb ? a.eventbrite.candidates.find(c => c.key === (o.eb || a.eventbrite.autoKey)) || null : null;
             const report = a.report.candidates.find(c => c.key === (o.report || a.report.autoKey)) || null;
             const manual = typeof o.manual === 'number';
             const registered = eb ? eb.registered : null;
             const attended = manual ? o.manual : (report ? report.count : null);
             return {
-                a, o, eb, report, manual, registered, attended,
+                a, o, onEb, eb, report, manual, registered, attended,
                 rate: registered && attended != null ? Math.round((attended / registered) * 100) : null
             };
         }
@@ -3345,15 +3357,15 @@
             const box = inner => `<div class="attendance-box" onclick="event.stopPropagation()">${inner}</div>`;
             const info = attendanceFor(event);
             if (!info) {
-                return box(attendanceLoading ? '🎟️ Loading registrations…'
-                    : attendanceError ? `🎟️ Couldn't load registrations (${attEsc(attendanceError)})`
-                    : '🎟️ Registrations not loaded yet');
+                return box(attendanceLoading ? '👥 Loading attendance…'
+                    : attendanceError ? `👥 Couldn't load attendance (${attEsc(attendanceError)})`
+                    : '👥 Attendance not loaded yet');
             }
             const { a, o } = info;
             const num = v => v == null ? '–' : v;
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const notes = [];
-            if (!info.eb) {
+            if (info.onEb && !info.eb) {
                 notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one under “Check match”'
                     : a.eventbrite.candidates.length ? 'Eventbrite event not matched automatically – check under “Check match”'
                     : 'No Eventbrite event found near this date');
@@ -3375,14 +3387,14 @@
               + `<option value="manual" ${reportCurrent === 'manual' ? 'selected' : ''}>${info.manual ? 'Typed by hand: ' + o.manual : 'Type a headcount…'}</option>`;
             return box(`
                 <div class="attendance-numbers">
-                    <span>🎟️ Registered <strong>${num(info.registered)}</strong></span>
+                    ${info.onEb ? `<span>🎟️ Registered <strong>${num(info.registered)}</strong></span>` : ''}
                     <span>👥 Attended <strong>${num(info.attended)}</strong></span>
-                    <span>📈 Show-up <strong>${info.rate == null ? '–' : info.rate + '%'}</strong></span>
+                    ${info.onEb ? `<span>📈 Show-up <strong>${info.rate == null ? '–' : info.rate + '%'}</strong></span>` : ''}
                 </div>
                 ${notes.length ? `<div class="attendance-note">${notes.join(' · ')}</div>` : ''}
                 <details class="attendance-match">
                     <summary>Check match</summary>
-                    <label>Eventbrite event<select onchange="setAttendanceMatch(${event.id}, 'eb', this.value)">${ebOptions}</select></label>
+                    ${info.onEb ? `<label>Eventbrite event<select onchange="setAttendanceMatch(${event.id}, 'eb', this.value)">${ebOptions}</select></label>` : ''}
                     <label>Activity report<select onchange="setAttendanceMatch(${event.id}, 'report', this.value)">${reportOptions}</select></label>
                 </details>`);
         }
@@ -3420,40 +3432,55 @@
             if (statsView && statsView.style.display === 'block') displayStats();
         }
 
+        let attendanceListOpen = false;
+
         function renderAttendanceStats(liveEvents) {
             const rows = liveEvents.filter(isAttendanceEvent)
                 .map(e => ({ e, info: attendanceFor(e) }))
                 .sort((x, y) => getStatsDate(y.e) - getStatsDate(x.e));
-            if (!rows.length) return '<p style="color:#9ca3af;margin:0;">No events marked “EventBrite Created” in this view.</p>';
-            // Totals only count events with both numbers, so the rate compares like with like.
+            if (!rows.length) return '<p style="color:#9ca3af;margin:0;">No past events in this view.</p>';
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const reported = rows.filter(r => r.info && r.info.attended != null);
+            const attendedTotal = reported.reduce((sum, r) => sum + r.info.attended, 0);
+            const missing = rows.filter(r => getStatsDate(r.e) <= today && !(r.info && r.info.attended != null)).length;
+            // The show-up rate only counts Eventbrite events with both numbers, so it compares like with like.
             const both = rows.filter(r => r.info && r.info.registered && r.info.attended != null);
             const reg = both.reduce((sum, r) => sum + r.info.registered, 0);
             const att = both.reduce((sum, r) => sum + r.info.attended, 0);
+            const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
             const cell = v => v == null ? '–' : v;
+            const na = '<span style="color:#9ca3af;">n/a</span>';
             const status = attendanceLoading ? 'Loading…'
                 : attendanceError ? `Couldn't load: ${attEsc(attendanceError)}`
                 : attendanceData ? 'Updated ' + new Date(attendanceData.loadedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
                 : 'Not loaded yet';
             return `
                 <div class="stats-kpi-row">
-                    <div class="kpi-card kpi-month"><div class="kpi-value">${both.length ? reg : '–'}</div><div class="kpi-label">Registered</div></div>
-                    <div class="kpi-card kpi-upcoming"><div class="kpi-value">${both.length ? att : '–'}</div><div class="kpi-label">Attended</div></div>
-                    <div class="kpi-card kpi-rate"><div class="kpi-value">${reg ? Math.round((att / reg) * 100) + '%' : '–'}</div><div class="kpi-label">Show-up Rate</div><div class="kpi-sub">${both.length} event${both.length === 1 ? '' : 's'} with both numbers</div></div>
+                    <div class="kpi-card kpi-upcoming"><div class="kpi-value">${reported.length ? attendedTotal : '–'}</div><div class="kpi-label">Total Attended</div><div class="kpi-sub">${plural(reported.length, 'event')} with a report</div></div>
+                    <div class="kpi-card kpi-month"><div class="kpi-value">${both.length ? reg : '–'}</div><div class="kpi-label">Registered</div><div class="kpi-sub">${plural(both.length, 'Eventbrite event')} with a report</div></div>
+                    <div class="kpi-card kpi-rate"><div class="kpi-value">${reg ? Math.round((att / reg) * 100) + '%' : '–'}</div><div class="kpi-label">Show-up Rate</div><div class="kpi-sub">attended ÷ registered</div></div>
+                    <div class="kpi-card kpi-progress"><div class="kpi-value">${missing}</div><div class="kpi-label">No Report Yet</div><div class="kpi-sub">past ${missing === 1 ? 'event' : 'events'} without a match</div></div>
                 </div>
-                <div class="attendance-table-wrap">
-                    <table class="attendance-table">
-                        <thead><tr><th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Show-up</th></tr></thead>
-                        <tbody>${rows.map(({ e, info }) => `
-                            <tr onclick="openEventDetailsModal(${e.id})">
-                                <td>${attEsc(e.name)}</td>
-                                <td style="white-space:nowrap;">${formatDate(getStatsDate(e))}</td>
-                                <td>${cell(info && info.registered)}</td>
-                                <td>${cell(info && info.attended)}</td>
-                                <td>${info && info.rate != null ? info.rate + '%' : '–'}</td>
-                            </tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
+                <details class="attendance-list" ${attendanceListOpen ? 'open' : ''} ontoggle="attendanceListOpen = this.open">
+                    <summary>Show all ${plural(rows.length, 'event')}</summary>
+                    <div class="attendance-table-wrap">
+                        <table class="attendance-table">
+                            <thead><tr><th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Show-up</th></tr></thead>
+                            <tbody>${rows.map(({ e, info }) => {
+                                const onEb = hasEventbrite(e);
+                                return `
+                                <tr onclick="openEventDetailsModal(${e.id})">
+                                    <td>${attEsc(e.name)}</td>
+                                    <td style="white-space:nowrap;">${formatDate(getStatsDate(e))}</td>
+                                    <td>${onEb ? cell(info && info.registered) : na}</td>
+                                    <td>${cell(info && info.attended)}</td>
+                                    <td>${!onEb ? na : info && info.rate != null ? info.rate + '%' : '–'}</td>
+                                </tr>`;
+                            }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </details>
                 <div class="attendance-status">${status} · <a href="#" onclick="loadAttendance(true); return false;">Refresh numbers</a></div>`;
         }
 

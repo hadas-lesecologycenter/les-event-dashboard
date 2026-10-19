@@ -3,9 +3,9 @@
  *
  * A separate Apps Script project from the main dashboard backend (Code.gs).
  * For each dashboard event it returns:
- *   - Registered: Eventbrite registrations still attending (cancelled and
- *     refunded orders left out)
  *   - Attended: the headcount from the LESEC Activity Reporting form
+ *   - Registered (events on Eventbrite only): Eventbrite registrations still
+ *     attending (cancelled and refunded orders left out)
  * Both are matched to the event by date, then by words the names share.
  *
  * It only READS Eventbrite and the responses spreadsheet. It never writes.
@@ -28,7 +28,8 @@ function doGet() {
   return json_({ ok: true, service: 'attendance' });
 }
 
-// Body: {"events": [{"id", "name", "date": "yyyy-MM-dd", "location", "type"}]}
+// Body: {"events": [{"id", "name", "date": "yyyy-MM-dd", "location", "type", "eventbrite": true|false}]}
+// Events sent with "eventbrite": false are only matched to activity reports.
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
@@ -43,8 +44,8 @@ function json_(obj) {
 }
 
 function getAttendance(evs) {
-  const dated = evs.filter(ev => /^\d{4}-\d{2}-\d{2}$/.test(ev.date || ''));
-  const earliest = dated.map(ev => ev.date).sort()[0];
+  const onEventbrite = ev => ev.eventbrite !== false;
+  const earliest = evs.filter(ev => onEventbrite(ev) && /^\d{4}-\d{2}-\d{2}$/.test(ev.date || '')).map(ev => ev.date).sort()[0];
   const since = earliest ? Utilities.formatDate(new Date(Date.parse(earliest) - WINDOW_DAYS * DAY_MS), 'UTC', 'yyyy-MM-dd') : '';
   const reports = readStcReports_();
   const ebEvents = since ? listEventbriteEvents_(since) : [];
@@ -53,7 +54,7 @@ function getAttendance(evs) {
     const kind = reportKindFor_(ev.type);
     return {
       ev: ev,
-      eb: rank_(ev, ebEvents, item => item.name, () => true),
+      eb: onEventbrite(ev) ? rank_(ev, ebEvents, item => item.name, () => true) : { candidates: [], autoKey: '', autoScore: 0, unsure: false },
       report: rank_(ev, reports, item => item.title + ' ' + item.place, item => !kind || item.kind === kind)
     };
   });
@@ -283,18 +284,19 @@ function fetchRegistrations_(ids) {
 // ---------- Check from the editor ----------
 
 // Run from the Apps Script editor: logs what the dashboard would show for
-// the 2026 events of the main dashboard's tracker sheet marked
-// "EventBrite Created" = Yes that already happened.
+// the 2026 events of the main dashboard's tracker sheet that already
+// happened (Eventbrite only for those marked "EventBrite Created" = Yes).
 function testAttendance() {
   const sheet = SpreadsheetApp.openById('1EKZHAAlNOPPQEgxDgR7IMBKXWY5aR3VEURl4crImsrY').getSheetByName('2026');
   const values = sheet.getDataRange().getValues();
   const head = values[0].map(h => String(h).trim());
   const iName = head.indexOf('Event Name'), iDate = head.indexOf('Date'), iEb = head.indexOf('EventBrite Created'),
-        iLoc = head.indexOf('Location'), iType = head.indexOf('Event Type');
+        iLoc = head.indexOf('Location'), iType = head.indexOf('Event Type'), iStatus = head.indexOf('Status');
   const today = Utilities.formatDate(new Date(), 'America/New_York', 'yyyy-MM-dd');
   const evs = values.slice(1)
-    .filter(r => String(r[iEb]).trim().toLowerCase() === 'yes' && r[iDate] instanceof Date)
+    .filter(r => r[iDate] instanceof Date && !/^cancel/i.test(String(r[iStatus]).trim()))
     .map((r, i) => ({ id: i, name: String(r[iName]), location: String(r[iLoc] || ''), type: String(r[iType] || ''),
+                      eventbrite: String(r[iEb]).trim().toLowerCase() === 'yes',
                       date: Utilities.formatDate(r[iDate], 'America/New_York', 'yyyy-MM-dd') }))
     .filter(ev => ev.date <= today);
   const res = getAttendance(evs);
@@ -302,7 +304,7 @@ function testAttendance() {
     const eb = r.eventbrite.candidates.filter(c => c.key === r.eventbrite.autoKey)[0];
     const rep = r.report.candidates.filter(c => c.key === r.report.autoKey)[0];
     Logger.log(evs[i].date + ' ' + evs[i].name +
-      ' | Eventbrite: ' + (eb ? '"' + eb.name + '" registered ' + eb.registered : (r.eventbrite.unsure ? 'several that day, pick one' : 'no match')) +
+      ' | Eventbrite: ' + (!evs[i].eventbrite ? '–' : eb ? '"' + eb.name + '" registered ' + eb.registered : (r.eventbrite.unsure ? 'several that day, pick one' : 'no match')) +
       ' | Report: ' + (rep ? '"' + rep.title + '" attended ' + rep.count : (r.report.unsure ? 'several that day, pick one' : 'no match')));
   });
 }
