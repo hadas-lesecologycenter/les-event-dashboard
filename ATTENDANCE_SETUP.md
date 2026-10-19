@@ -1,14 +1,14 @@
-# Registered vs. Attended – Setup
+# Attendance – Setup
 
-The dashboard shows, for each event marked **EventBrite Created = Yes** in the tracker:
+On each event card the dashboard shows:
 
-- **Registered** – Eventbrite registrations still attending (cancelled/refunded orders left out)
-- **Attended** – the headcount from the LESEC Activity Reporting form ("Number of Participants" for workshops, "Number of tree care volunteers" for Tree Care volunteer events), counting only reports from Maddy, Hadas or Gretel
-- **Show-up rate** – attended ÷ registered
+- **Attended** (every past event) – the headcount from the LESEC Activity Reporting form ("Number of Participants" for workshops, "Number of tree care volunteers" for Tree Care volunteer events), counting only reports from Maddy, Hadas or Gretel
+- **Registered** (events marked **EventBrite Created = Yes**) – Eventbrite registrations still attending (cancelled/refunded orders left out)
+- **Show-up rate** (Eventbrite events) – attended ÷ registered
 
-Totals are in the **Stats** tab under "Registered vs. Attended".
+Totals are in the **Stats** tab under "Attendance Rate", with the full list of events behind "Show all events".
 
-Events are matched to Eventbrite and to the activity report by **date**, then by words their names share. If there are several on the same day and none is clearly the right one, the card asks you to pick one under **Check match**. Picks made there are saved in your browser only.
+Events are matched to the activity report (and Eventbrite) by **date**, then by words their names share. Volunteer events only match tree care reports and programs only workshop reports. If there are several on the same day and none is clearly the right one, the card asks you to pick one under **Check match**. Picks made there are saved in your browser only.
 
 ## Where the numbers come from
 
