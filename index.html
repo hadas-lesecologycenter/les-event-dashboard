@@ -3291,7 +3291,7 @@
 
         async function loadAttendance(force) {
             const list = events.filter(isAttendanceEvent).map(e => ({
-                id: e.id, name: e.name, location: e.location || '', date: formatDateForInput(getStatsDate(e))
+                id: e.id, name: e.name, location: e.location || '', type: e.type || '', date: formatDateForInput(getStatsDate(e))
             }));
             if (!list.length || attendanceLoading) return;
             if (!force) {
@@ -3353,10 +3353,16 @@
             const num = v => v == null ? '–' : v;
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const notes = [];
-            if (!info.eb) notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one under “Check match”' : 'No Eventbrite event found on this date');
+            if (!info.eb) {
+                notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one under “Check match”'
+                    : a.eventbrite.candidates.length ? 'Eventbrite event not matched automatically – check under “Check match”'
+                    : 'No Eventbrite event found near this date');
+            }
             if (info.attended == null && !o.report) {
                 if (a.report.unsure) notes.push('Several activity reports that day – pick one under “Check match”');
-                else if (getStatsDate(event) < today) notes.push('No activity report found yet');
+                else if (getStatsDate(event) < today) {
+                    notes.push(a.report.candidates.length ? 'Activity report not matched automatically – check under “Check match”' : 'No activity report found yet');
+                }
             }
             const ebCurrent = o.eb || a.eventbrite.autoKey || 'none';
             const ebOptions = a.eventbrite.candidates.map(c =>

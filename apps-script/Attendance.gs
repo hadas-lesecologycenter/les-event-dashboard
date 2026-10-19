@@ -28,7 +28,7 @@ function doGet() {
   return json_({ ok: true, service: 'attendance' });
 }
 
-// Body: {"events": [{"id", "name", "date": "yyyy-MM-dd", "location"}]}
+// Body: {"events": [{"id", "name", "date": "yyyy-MM-dd", "location", "type"}]}
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
@@ -49,11 +49,16 @@ function getAttendance(evs) {
   const reports = readStcReports_();
   const ebEvents = since ? listEventbriteEvents_(since) : [];
 
-  const ranked = evs.map(ev => ({
-    ev: ev,
-    eb: rank_(ev, ebEvents, item => item.name),
-    report: rank_(ev, reports, item => item.title + ' ' + item.place)
-  }));
+  const ranked = evs.map(ev => {
+    const kind = reportKindFor_(ev.type);
+    return {
+      ev: ev,
+      eb: rank_(ev, ebEvents, item => item.name, () => true),
+      report: rank_(ev, reports, item => item.title + ' ' + item.place, item => !kind || item.kind === kind)
+    };
+  });
+  resolveSharedMatches_(ranked.map(r => r.eb));
+  resolveSharedMatches_(ranked.map(r => r.report));
   const ebIds = {};
   ranked.forEach(r => r.eb.candidates.forEach(c => { ebIds[c.key] = true; }));
   const regs = fetchRegistrations_(Object.keys(ebIds));
@@ -68,17 +73,26 @@ function getAttendance(evs) {
         autoKey: r.eb.autoKey,
         unsure: r.eb.unsure
       },
-      report: r.report
+      report: { candidates: r.report.candidates, autoKey: r.report.autoKey, unsure: r.report.unsure }
     }))
   };
 }
 
+// Volunteer events are reported as tree care, programs as workshops; other
+// types (e.g. field trips) can be either.
+function reportKindFor_(type) {
+  const t = String(type || '').toUpperCase();
+  if (t.indexOf('VOLUNTEER') >= 0) return 'Tree care';
+  if (/PROGRAM|WORKSHOP|TABLING/.test(t)) return 'Workshop';
+  return '';
+}
+
 // Items within WINDOW_DAYS of the event, closest date first, then most
-// shared words. The automatic pick is a same-day item, but only when it is
-// the only one that day or clearly shares more words than the rest;
+// shared words. The automatic pick is a same-day item that `fits`, but only
+// when it is the only one or clearly shares more words than the rest;
 // otherwise "unsure" asks a person to pick.
-function rank_(ev, items, textOf) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(ev.date || '')) return { candidates: [], autoKey: '', unsure: false };
+function rank_(ev, items, textOf, fits) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ev.date || '')) return { candidates: [], autoKey: '', autoScore: 0, unsure: false };
   const evT = Date.parse(ev.date);
   const evWords = wordSet_(ev.name + ' ' + (ev.location || ''));
   const scored = [];
@@ -89,13 +103,32 @@ function rank_(ev, items, textOf) {
     scored.push({ item: item, diff: diff, score: score });
   });
   scored.sort((a, b) => a.diff - b.diff || b.score - a.score);
-  const sameDay = scored.filter(s => s.diff === 0);
+  const sameDay = scored.filter(s => s.diff === 0 && fits(s.item));
   const clear = sameDay.length === 1 || (sameDay.length > 1 && sameDay[0].score > sameDay[1].score);
   return {
     candidates: scored.map(s => s.item),
     autoKey: clear ? sameDay[0].item.key : '',
+    autoScore: clear ? sameDay[0].score : 0,
     unsure: sameDay.length > 1 && !clear
   };
+}
+
+// Two events on the same day can both pick the one Eventbrite event or
+// report that day. The one sharing more words keeps it; on a tie neither
+// does and both ask a person to pick.
+function resolveSharedMatches_(matches) {
+  const byKey = {};
+  matches.forEach(m => { if (m.autoKey) (byKey[m.autoKey] = byKey[m.autoKey] || []).push(m); });
+  Object.keys(byKey).forEach(key => {
+    const claims = byKey[key].sort((a, b) => b.autoScore - a.autoScore);
+    if (claims.length < 2) return;
+    const tie = claims[0].autoScore === claims[1].autoScore;
+    claims.forEach((m, i) => {
+      if (i === 0 && !tie) return;
+      m.autoKey = '';
+      m.unsure = tie;
+    });
+  });
 }
 
 // Words found in nearly every name don't help tell events apart.
@@ -256,11 +289,12 @@ function testAttendance() {
   const sheet = SpreadsheetApp.openById('1EKZHAAlNOPPQEgxDgR7IMBKXWY5aR3VEURl4crImsrY').getSheetByName('2026');
   const values = sheet.getDataRange().getValues();
   const head = values[0].map(h => String(h).trim());
-  const iName = head.indexOf('Event Name'), iDate = head.indexOf('Date'), iEb = head.indexOf('EventBrite Created'), iLoc = head.indexOf('Location');
+  const iName = head.indexOf('Event Name'), iDate = head.indexOf('Date'), iEb = head.indexOf('EventBrite Created'),
+        iLoc = head.indexOf('Location'), iType = head.indexOf('Event Type');
   const today = Utilities.formatDate(new Date(), 'America/New_York', 'yyyy-MM-dd');
   const evs = values.slice(1)
     .filter(r => String(r[iEb]).trim().toLowerCase() === 'yes' && r[iDate] instanceof Date)
-    .map((r, i) => ({ id: i, name: String(r[iName]), location: String(r[iLoc] || ''),
+    .map((r, i) => ({ id: i, name: String(r[iName]), location: String(r[iLoc] || ''), type: String(r[iType] || ''),
                       date: Utilities.formatDate(r[iDate], 'America/New_York', 'yyyy-MM-dd') }))
     .filter(ev => ev.date <= today);
   const res = getAttendance(evs);
