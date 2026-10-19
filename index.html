@@ -1285,6 +1285,12 @@
         .attendance-match summary { cursor: pointer; color: #6a5a4a; font-size: 0.9em; }
         .attendance-match label { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; font-size: 0.85em; font-weight: 600; color: #6a5a4a; }
         .attendance-match select { max-width: 100%; padding: 5px 8px; border: 1px solid #d4cec0; border-radius: 6px; background: white; font-family: inherit; font-size: 1em; font-weight: 400; }
+        .attendance-by-category { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-top: 14px; }
+        .att-cat-card { background: #f9f6f1; border: 1px solid #e5ddd1; border-left: 4px solid #1d5432; border-radius: 10px; padding: 12px 14px; }
+        .att-cat-name { font-weight: 700; color: #2c2416; margin-bottom: 6px; }
+        .att-cat-nums { display: flex; flex-wrap: wrap; gap: 4px 16px; color: #6a5a4a; font-size: 0.9em; }
+        .att-cat-nums strong { color: #1d5432; font-size: 1.35em; margin-right: 3px; }
+        .att-cat-sub { margin-top: 4px; font-size: 0.78em; color: #9ca3af; }
         .attendance-list summary { margin-top: 16px; cursor: pointer; font-weight: 600; color: #1d5432; }
         .attendance-table-wrap { overflow-x: auto; margin-top: 10px; background: #f9f6f1; border: 1px solid #e5ddd1; border-radius: 10px; }
         .attendance-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
@@ -3475,6 +3481,28 @@
             const reg = both.reduce((sum, r) => sum + r.info.registered, 0);
             const att = both.reduce((sum, r) => sum + r.info.attended, 0);
             const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+            // Same numbers per event category: Stewardship and Education first.
+            const catOrder = ['Stewardship', 'Education'];
+            const byCat = {};
+            rows.forEach(r => { const c = r.e.primaryCategory || 'Uncategorized'; (byCat[c] = byCat[c] || []).push(r); });
+            const categories = Object.keys(byCat).sort((x, y) =>
+                ((catOrder.indexOf(x) + 1) || 99) - ((catOrder.indexOf(y) + 1) || 99) || x.localeCompare(y));
+            const categoryCards = categories.map(c => {
+                const catRows = byCat[c];
+                const catReported = catRows.filter(r => r.info && r.info.attended != null);
+                const catBoth = catRows.filter(r => r.info && r.info.registered && r.info.attended != null);
+                const catReg = catBoth.reduce((sum, r) => sum + r.info.registered, 0);
+                const catAtt = catBoth.reduce((sum, r) => sum + r.info.attended, 0);
+                return `
+                    <div class="att-cat-card" style="border-left-color:${STATS_CAT_COLORS[c] || '#1d5432'};">
+                        <div class="att-cat-name">${attEsc(c)}</div>
+                        <div class="att-cat-nums">
+                            <span><strong>${catReported.length ? catReported.reduce((sum, r) => sum + r.info.attended, 0) : '–'}</strong>attended</span>
+                            <span><strong>${catReg ? Math.round((catAtt / catReg) * 100) + '%' : '–'}</strong>show-up</span>
+                        </div>
+                        <div class="att-cat-sub">${plural(catReported.length, 'event')} with a report${catBoth.length ? ` · show-up from ${plural(catBoth.length, 'Eventbrite event')}` : ''}</div>
+                    </div>`;
+            }).join('');
             rows.forEach(r => { r.notes = r.info ? attendanceNotes(r.e, r.info) : []; });
             const needCount = rows.filter(r => r.notes.length).length;
             const listed = attendanceOnlyNeedsCheck ? rows.filter(r => r.notes.length) : rows;
@@ -3491,6 +3519,7 @@
                     <div class="kpi-card kpi-rate"><div class="kpi-value">${reg ? Math.round((att / reg) * 100) + '%' : '–'}</div><div class="kpi-label">Show-up Rate</div><div class="kpi-sub">attended ÷ registered</div></div>
                     <div class="kpi-card kpi-progress"><div class="kpi-value">${missing}</div><div class="kpi-label">No Report Yet</div><div class="kpi-sub">past ${missing === 1 ? 'event' : 'events'} without a match</div></div>
                 </div>
+                <div class="attendance-by-category">${categoryCards}</div>
                 <details class="attendance-list" ${attendanceListOpen ? 'open' : ''} ontoggle="attendanceListOpen = this.open">
                     <summary>Show all ${plural(rows.length, 'event')}${needCount ? ` · ${needCount} need${needCount === 1 ? 's' : ''} checking` : ''}</summary>
                     <label class="attendance-filter"><input type="checkbox" ${attendanceOnlyNeedsCheck ? 'checked' : ''} onchange="attendanceOnlyNeedsCheck = this.checked; displayStats();"> Only show events that need checking</label>
