@@ -1290,9 +1290,17 @@
         .attendance-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
         .attendance-table th { text-align: left; padding: 10px 12px; color: #6a5a4a; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5ddd1; }
         .attendance-table td { padding: 9px 12px; border-bottom: 1px solid #efe8dd; }
-        .attendance-table tbody tr { cursor: pointer; }
         .attendance-table tbody tr:hover { background: white; }
         .attendance-table th:nth-child(n+3), .attendance-table td:nth-child(n+3) { text-align: right; white-space: nowrap; }
+        .attendance-table th.att-match, .attendance-table td.att-match { text-align: left; white-space: normal; min-width: 230px; }
+        .attendance-table td.att-match div + div { margin-top: 4px; }
+        .attendance-table select { width: 100%; max-width: 300px; padding: 4px 6px; border: 1px solid #d4cec0; border-radius: 6px; background: white; font-family: inherit; font-size: 0.85em; }
+        .attendance-table tr.needs-check td:first-child { box-shadow: inset 3px 0 0 #f59e0b; }
+        .attendance-table .attendance-note { margin-top: 3px; font-size: 0.85em; }
+        .att-event-link { color: inherit; font-weight: 600; text-decoration: none; }
+        .att-event-link:hover { text-decoration: underline; }
+        .attendance-filter { display: flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 0.85em; color: #6a5a4a; cursor: pointer; }
+        .attendance-filter input { width: auto; accent-color: #1d5432; }
         .attendance-status { margin-top: 10px; font-size: 0.82em; color: #9ca3af; }
         .attendance-status a { color: #1d5432; }
 
@@ -3352,6 +3360,45 @@
             };
         }
 
+        // Why an event's numbers are missing or may be wrong, as short notes.
+        function attendanceNotes(event, info) {
+            const { a, o } = info;
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const notes = [];
+            if (info.onEb && !info.eb) {
+                notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one'
+                    : a.eventbrite.candidates.length ? 'Eventbrite event not matched automatically'
+                    : 'No Eventbrite event found near this date');
+            }
+            if (info.attended == null && !o.report) {
+                if (a.report.unsure) notes.push('Several activity reports that day – pick one');
+                else if (getStatsDate(event) <= today) {
+                    notes.push(a.report.candidates.length ? 'Activity report not matched automatically' : 'No activity report found yet');
+                }
+            }
+            return notes;
+        }
+
+        // The Eventbrite and activity-report dropdowns used on cards and in Stats.
+        function attendanceSelects(event, info) {
+            const { a, o } = info;
+            const num = v => v == null ? '–' : v;
+            const day = d => formatDate(new Date(d + 'T12:00:00'));
+            const ebCurrent = o.eb || a.eventbrite.autoKey || 'none';
+            const ebOptions = a.eventbrite.candidates.map(c =>
+                `<option value="${attEsc(c.key)}" ${c.key === ebCurrent ? 'selected' : ''}>${attEsc(day(c.date) + ' · ' + c.name + ' · ' + num(c.registered) + ' registered')}</option>`
+            ).join('') + `<option value="none" ${ebCurrent === 'none' ? 'selected' : ''}>No match</option>`;
+            const reportCurrent = info.manual ? 'manual' : (o.report || a.report.autoKey || 'none');
+            const reportOptions = a.report.candidates.map(c =>
+                `<option value="${attEsc(c.key)}" ${c.key === reportCurrent ? 'selected' : ''}>${attEsc(day(c.date) + ' · ' + c.title + (c.place ? ' @ ' + c.place : '') + ' · ' + num(c.count) + ' people')}</option>`
+            ).join('') + `<option value="none" ${reportCurrent === 'none' ? 'selected' : ''}>No report / no match</option>`
+              + `<option value="manual" ${reportCurrent === 'manual' ? 'selected' : ''}>${info.manual ? 'Typed by hand: ' + o.manual : 'Type a headcount…'}</option>`;
+            return {
+                eb: info.onEb ? `<select title="Eventbrite event" onchange="setAttendanceMatch(${event.id}, 'eb', this.value)">${ebOptions}</select>` : '',
+                report: `<select title="Activity report" onchange="setAttendanceMatch(${event.id}, 'report', this.value)">${reportOptions}</select>`
+            };
+        }
+
         function renderAttendanceBox(event) {
             if (!isAttendanceEvent(event)) return '';
             const box = inner => `<div class="attendance-box" onclick="event.stopPropagation()">${inner}</div>`;
@@ -3361,30 +3408,9 @@
                     : attendanceError ? `👥 Couldn't load attendance (${attEsc(attendanceError)})`
                     : '👥 Attendance not loaded yet');
             }
-            const { a, o } = info;
             const num = v => v == null ? '–' : v;
-            const today = new Date(); today.setHours(0, 0, 0, 0);
-            const notes = [];
-            if (info.onEb && !info.eb) {
-                notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one under “Check match”'
-                    : a.eventbrite.candidates.length ? 'Eventbrite event not matched automatically – check under “Check match”'
-                    : 'No Eventbrite event found near this date');
-            }
-            if (info.attended == null && !o.report) {
-                if (a.report.unsure) notes.push('Several activity reports that day – pick one under “Check match”');
-                else if (getStatsDate(event) < today) {
-                    notes.push(a.report.candidates.length ? 'Activity report not matched automatically – check under “Check match”' : 'No activity report found yet');
-                }
-            }
-            const ebCurrent = o.eb || a.eventbrite.autoKey || 'none';
-            const ebOptions = a.eventbrite.candidates.map(c =>
-                `<option value="${attEsc(c.key)}" ${c.key === ebCurrent ? 'selected' : ''}>${attEsc(formatDate(new Date(c.date + 'T12:00:00')) + ' · ' + c.name + ' · ' + num(c.registered) + ' registered')}</option>`
-            ).join('') + `<option value="none" ${ebCurrent === 'none' ? 'selected' : ''}>No match</option>`;
-            const reportCurrent = info.manual ? 'manual' : (o.report || a.report.autoKey || 'none');
-            const reportOptions = a.report.candidates.map(c =>
-                `<option value="${attEsc(c.key)}" ${c.key === reportCurrent ? 'selected' : ''}>${attEsc(formatDate(new Date(c.date + 'T12:00:00')) + ' · ' + c.title + (c.place ? ' @ ' + c.place : '') + ' · ' + num(c.count) + ' people')}</option>`
-            ).join('') + `<option value="none" ${reportCurrent === 'none' ? 'selected' : ''}>No report / no match</option>`
-              + `<option value="manual" ${reportCurrent === 'manual' ? 'selected' : ''}>${info.manual ? 'Typed by hand: ' + o.manual : 'Type a headcount…'}</option>`;
+            const notes = attendanceNotes(event, info);
+            const selects = attendanceSelects(event, info);
             return box(`
                 <div class="attendance-numbers">
                     ${info.onEb ? `<span>🎟️ Registered <strong>${num(info.registered)}</strong></span>` : ''}
@@ -3392,10 +3418,10 @@
                     ${info.onEb ? `<span>📈 Show-up <strong>${info.rate == null ? '–' : info.rate + '%'}</strong></span>` : ''}
                 </div>
                 ${notes.length ? `<div class="attendance-note">${notes.join(' · ')}</div>` : ''}
-                <details class="attendance-match">
+                <details class="attendance-match" ${notes.length ? 'open' : ''}>
                     <summary>Check match</summary>
-                    ${info.onEb ? `<label>Eventbrite event<select onchange="setAttendanceMatch(${event.id}, 'eb', this.value)">${ebOptions}</select></label>` : ''}
-                    <label>Activity report<select onchange="setAttendanceMatch(${event.id}, 'report', this.value)">${reportOptions}</select></label>
+                    ${selects.eb ? `<label>Eventbrite event${selects.eb}</label>` : ''}
+                    <label>Activity report${selects.report}</label>
                 </details>`);
         }
 
@@ -3433,6 +3459,7 @@
         }
 
         let attendanceListOpen = false;
+        let attendanceOnlyNeedsCheck = false;
 
         function renderAttendanceStats(liveEvents) {
             const rows = liveEvents.filter(isAttendanceEvent)
@@ -3448,6 +3475,9 @@
             const reg = both.reduce((sum, r) => sum + r.info.registered, 0);
             const att = both.reduce((sum, r) => sum + r.info.attended, 0);
             const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+            rows.forEach(r => { r.notes = r.info ? attendanceNotes(r.e, r.info) : []; });
+            const needCount = rows.filter(r => r.notes.length).length;
+            const listed = attendanceOnlyNeedsCheck ? rows.filter(r => r.notes.length) : rows;
             const cell = v => v == null ? '–' : v;
             const na = '<span style="color:#9ca3af;">n/a</span>';
             const status = attendanceLoading ? 'Loading…'
@@ -3462,21 +3492,25 @@
                     <div class="kpi-card kpi-progress"><div class="kpi-value">${missing}</div><div class="kpi-label">No Report Yet</div><div class="kpi-sub">past ${missing === 1 ? 'event' : 'events'} without a match</div></div>
                 </div>
                 <details class="attendance-list" ${attendanceListOpen ? 'open' : ''} ontoggle="attendanceListOpen = this.open">
-                    <summary>Show all ${plural(rows.length, 'event')}</summary>
+                    <summary>Show all ${plural(rows.length, 'event')}${needCount ? ` · ${needCount} need${needCount === 1 ? 's' : ''} checking` : ''}</summary>
+                    <label class="attendance-filter"><input type="checkbox" ${attendanceOnlyNeedsCheck ? 'checked' : ''} onchange="attendanceOnlyNeedsCheck = this.checked; displayStats();"> Only show events that need checking</label>
                     <div class="attendance-table-wrap">
                         <table class="attendance-table">
-                            <thead><tr><th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Show-up</th></tr></thead>
-                            <tbody>${rows.map(({ e, info }) => {
+                            <thead><tr><th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Show-up</th><th class="att-match">Matched to</th></tr></thead>
+                            <tbody>${listed.length ? listed.map(({ e, info, notes }) => {
                                 const onEb = hasEventbrite(e);
+                                const selects = info ? attendanceSelects(e, info) : null;
                                 return `
-                                <tr onclick="openEventDetailsModal(${e.id})">
-                                    <td>${attEsc(e.name)}</td>
+                                <tr class="${notes.length ? 'needs-check' : ''}">
+                                    <td><a href="#" class="att-event-link" onclick="openEventDetailsModal(${e.id}); return false;">${attEsc(e.name)}</a>
+                                        ${notes.length ? `<div class="attendance-note">${notes.join(' · ')}</div>` : ''}</td>
                                     <td style="white-space:nowrap;">${formatDate(getStatsDate(e))}</td>
                                     <td>${onEb ? cell(info && info.registered) : na}</td>
                                     <td>${cell(info && info.attended)}</td>
                                     <td>${!onEb ? na : info && info.rate != null ? info.rate + '%' : '–'}</td>
+                                    <td class="att-match">${selects ? (selects.eb ? `<div>${selects.eb}</div>` : '') + `<div>${selects.report}</div>` : ''}</td>
                                 </tr>`;
-                            }).join('')}
+                            }).join('') : '<tr><td colspan="6" style="color:#9ca3af;">Nothing needs checking. 🎉</td></tr>'}
                             </tbody>
                         </table>
                     </div>
