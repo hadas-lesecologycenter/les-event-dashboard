@@ -1276,6 +1276,25 @@
         .stats-section:first-child { border-top: none; padding-top: 0; }
         .stats-section h2 { font-size: 1.1em; font-weight: 700; color: #1d5432; margin-bottom: 16px; }
 
+        /* ── Registered vs. attended ── */
+        .attendance-box { margin: 10px 0 4px; padding: 10px 12px; background: #f9f6f1; border: 1px solid #e5ddd1; border-left: 3px solid #1d5432; border-radius: 6px; font-size: 0.88em; cursor: default; }
+        .attendance-numbers { display: flex; flex-wrap: wrap; gap: 6px 18px; }
+        .attendance-numbers strong { color: #1d5432; font-size: 1.1em; }
+        .attendance-note { margin-top: 6px; color: #b45309; font-size: 0.92em; }
+        .attendance-match { margin-top: 6px; }
+        .attendance-match summary { cursor: pointer; color: #6a5a4a; font-size: 0.9em; }
+        .attendance-match label { display: flex; flex-direction: column; gap: 3px; margin-top: 8px; font-size: 0.85em; font-weight: 600; color: #6a5a4a; }
+        .attendance-match select { max-width: 100%; padding: 5px 8px; border: 1px solid #d4cec0; border-radius: 6px; background: white; font-family: inherit; font-size: 1em; font-weight: 400; }
+        .attendance-table-wrap { overflow-x: auto; margin-top: 16px; background: #f9f6f1; border: 1px solid #e5ddd1; border-radius: 10px; }
+        .attendance-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
+        .attendance-table th { text-align: left; padding: 10px 12px; color: #6a5a4a; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 1px solid #e5ddd1; }
+        .attendance-table td { padding: 9px 12px; border-bottom: 1px solid #efe8dd; }
+        .attendance-table tbody tr { cursor: pointer; }
+        .attendance-table tbody tr:hover { background: white; }
+        .attendance-table th:nth-child(n+3), .attendance-table td:nth-child(n+3) { text-align: right; white-space: nowrap; }
+        .attendance-status { margin-top: 10px; font-size: 0.82em; color: #9ca3af; }
+        .attendance-status a { color: #1d5432; }
+
         .stats-two-col {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -2927,6 +2946,11 @@
                 </div>
 
                 <div class="stats-section">
+                    <h2>🎟️ Registered vs. Attended</h2>
+                    ${renderAttendanceStats(liveEvents)}
+                </div>
+
+                <div class="stats-section">
                     <h2>🧑‍🤝‍🧑 Team Workload</h2>
                     <div class="workload-grid">
                         ${ownerWorkload.map(w => `
@@ -3232,6 +3256,200 @@
 
 
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwj6pWwN3WqtQgQklHHvIexVXqkQpSehR3sqWfhXVcDiWjeSGrcwhS2s7vUBz5k6U7z/exec';
+
+        // ===== REGISTERED VS. ATTENDED =====
+        // For events marked "EventBrite Created", shows Eventbrite registrations
+        // next to the headcount from the Activity Reporting form. The numbers come
+        // from a separate, read-only Apps Script (apps-script/Attendance.gs) that
+        // matches by date and name. A match picked by hand is kept in this browser.
+        const ATTENDANCE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz377YkgD0OQPVgQhPXo1knLOHRACL3lFVSzsu4bBNYJoNLoHCE31LkjRC7H__pBTgH0Q/exec';
+        const ATTENDANCE_MAX_AGE = 60 * 60 * 1000;
+        const ATTENDANCE_RETRY_AFTER = 5 * 60 * 1000;
+        let attendanceData = readStoredJson('attendanceData', null);
+        let attendanceOverrides = readStoredJson('attendanceOverrides', {});
+        let attendanceLoading = false;
+        let attendanceError = '';
+        let attendanceFailedAt = 0;
+
+        function readStoredJson(key, fallback) {
+            try { return JSON.parse(localStorage.getItem(key)) || fallback; } catch (e) { return fallback; }
+        }
+
+        function writeStoredJson(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+        }
+
+        function attEsc(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+        }
+
+        function isAttendanceEvent(e) {
+            return !isArchivedEvent(e) && !!e.date
+                && String(e.eventbrite || '').trim().toLowerCase() === 'yes'
+                && !String(e.status || '').trim().toLowerCase().startsWith('cancel');
+        }
+
+        async function loadAttendance(force) {
+            const list = events.filter(isAttendanceEvent).map(e => ({
+                id: e.id, name: e.name, location: e.location || '', date: formatDateForInput(getStatsDate(e))
+            }));
+            if (!list.length || attendanceLoading) return;
+            if (!force) {
+                const fresh = attendanceData && Date.now() - attendanceData.loadedAt < ATTENDANCE_MAX_AGE
+                    && list.every(e => attendanceData.byId[e.id] && attendanceData.byId[e.id].date === e.date);
+                if (fresh || Date.now() - attendanceFailedAt < ATTENDANCE_RETRY_AFTER) return;
+            }
+            attendanceLoading = true;
+            attendanceError = '';
+            refreshAttendanceViews();
+            try {
+                // text/plain avoids a CORS preflight, which Apps Script can't answer.
+                const response = await fetch(ATTENDANCE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ events: list })
+                });
+                const data = await response.json();
+                if (!data.success) throw new Error(data.error || 'unknown error');
+                const dates = Object.fromEntries(list.map(e => [e.id, e.date]));
+                attendanceData = { loadedAt: Date.now(), byId: {} };
+                data.events.forEach(r => { attendanceData.byId[r.id] = Object.assign(r, { date: dates[r.id] }); });
+                writeStoredJson('attendanceData', attendanceData);
+            } catch (error) {
+                console.warn('Failed to load registrations/attendance:', error);
+                attendanceError = error.message;
+                attendanceFailedAt = Date.now();
+            } finally {
+                attendanceLoading = false;
+                refreshAttendanceViews();
+            }
+        }
+
+        function attendanceFor(event) {
+            const a = attendanceData && attendanceData.byId[event.id];
+            if (!a) return null;
+            const o = attendanceOverrides[event.id] || {};
+            const eb = a.eventbrite.candidates.find(c => c.key === (o.eb || a.eventbrite.autoKey)) || null;
+            const report = a.report.candidates.find(c => c.key === (o.report || a.report.autoKey)) || null;
+            const manual = typeof o.manual === 'number';
+            const registered = eb ? eb.registered : null;
+            const attended = manual ? o.manual : (report ? report.count : null);
+            return {
+                a, o, eb, report, manual, registered, attended,
+                rate: registered && attended != null ? Math.round((attended / registered) * 100) : null
+            };
+        }
+
+        function renderAttendanceBox(event) {
+            if (!isAttendanceEvent(event)) return '';
+            const box = inner => `<div class="attendance-box" onclick="event.stopPropagation()">${inner}</div>`;
+            const info = attendanceFor(event);
+            if (!info) {
+                return box(attendanceLoading ? '🎟️ Loading registrations…'
+                    : attendanceError ? `🎟️ Couldn't load registrations (${attEsc(attendanceError)})`
+                    : '🎟️ Registrations not loaded yet');
+            }
+            const { a, o } = info;
+            const num = v => v == null ? '–' : v;
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const notes = [];
+            if (!info.eb) notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one under “Check match”' : 'No Eventbrite event found on this date');
+            if (info.attended == null && !o.report) {
+                if (a.report.unsure) notes.push('Several activity reports that day – pick one under “Check match”');
+                else if (getStatsDate(event) < today) notes.push('No activity report found yet');
+            }
+            const ebCurrent = o.eb || a.eventbrite.autoKey || 'none';
+            const ebOptions = a.eventbrite.candidates.map(c =>
+                `<option value="${attEsc(c.key)}" ${c.key === ebCurrent ? 'selected' : ''}>${attEsc(formatDate(new Date(c.date + 'T12:00:00')) + ' · ' + c.name + ' · ' + num(c.registered) + ' registered')}</option>`
+            ).join('') + `<option value="none" ${ebCurrent === 'none' ? 'selected' : ''}>No match</option>`;
+            const reportCurrent = info.manual ? 'manual' : (o.report || a.report.autoKey || 'none');
+            const reportOptions = a.report.candidates.map(c =>
+                `<option value="${attEsc(c.key)}" ${c.key === reportCurrent ? 'selected' : ''}>${attEsc(formatDate(new Date(c.date + 'T12:00:00')) + ' · ' + c.title + (c.place ? ' @ ' + c.place : '') + ' · ' + num(c.count) + ' people')}</option>`
+            ).join('') + `<option value="none" ${reportCurrent === 'none' ? 'selected' : ''}>No report / no match</option>`
+              + `<option value="manual" ${reportCurrent === 'manual' ? 'selected' : ''}>${info.manual ? 'Typed by hand: ' + o.manual : 'Type a headcount…'}</option>`;
+            return box(`
+                <div class="attendance-numbers">
+                    <span>🎟️ Registered <strong>${num(info.registered)}</strong></span>
+                    <span>👥 Attended <strong>${num(info.attended)}</strong></span>
+                    <span>📈 Show-up <strong>${info.rate == null ? '–' : info.rate + '%'}</strong></span>
+                </div>
+                ${notes.length ? `<div class="attendance-note">${notes.join(' · ')}</div>` : ''}
+                <details class="attendance-match">
+                    <summary>Check match</summary>
+                    <label>Eventbrite event<select onchange="setAttendanceMatch(${event.id}, 'eb', this.value)">${ebOptions}</select></label>
+                    <label>Activity report<select onchange="setAttendanceMatch(${event.id}, 'report', this.value)">${reportOptions}</select></label>
+                </details>`);
+        }
+
+        function setAttendanceMatch(id, which, value) {
+            const a = attendanceData && attendanceData.byId[id];
+            const o = Object.assign({}, attendanceOverrides[id]);
+            if (which === 'report' && value === 'manual') {
+                const event = events.find(e => e.id === id);
+                const n = prompt(`How many people attended "${event ? event.name : ''}"?`, typeof o.manual === 'number' ? o.manual : '');
+                if (n === null || n.trim() === '' || isNaN(Number(n))) { refreshAttendanceViews(); return; }
+                o.manual = Number(n);
+                delete o.report;
+            } else if (which === 'report') {
+                delete o.manual;
+                // Picking the automatic match again drops the override so it follows new data.
+                if (a && value === a.report.autoKey) delete o.report; else o.report = value;
+            } else {
+                if (a && value === a.eventbrite.autoKey) delete o.eb; else o.eb = value;
+            }
+            if (Object.keys(o).length) attendanceOverrides[id] = o; else delete attendanceOverrides[id];
+            writeStoredJson('attendanceOverrides', attendanceOverrides);
+            refreshAttendanceViews();
+        }
+
+        function refreshAttendanceViews() {
+            document.querySelectorAll('[data-attendance-id]').forEach(div => {
+                const event = events.find(e => String(e.id) === div.dataset.attendanceId);
+                if (!event) return;
+                const wasOpen = !!div.querySelector('details[open]');
+                div.innerHTML = renderAttendanceBox(event);
+                if (wasOpen && div.querySelector('details')) div.querySelector('details').open = true;
+            });
+            const statsView = document.getElementById('statsView');
+            if (statsView && statsView.style.display === 'block') displayStats();
+        }
+
+        function renderAttendanceStats(liveEvents) {
+            const rows = liveEvents.filter(isAttendanceEvent)
+                .map(e => ({ e, info: attendanceFor(e) }))
+                .sort((x, y) => getStatsDate(y.e) - getStatsDate(x.e));
+            if (!rows.length) return '<p style="color:#9ca3af;margin:0;">No events marked “EventBrite Created” in this view.</p>';
+            // Totals only count events with both numbers, so the rate compares like with like.
+            const both = rows.filter(r => r.info && r.info.registered && r.info.attended != null);
+            const reg = both.reduce((sum, r) => sum + r.info.registered, 0);
+            const att = both.reduce((sum, r) => sum + r.info.attended, 0);
+            const cell = v => v == null ? '–' : v;
+            const status = attendanceLoading ? 'Loading…'
+                : attendanceError ? `Couldn't load: ${attEsc(attendanceError)}`
+                : attendanceData ? 'Updated ' + new Date(attendanceData.loadedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+                : 'Not loaded yet';
+            return `
+                <div class="stats-kpi-row">
+                    <div class="kpi-card kpi-month"><div class="kpi-value">${both.length ? reg : '–'}</div><div class="kpi-label">Registered</div></div>
+                    <div class="kpi-card kpi-upcoming"><div class="kpi-value">${both.length ? att : '–'}</div><div class="kpi-label">Attended</div></div>
+                    <div class="kpi-card kpi-rate"><div class="kpi-value">${reg ? Math.round((att / reg) * 100) + '%' : '–'}</div><div class="kpi-label">Show-up Rate</div><div class="kpi-sub">${both.length} event${both.length === 1 ? '' : 's'} with both numbers</div></div>
+                </div>
+                <div class="attendance-table-wrap">
+                    <table class="attendance-table">
+                        <thead><tr><th>Event</th><th>Date</th><th>Registered</th><th>Attended</th><th>Show-up</th></tr></thead>
+                        <tbody>${rows.map(({ e, info }) => `
+                            <tr onclick="openEventDetailsModal(${e.id})">
+                                <td>${attEsc(e.name)}</td>
+                                <td style="white-space:nowrap;">${formatDate(getStatsDate(e))}</td>
+                                <td>${cell(info && info.registered)}</td>
+                                <td>${cell(info && info.attended)}</td>
+                                <td>${info && info.rate != null ? info.rate + '%' : '–'}</td>
+                            </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="attendance-status">${status} · <a href="#" onclick="loadAttendance(true); return false;">Refresh numbers</a></div>`;
+        }
 
         const metricsCache = {};
         let lastSheetSync = 0;
@@ -4480,6 +4698,7 @@
                                     <span class="meta-item" style="color:#9ca3af;font-size:0.8em;">#${event.id}</span>
                                 </div>
                                 <div id="metrics-${event.id}" class="metrics-placeholder"></div>
+                                <div data-attendance-id="${event.id}">${renderAttendanceBox(event)}</div>
                             </div>
                             <div class="event-status" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
                                 <div style="display: flex; gap: 6px;">
@@ -4520,6 +4739,8 @@
                     </div>
                 `;
             }).join('');
+
+            loadAttendance();
 
             // Load metrics from localStorage for each event
             filteredEvents.forEach(event => {
