@@ -3275,14 +3275,16 @@
         // ===== ATTENDANCE =====
         // Shows the headcount from the Activity Reporting form for past events and,
         // for events marked "EventBrite Created", Eventbrite registrations and the
-        // show-up rate. The numbers come from a separate, read-only Apps Script
-        // (apps-script/Attendance.gs) that matches by date and name. A match picked
-        // by hand is kept in this browser.
+        // show-up rate. The numbers come from a separate Apps Script
+        // (apps-script/Attendance.gs) that matches by date and name. Matches picked
+        // by hand are shared with the team through the "Attendance Matches" tab of
+        // the tracker spreadsheet.
         const ATTENDANCE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz377YkgD0OQPVgQhPXo1knLOHRACL3lFVSzsu4bBNYJoNLoHCE31LkjRC7H__pBTgH0Q/exec';
         const ATTENDANCE_MAX_AGE = 60 * 60 * 1000;
         const ATTENDANCE_RETRY_AFTER = 5 * 60 * 1000;
         let attendanceData = readStoredJson('attendanceData', null);
-        let attendanceOverrides = readStoredJson('attendanceOverrides', {});
+        let attendanceOverrides = (attendanceData && attendanceData.overrides) || {};
+        let attendanceMatchesChecked = false;
         let attendanceLoading = false;
         let attendanceError = '';
         let attendanceFailedAt = 0;
@@ -3310,6 +3312,77 @@
             return hasEventbrite(e) || getStatsDate(e) <= today;
         }
 
+        // text/plain avoids a CORS preflight, which Apps Script can't answer.
+        async function postAttendance(body) {
+            const response = await fetch(ATTENDANCE_SCRIPT_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(body)
+            });
+            const data = await response.json();
+            if (!data.success) throw new Error(data.error || 'unknown error');
+            return data;
+        }
+
+        function useSharedOverrides(overrides) {
+            attendanceOverrides = overrides;
+            if (attendanceData) {
+                attendanceData.overrides = overrides;
+                writeStoredJson('attendanceData', attendanceData);
+            }
+        }
+
+        // The cached numbers can be an hour old, but teammates' picks should show
+        // up right away, so fetch just the picks once per page load.
+        async function loadAttendanceMatches() {
+            if (attendanceMatchesChecked) return;
+            attendanceMatchesChecked = true;
+            try {
+                const data = await postAttendance({ action: 'getMatches' });
+                if (data.overrides) {
+                    useSharedOverrides(data.overrides);
+                    refreshAttendanceViews();
+                }
+                shareLocalOverrides();
+            } catch (error) {
+                console.warn('Failed to load attendance matches:', error);
+            }
+        }
+
+        // Picks made before matches were shared live only in this browser; send
+        // them to the sheet once, keeping the local copy until that works.
+        function shareLocalOverrides() {
+            const local = readStoredJson('attendanceOverrides', null);
+            if (!local) return;
+            const pending = Object.keys(local).filter(id => !attendanceOverrides[id]);
+            pending.forEach(id => { attendanceOverrides[id] = local[id]; });
+            Promise.all(pending.map(id => saveAttendanceMatch(id, local[id])))
+                .then(() => {
+                    localStorage.removeItem('attendanceOverrides');
+                    useSharedOverrides(attendanceOverrides);
+                    refreshAttendanceViews();
+                })
+                .catch(error => console.warn('Failed to share earlier attendance matches:', error));
+        }
+
+        async function saveAttendanceMatch(id, o) {
+            const event = events.find(e => String(e.id) === String(id));
+            const data = await postAttendance({
+                action: 'saveMatch', id: String(id),
+                name: event ? event.name : '', date: event ? formatDateForInput(getStatsDate(event)) : '',
+                eb: o.eb || '', report: o.report || '', manual: typeof o.manual === 'number' ? o.manual : ''
+            });
+            if (!data.saved) throw new Error('the STC Events script needs the latest Attendance.gs');
+        }
+
+        function attendanceToast(message) {
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#ef4444;color:white;padding:14px 20px;border-radius:8px;font-weight:500;z-index:9999;box-shadow:0 4px 12px rgba(0,0,0,0.15);max-width:400px;line-height:1.5;';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 8000);
+        }
+
         async function loadAttendance(force) {
             const list = events.filter(isAttendanceEvent).map(e => ({
                 id: e.id, name: e.name, location: e.location || '', type: e.type || '',
@@ -3320,26 +3393,24 @@
                 const fresh = attendanceData && Date.now() - attendanceData.loadedAt < ATTENDANCE_MAX_AGE
                     && list.every(e => attendanceData.byId[e.id] && attendanceData.byId[e.id].date === e.date
                         && attendanceData.byId[e.id].sentWithEventbrite === e.eventbrite);
-                if (fresh || Date.now() - attendanceFailedAt < ATTENDANCE_RETRY_AFTER) return;
+                if (fresh || Date.now() - attendanceFailedAt < ATTENDANCE_RETRY_AFTER) {
+                    if (fresh) loadAttendanceMatches();
+                    return;
+                }
             }
             attendanceLoading = true;
             attendanceError = '';
             refreshAttendanceViews();
             try {
-                // text/plain avoids a CORS preflight, which Apps Script can't answer.
-                const response = await fetch(ATTENDANCE_SCRIPT_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-                    body: JSON.stringify({ events: list })
-                });
-                const data = await response.json();
-                if (!data.success) throw new Error(data.error || 'unknown error');
+                const data = await postAttendance({ events: list });
                 const sent = Object.fromEntries(list.map(e => [e.id, e]));
-                attendanceData = { loadedAt: Date.now(), byId: {} };
+                attendanceData = { loadedAt: Date.now(), byId: {}, overrides: {} };
                 data.events.forEach(r => {
                     attendanceData.byId[r.id] = Object.assign(r, { date: sent[r.id].date, sentWithEventbrite: sent[r.id].eventbrite });
                 });
-                writeStoredJson('attendanceData', attendanceData);
+                useSharedOverrides(data.overrides || {});
+                attendanceMatchesChecked = true;
+                shareLocalOverrides();
             } catch (error) {
                 console.warn('Failed to load attendance:', error);
                 attendanceError = error.message;
@@ -3431,7 +3502,7 @@
                 </details>`);
         }
 
-        function setAttendanceMatch(id, which, value) {
+        async function setAttendanceMatch(id, which, value) {
             const a = attendanceData && attendanceData.byId[id];
             const o = Object.assign({}, attendanceOverrides[id]);
             if (which === 'report' && value === 'manual') {
@@ -3447,9 +3518,18 @@
             } else {
                 if (a && value === a.eventbrite.autoKey) delete o.eb; else o.eb = value;
             }
+            const previous = attendanceOverrides[id];
             if (Object.keys(o).length) attendanceOverrides[id] = o; else delete attendanceOverrides[id];
-            writeStoredJson('attendanceOverrides', attendanceOverrides);
+            useSharedOverrides(attendanceOverrides);
             refreshAttendanceViews();
+            try {
+                await saveAttendanceMatch(id, o);
+            } catch (error) {
+                if (previous) attendanceOverrides[id] = previous; else delete attendanceOverrides[id];
+                useSharedOverrides(attendanceOverrides);
+                refreshAttendanceViews();
+                attendanceToast(`Couldn't save this match for the team (${error.message}). Please try again.`);
+            }
         }
 
         function refreshAttendanceViews() {

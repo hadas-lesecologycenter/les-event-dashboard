@@ -8,13 +8,19 @@
  *     attending (cancelled and refunded orders left out)
  * Both are matched to the event by date, then by words the names share.
  *
- * It only READS Eventbrite and the responses spreadsheet. It never writes.
+ * It only READS Eventbrite and the responses spreadsheet. The one thing it
+ * writes is the team's match picks, in the "Attendance Matches" tab of the
+ * tracker spreadsheet.
  *
  * Setup: see ATTENDANCE_SETUP.md.
  */
 
 const ACTIVITY_SHEET_ID = '1RqQl5Wx-DUhMDQwTk2APz0VulodV3FaS51Y9WGuYwAs';
 const ACTIVITY_SHEET_NAME = 'Form Responses 1';
+// Matches picked by hand on the dashboard, shared by the whole team.
+const TRACKER_SHEET_ID = '1EKZHAAlNOPPQEgxDgR7IMBKXWY5aR3VEURl4crImsrY';
+const MATCHES_SHEET_NAME = 'Attendance Matches';
+const MATCH_HEADERS = ['Event ID', 'Event Name', 'Event Date', 'Eventbrite Pick', 'Activity Report Pick', 'Headcount Typed', 'Updated'];
 // Only report rows whose "Name of staff" mentions one of these count as
 // Street Tree Care events.
 const STC_STAFF = ['Maddy', 'Hadas', 'Gretel'];
@@ -28,11 +34,16 @@ function doGet() {
   return json_({ ok: true, service: 'attendance' });
 }
 
-// Body: {"events": [{"id", "name", "date": "yyyy-MM-dd", "location", "type", "eventbrite": true|false}]}
-// Events sent with "eventbrite": false are only matched to activity reports.
+// Bodies:
+//   {"events": [{"id", "name", "date": "yyyy-MM-dd", "location", "type", "eventbrite": true|false}]}
+//     Events sent with "eventbrite": false are only matched to activity reports.
+//   {"action": "getMatches"}
+//   {"action": "saveMatch", "id", "name", "date", "eb", "report", "manual"}
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (body.action === 'getMatches') return json_({ success: true, overrides: readMatches_() });
+    if (body.action === 'saveMatch') return json_(saveMatch_(body));
     return json_(getAttendance(body.events || []));
   } catch (err) {
     return json_({ success: false, error: String(err && err.message || err) });
@@ -67,6 +78,7 @@ function getAttendance(evs) {
   return {
     success: true,
     fetchedAt: new Date().toISOString(),
+    overrides: readMatches_(),
     events: ranked.map(r => ({
       id: r.ev.id,
       eventbrite: {
@@ -195,6 +207,62 @@ function readStcReports_() {
     out.push(row);
   }
   return out;
+}
+
+// ---------- Shared match picks ----------
+
+function matchesSheet_(create) {
+  const ss = SpreadsheetApp.openById(TRACKER_SHEET_ID);
+  let sheet = ss.getSheetByName(MATCHES_SHEET_NAME);
+  if (!sheet && create) {
+    sheet = ss.insertSheet(MATCHES_SHEET_NAME);
+    sheet.appendRow(MATCH_HEADERS);
+    sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+// {eventId: {eb, report, manual}}; eb/report hold a key or "none".
+function readMatches_() {
+  const sheet = matchesSheet_(false);
+  if (!sheet) return {};
+  const out = {};
+  sheet.getDataRange().getValues().slice(1).forEach(r => {
+    const id = String(r[0]).trim();
+    if (!id) return;
+    const o = {};
+    if (String(r[3]).trim()) o.eb = String(r[3]).trim();
+    if (String(r[4]).trim()) o.report = String(r[4]).trim();
+    if (String(r[5]).trim() !== '' && !isNaN(Number(r[5]))) o.manual = Number(r[5]);
+    if (Object.keys(o).length) out[id] = o;
+  });
+  return out;
+}
+
+// One row per event; a pick set back to automatic removes the row.
+function saveMatch_(m) {
+  const id = String(m.id || '').trim();
+  if (!id) return { success: false, error: 'Missing event id' };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const sheet = matchesSheet_(true);
+    const ids = sheet.getRange(1, 1, sheet.getLastRow(), 1).getValues().map(r => String(r[0]).trim());
+    const at = ids.indexOf(id, 1);
+    const manual = m.manual === '' || m.manual === null || m.manual === undefined || isNaN(Number(m.manual)) ? '' : Number(m.manual);
+    if (!m.eb && !m.report && manual === '') {
+      if (at > 0) sheet.deleteRow(at + 1);
+    } else {
+      // Keys are stored as text so long numeric IDs stay exact.
+      const row = [id, m.name || '', m.date || '', m.eb || '', m.report || '', manual, new Date()];
+      const range = at > 0 ? sheet.getRange(at + 1, 1, 1, row.length) : sheet.getRange(sheet.getLastRow() + 1, 1, 1, row.length);
+      range.setNumberFormats([['@', '@', '@', '@', '@', '0', 'yyyy-mm-dd hh:mm']]);
+      range.setValues([row]);
+    }
+    return { success: true, saved: true };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 // ---------- Eventbrite ----------
