@@ -8,11 +8,11 @@ On each event card the dashboard shows:
 
 Totals are in the **Stats** tab under "Attendance Rate", with the full list of events behind "Show all events".
 
-Events are matched to the activity report (and Eventbrite) by **date**, then by words their names share. Volunteer events only match tree care reports and programs only workshop reports. If there are several on the same day and none is clearly the right one, the card asks you to pick one under **Check match**. Picks made there are saved in your browser only.
+Events are matched to the activity report (and Eventbrite) by **date**, then by words their names share. Volunteer events only match tree care reports and programs only workshop reports. If there are several on the same day and none is clearly the right one, the card asks you to pick one under **Check match** (or in the Stats list). Picks are saved in the **Attendance Matches** tab of the tracker spreadsheet, so the whole team sees the same matches.
 
 ## Where the numbers come from
 
-A separate Apps Script project, **STC Events**, runs `apps-script/Attendance.gs`. It only *reads* Eventbrite and the responses spreadsheet – it never writes to either. The main dashboard backend (`apps-script/Code.gs`) is not involved.
+A separate Apps Script project, **STC Events**, runs `apps-script/Attendance.gs`. It only *reads* Eventbrite and the responses spreadsheet – it never writes to either. The only thing it writes is the match picks, in the **Attendance Matches** tab of the tracker (created on the first pick). The main dashboard backend (`apps-script/Code.gs`) is not involved.
 
 ## Setting up the STC Events project
 
