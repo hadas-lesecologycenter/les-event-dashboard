@@ -1413,6 +1413,29 @@
         }
         .month-label.current { color: #10b981; font-weight: 700; }
 
+        /* Quarterly totals under the monthly chart */
+        .quarter-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .quarter-cell {
+            background: #f9f6f1;
+            border: 1.5px solid #e5ddd1;
+            border-radius: 10px;
+            padding: 8px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quarter-cell:hover { border-color: #1d5432; }
+        .quarter-cell.current { border-color: #10b981; background: #ecfdf5; }
+        .quarter-count { font-size: 1.3em; font-weight: 800; color: #1d5432; line-height: 1.1; }
+        .quarter-cell.current .quarter-count { color: #10b981; }
+        .quarter-label { font-size: 0.72em; font-weight: 700; color: #6a5a4a; }
+        .quarter-range { font-size: 0.68em; color: #9ca3af; }
+
         /* Year filter */
         .stats-toolbar {
             display: flex;
@@ -2793,9 +2816,21 @@
             let selectedMonth = localStorage.getItem('statsMonth') || 'all';
             if (selectedMonth !== 'all' && (parseInt(selectedMonth) < 0 || parseInt(selectedMonth) > 11)) selectedMonth = 'all';
 
-            const allEvents = selectedMonth === 'all'
-                ? yearFiltered
-                : yearFiltered.filter(e => getStatsDate(e).getMonth() === parseInt(selectedMonth));
+            // Quarter filter (Q1 = Jan–Mar, …). Month and quarter are exclusive; a month wins if both are stored.
+            const quarterNames = ['Q1','Q2','Q3','Q4'];
+            const quarterRanges = ['Jan–Mar','Apr–Jun','Jul–Sep','Oct–Dec'];
+            let selectedQuarter = localStorage.getItem('statsQuarter') || 'all';
+            if (selectedQuarter !== 'all' && (parseInt(selectedQuarter) < 0 || parseInt(selectedQuarter) > 3)) selectedQuarter = 'all';
+            if (selectedMonth !== 'all') selectedQuarter = 'all';
+
+            const allEvents = selectedMonth !== 'all'
+                ? yearFiltered.filter(e => getStatsDate(e).getMonth() === parseInt(selectedMonth))
+                : selectedQuarter !== 'all'
+                ? yearFiltered.filter(e => Math.floor(getStatsDate(e).getMonth() / 3) === parseInt(selectedQuarter))
+                : yearFiltered;
+            const periodLabel = selectedMonth !== 'all' ? monthNamesFull[parseInt(selectedMonth)]
+                : selectedQuarter !== 'all' ? quarterNames[parseInt(selectedQuarter)] + ' (' + quarterRanges[parseInt(selectedQuarter)] + ')'
+                : null;
 
             // Canceled events get their own section and are excluded from every
             // other stat below. Matches "Canceled", "canceled", "Cancelled", etc.
@@ -2829,6 +2864,8 @@
             yearFiltered.filter(e => !isCanceled(e)).forEach(e => { byMonth[monthNames[getStatsDate(e).getMonth()]]++; });
             const maxMonth = Math.max(...Object.values(byMonth), 1);
             const curMonthName = monthNames[now.getMonth()];
+            const byQuarter = quarterNames.map((q, qi) => monthNames.slice(qi * 3, qi * 3 + 3).reduce((sum, m) => sum + byMonth[m], 0));
+            const isCurrentYearView = selectedYear === 'all' || parseInt(selectedYear) === now.getFullYear();
 
             // Day of week distribution
             const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -2911,12 +2948,19 @@
                             ${monthNamesFull.map((m, idx) => `<button class="month-pill year-pill ${selectedMonth==String(idx)?'active':''}" data-month="${idx}">${m}</button>`).join('')}
                         </div>
                     </div>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <span style="font-size:0.75em;font-weight:700;color:#9ca3af;letter-spacing:0.05em;text-transform:uppercase;min-width:46px;">Quarter</span>
+                        <div class="stats-year-pills">
+                            <button class="quarter-pill year-pill ${selectedQuarter==='all'?'active':''}" data-quarter="all">All</button>
+                            ${quarterNames.map((q, idx) => `<button class="quarter-pill year-pill ${selectedQuarter==String(idx)?'active':''}" data-quarter="${idx}" title="${quarterRanges[idx]}">${q}</button>`).join('')}
+                        </div>
+                    </div>
                     <div class="stats-summary-line">
                         Showing <strong>${liveEvents.length}</strong> event${liveEvents.length===1?'':'s'}${canceledEvents.length ? ` <span style="color:#9ca3af;">(excludes ${canceledEvents.length} canceled)</span>` : ''}
-                        ${selectedMonth==='all' && selectedYear==='all' ? 'across all time' :
-                          selectedMonth==='all' ? 'in ' + selectedYear :
-                          selectedYear==='all' ? 'in ' + monthNamesFull[parseInt(selectedMonth)] + ' (all years)' :
-                          'in ' + monthNamesFull[parseInt(selectedMonth)] + ' ' + selectedYear}
+                        ${!periodLabel && selectedYear==='all' ? 'across all time' :
+                          !periodLabel ? 'in ' + selectedYear :
+                          selectedYear==='all' ? 'in ' + periodLabel + ' (all years)' :
+                          'in ' + periodLabel + ' ' + selectedYear}
                     </div>
                 </div>
 
@@ -3004,8 +3048,9 @@
                             ${monthNames.map((m, idx) => {
                                 const n = byMonth[m];
                                 const h = n > 0 ? Math.max((n / maxMonth) * 100, 12) : 0;
-                                const isSelected = selectedMonth !== 'all' && parseInt(selectedMonth) === idx;
-                                const cur = isSelected || (selectedMonth === 'all' && m === curMonthName && (selectedYear === 'all' || parseInt(selectedYear) === now.getFullYear()));
+                                const isSelected = (selectedMonth !== 'all' && parseInt(selectedMonth) === idx)
+                                    || (selectedQuarter !== 'all' && Math.floor(idx / 3) === parseInt(selectedQuarter));
+                                const cur = isSelected || (selectedMonth === 'all' && selectedQuarter === 'all' && m === curMonthName && isCurrentYearView);
                                 return `<div class="month-col">
                                     <div class="month-bar-wrap">
                                         <div class="month-bar ${cur ? 'current' : ''} ${n === 0 ? 'empty' : ''}" style="height:${h}%;cursor:pointer;" data-month-bar="${idx}">
@@ -3013,6 +3058,18 @@
                                         </div>
                                     </div>
                                     <div class="month-label ${cur ? 'current' : ''}">${m}</div>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                        <div class="quarter-row">
+                            ${quarterNames.map((q, qi) => {
+                                const cur = selectedQuarter !== 'all' ? parseInt(selectedQuarter) === qi
+                                    : selectedMonth !== 'all' ? Math.floor(parseInt(selectedMonth) / 3) === qi
+                                    : isCurrentYearView && Math.floor(now.getMonth() / 3) === qi;
+                                return `<div class="quarter-cell ${cur ? 'current' : ''}" data-quarter-cell="${qi}" title="Click to filter to ${q}">
+                                    <div class="quarter-count">${byQuarter[qi]}</div>
+                                    <div class="quarter-label">${q}</div>
+                                    <div class="quarter-range">${quarterRanges[qi]}</div>
                                 </div>`;
                             }).join('')}
                         </div>
@@ -3125,6 +3182,7 @@
             statsView.querySelectorAll('.month-pill[data-month]').forEach(btn => {
                 btn.addEventListener('click', () => {
                     localStorage.setItem('statsMonth', btn.dataset.month);
+                    localStorage.setItem('statsQuarter', 'all');
                     displayStats();
                 });
             });
@@ -3133,6 +3191,24 @@
                     const monthIdx = bar.dataset.monthBar;
                     const current = localStorage.getItem('statsMonth') || 'all';
                     localStorage.setItem('statsMonth', current === monthIdx ? 'all' : monthIdx);
+                    localStorage.setItem('statsQuarter', 'all');
+                    displayStats();
+                });
+            });
+            statsView.querySelectorAll('.quarter-pill[data-quarter]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    localStorage.setItem('statsQuarter', btn.dataset.quarter);
+                    localStorage.setItem('statsMonth', 'all');
+                    displayStats();
+                });
+            });
+            statsView.querySelectorAll('[data-quarter-cell]').forEach(cell => {
+                cell.addEventListener('click', () => {
+                    const qIdx = cell.dataset.quarterCell;
+                    const current = localStorage.getItem('statsQuarter') || 'all';
+                    const isActive = current === qIdx && (localStorage.getItem('statsMonth') || 'all') === 'all';
+                    localStorage.setItem('statsQuarter', isActive ? 'all' : qIdx);
+                    localStorage.setItem('statsMonth', 'all');
                     displayStats();
                 });
             });
