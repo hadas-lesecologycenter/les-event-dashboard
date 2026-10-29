@@ -3383,7 +3383,7 @@
 
         // Past events, plus upcoming ones on Eventbrite for their registrations.
         function isAttendanceEvent(e) {
-            if (isArchivedEvent(e) || !e.date || String(e.status || '').trim().toLowerCase().startsWith('cancel')) return false;
+            if (!e.date || String(e.status || '').trim().toLowerCase().startsWith('cancel')) return false;
             const today = new Date(); today.setHours(0, 0, 0, 0);
             return hasEventbrite(e) || getStatsDate(e) <= today;
         }
@@ -3497,18 +3497,30 @@
             }
         }
 
+        // 2025 archive events carry the volunteer count from the 2025 log; it is
+        // their headcount unless someone picks a report or types one.
+        function storedHeadcount(event) {
+            const m = isArchivedEvent(event) && event.metrics;
+            return m && typeof m.volunteers === 'number' ? m.volunteers : null;
+        }
+
         function attendanceFor(event) {
-            const a = attendanceData && attendanceData.byId[event.id];
+            const stored = storedHeadcount(event);
+            // Stored counts show even before (or without) the script's answer.
+            const pending = !(attendanceData && attendanceData.byId[event.id]);
+            const none = { candidates: [], autoKey: '', unsure: false };
+            const a = pending ? (stored != null ? { eventbrite: none, report: none } : null) : attendanceData.byId[event.id];
             if (!a) return null;
             const o = attendanceOverrides[event.id] || {};
             const onEb = hasEventbrite(event);
             const eb = onEb ? a.eventbrite.candidates.find(c => c.key === (o.eb || a.eventbrite.autoKey)) || null : null;
-            const report = a.report.candidates.find(c => c.key === (o.report || a.report.autoKey)) || null;
+            const useStored = stored != null && !o.report;
+            const report = useStored ? null : a.report.candidates.find(c => c.key === (o.report || a.report.autoKey)) || null;
             const manual = typeof o.manual === 'number';
             const registered = eb ? eb.registered : null;
-            const attended = manual ? o.manual : (report ? report.count : null);
+            const attended = manual ? o.manual : useStored ? stored : (report ? report.count : null);
             return {
-                a, o, onEb, eb, report, manual, registered, attended,
+                a, o, onEb, eb, report, manual, registered, attended, stored, pending,
                 rate: registered && attended != null ? Math.round((attended / registered) * 100) : null
             };
         }
@@ -3518,6 +3530,7 @@
             const { a, o } = info;
             const today = new Date(); today.setHours(0, 0, 0, 0);
             const notes = [];
+            if (info.pending) return notes;
             if (info.onEb && !info.eb) {
                 notes.push(a.eventbrite.unsure ? 'Several Eventbrite events that day – pick one'
                     : a.eventbrite.candidates.length ? 'Eventbrite event not matched automatically'
@@ -3541,8 +3554,9 @@
             const ebOptions = a.eventbrite.candidates.map(c =>
                 `<option value="${attEsc(c.key)}" ${c.key === ebCurrent ? 'selected' : ''}>${attEsc(day(c.date) + ' · ' + c.name + ' · ' + num(c.registered) + ' registered')}</option>`
             ).join('') + `<option value="none" ${ebCurrent === 'none' ? 'selected' : ''}>No match</option>`;
-            const reportCurrent = info.manual ? 'manual' : (o.report || a.report.autoKey || 'none');
-            const reportOptions = a.report.candidates.map(c =>
+            const reportCurrent = info.manual ? 'manual' : (o.report || (info.stored != null ? 'stored' : a.report.autoKey) || 'none');
+            const reportOptions = (info.stored != null ? `<option value="stored" ${reportCurrent === 'stored' ? 'selected' : ''}>2025 log · ${info.stored} volunteer${info.stored === 1 ? '' : 's'}</option>` : '')
+              + a.report.candidates.map(c =>
                 `<option value="${attEsc(c.key)}" ${c.key === reportCurrent ? 'selected' : ''}>${attEsc(day(c.date) + ' · ' + c.title + (c.place ? ' @ ' + c.place : '') + ' · ' + num(c.count) + ' people')}</option>`
             ).join('') + `<option value="none" ${reportCurrent === 'none' ? 'selected' : ''}>No report / no match</option>`
               + `<option value="manual" ${reportCurrent === 'manual' ? 'selected' : ''}>${info.manual ? 'Typed by hand: ' + o.manual : 'Type a headcount…'}</option>`;
@@ -3581,16 +3595,18 @@
         async function setAttendanceMatch(id, which, value) {
             const a = attendanceData && attendanceData.byId[id];
             const o = Object.assign({}, attendanceOverrides[id]);
+            const event = events.find(e => e.id === id);
+            const stored = event ? storedHeadcount(event) : null;
             if (which === 'report' && value === 'manual') {
-                const event = events.find(e => e.id === id);
                 const n = prompt(`How many people attended "${event ? event.name : ''}"?`, typeof o.manual === 'number' ? o.manual : '');
                 if (n === null || n.trim() === '' || isNaN(Number(n))) { refreshAttendanceViews(); return; }
                 o.manual = Number(n);
                 delete o.report;
             } else if (which === 'report') {
                 delete o.manual;
-                // Picking the automatic match again drops the override so it follows new data.
-                if (a && value === a.report.autoKey) delete o.report; else o.report = value;
+                // Picking the default again (the 2025 log count, else the automatic
+                // match) drops the override so it follows new data.
+                if (value === 'stored' || (stored == null && a && value === a.report.autoKey)) delete o.report; else o.report = value;
             } else {
                 if (a && value === a.eventbrite.autoKey) delete o.eb; else o.eb = value;
             }

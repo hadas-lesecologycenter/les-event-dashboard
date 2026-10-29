@@ -2,7 +2,7 @@
 
 On each event card the dashboard shows:
 
-- **Attended** (every past event) – the headcount from the LESEC Activity Reporting form ("Number of Participants" for workshops, "Number of tree care volunteers" for Tree Care volunteer events), counting only reports from Maddy, Hadas or Gretel
+- **Attended** (every past event) – the headcount from the LESEC Activity Reporting form ("Number of Participants" for workshops, "Number of tree care volunteers" for Tree Care volunteer events), counting only reports from Maddy, Hadas or Gretel. For 2025 archive events the volunteer count from the "2025 tree care volunteer events" sheet (stored in `index.html`) is used instead, unless a report is picked or a headcount typed under **Check match**.
 - **Registered** (events marked **EventBrite Created = Yes**) – Eventbrite registrations still attending (cancelled/refunded orders left out)
 - **Show-up rate** (Eventbrite events) – attended ÷ registered
 
